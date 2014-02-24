@@ -1,0 +1,12 @@
+
+#
+# overwrite and define values from settings.py as needed
+#
+
+from sampleimpl.ws_impl_v1 import WS1
+from sampleimpl.ws_impl_v2 import WS2
+
+ETOXWS_IMPL_V1 = WS1
+ETOXWS_IMPL_V2 = WS2
+
+ETOXWS_IMPL_V2_ASYNC = True
