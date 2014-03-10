@@ -60,7 +60,11 @@ class WebserviceImplementationBase(object):
 	def dir_impl(self):
 		raise NotImplementedError("must be implemented by subclass")
 	def dir(self):
-		return self.dir_impl()
+		retval = self.dir_impl()
+		from django.conf import settings
+		if settings.DEBUG:
+			assert(isinstance(json.loads(retval), types.ListType))
+		return retval
 
 	def _nrecord(self, sdf_file):
 		nrec = 0
