@@ -3,6 +3,11 @@
 # overwrite and define values from settings.py as needed
 #
 
+# development setting
+DEBUG = True
+# production setting
+#DEBUG = False
+
 from sampleimpl.ws_impl_v1 import WS1
 from sampleimpl.ws_impl_v2 import WS2
 

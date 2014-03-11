@@ -87,8 +87,9 @@ class WS2(WebserviceImplementationBase):
 					result = dict()
 					result['cmp_id'] = i
 					result['value'] = r[0]
-					result['AD'] = r[1]
-					result['RI'] = r[2]
+					result['success'] = True
+					result['AD'] = { "value": r[1], "success": True, "message": "" }
+					result['RI'] = { "value": r[2], "success": True, "message": "" }
 					jobobserver.report_result(i, json.dumps(result))
 
 

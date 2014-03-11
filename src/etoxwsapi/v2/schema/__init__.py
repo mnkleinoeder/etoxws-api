@@ -95,8 +95,9 @@ def get(name):
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.DEBUG)
-	print get('ws_info')
-	print _registry.keys()
-
+	ws_info = get('ws_info')
+	print ws_info.schema
+	print ws_info.to_json()
+	
 
 	

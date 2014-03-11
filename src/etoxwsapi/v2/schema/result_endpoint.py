@@ -8,13 +8,30 @@ result_endpoint =	{
 			"type": "number",
 			"description": "the type should be redefined if needed"
 		},
+		"success": { "type": "boolean" },
+		"message": { "type": "string" },
 		"AD" : {
-			"type":	"number",
-			"minimum": 0,
-			"minimum": 1
+			"type":	"object",
+			"properties": {
+				"value": {
+					"type": "number",
+					"minimum": 0,
+					"minimum": 6,
+				},
+				"success": { "type": "boolean" },
+				"message": { "type": "string" },
+			},
+			"additionalProperties": False,
 		},
-		"RI" : { "type": "number" },
-		"msg": { "type": "string" }
+		"RI" : {
+			"type":	"object",
+			"properties": {
+				"value": { "type": "number" },
+				"success": { "type": "boolean" },
+				"message": { "type": "string" },
+			},
+			"additionalProperties": False,
+		},
 	},
 	#"required": [ "result" ],
 	"additionalProperties": False,
