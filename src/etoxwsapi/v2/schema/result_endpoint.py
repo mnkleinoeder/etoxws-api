@@ -11,25 +11,29 @@ result_endpoint =	{
 		"success": { "type": "boolean" },
 		"message": { "type": "string" },
 		"AD" : {
+			"description": "applicability domain assessment ADAN",
 			"type":	"object",
 			"properties": {
 				"value": {
 					"type": "number",
 					"minimum": 0,
-					"minimum": 6,
+					"maximum": 6,
 				},
 				"success": { "type": "boolean" },
 				"message": { "type": "string" },
 			},
+			"required": [ "value", "success" ],
 			"additionalProperties": False,
 		},
 		"RI" : {
+			"description": "reliability index measure",
 			"type":	"object",
 			"properties": {
 				"value": { "type": "number" },
 				"success": { "type": "boolean" },
 				"message": { "type": "string" },
 			},
+			"required": [ "value", "success" ],
 			"additionalProperties": False,
 		},
 	},

@@ -1,0 +1,32 @@
+WSGIPythonHome /opt/virtualenv/etoxwsapi
+
+<VirtualHost *:80>
+  ServerAdmin webmaster@localhost
+
+  DocumentRoot /srv/www/none
+  <Directory />
+    Options FollowSymLinks
+    AllowOverride None
+  </Directory>
+
+  ErrorLog ${APACHE_LOG_DIR}/etoxwsapi.log
+
+  # Possible values include: debug, info, notice, warn, error, crit,
+  # alert, emerg.
+  LogLevel warn
+
+  CustomLog ${APACHE_LOG_DIR}/etoxwsapi.log combined
+
+  <IfModule mod_wsgi.c>
+	  # Debian style
+    #WSGIScriptAlias / /etc/apache2/sites-available/etoxws.wsgi
+
+		# RHEL style
+    WSGIScriptAlias / /etc/httpd/conf.d/etoxws.wsgi
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIDaemonProcess etoxwsapi processes=15 threads=1
+    WSGIProcessGroup etoxwsapi
+  </IfModule>
+
+</VirtualHost>
+

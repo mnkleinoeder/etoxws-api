@@ -68,6 +68,15 @@ class Test_result_metabolism(unittest.TestCase):
 		]
 		o = self.result_metabolism.create_object(result=result)
 
+class Test_result_endpoint(unittest.TestCase):
+	def setUp(self):
+		self.result_endpoint = schema.get('result_endpoint')
+
+	def test_create(self):
+		o = self.result_endpoint.create_object()
+		o['value'] = 99
+		o['AD'] = {'value': 6, "success": True}
+
 if __name__ == "__main__":
 	unittest.main()
 	

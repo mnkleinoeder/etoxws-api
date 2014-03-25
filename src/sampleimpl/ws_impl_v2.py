@@ -54,6 +54,7 @@ class WS2(WebserviceImplementationBase):
 		return json.dumps(self.my_models)
 
 	def calculate_impl(self, jobobserver, calc_info, sdf_file):
+		result_endpoint_schema = schema.get("result_endpoint")
 		calculation_program = os.path.join(THIS_DIR, 'sample_calculation_program.py')
 
 		infile = tempfile.mktemp(suffix=".sdf")
@@ -84,12 +85,12 @@ class WS2(WebserviceImplementationBase):
 			with open(outfile) as fp:
 				for i, line in enumerate(fp):
 					r = line.strip().split('\t')
-					result = dict()
-					result['cmp_id'] = i
-					result['value'] = r[0]
+					result = result_endpoint_schema.create_object()
+					result['cmp_id'] = str(i)
+					result['value'] = float(r[0])
 					result['success'] = True
-					result['AD'] = { "value": r[1], "success": True, "message": "" }
-					result['RI'] = { "value": r[2], "success": True, "message": "" }
+					result['AD'] = { "value": float(r[1]), "success": True, "message": "" }
+					result['RI'] = { "value": float(r[2]), "success": True, "message": "" }
 					jobobserver.report_result(i, json.dumps(result))
 
 

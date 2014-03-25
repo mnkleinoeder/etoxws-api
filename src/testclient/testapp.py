@@ -10,7 +10,7 @@ import json
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
+BASE_URL = 'http://localhost/etoxwsapi/v2'
 
 def main(argv=None):
 	try:
@@ -40,19 +40,30 @@ def main(argv=None):
 
 		req_ret = requests.post(BASE_URL+"/jobs/", data = req_obj.to_json())
 		
-		job_ids = [ stat['job_id'] for stat in json.loads(req_ret.text) ]
-		for job_id in job_ids:
-			print "new job submitted. job_id is: %s"%(job_id)
+		job_ids = list()
+		for stat in json.loads(req_ret.text):
+			job_ids.append(stat['job_id'])
+			print "======================================================================"
+			print "new job submitted."
+			for t in ("job_id", "status", "msg"):
+				print "%s: %s"%(t, stat[t])
 
 		print "observing running jobs for 10sec. (or until one is completed)"
 		do_poll = True
 		while do_poll:
+			do_poll = False
 			for job_id in job_ids:
-				stat = json.loads(requests.get(BASE_URL+"/jobs/%s"%(job_id)).text)
-				print "status for '%s': %s"%(job_id, stat)
-				if stat['status'] == "JOB_COMPLETED":
-					print "Job completed. Done."
-					do_poll = False
+				response = requests.get(BASE_URL+"/jobs/%s"%(job_id))
+				if response.status_code == 200:
+					do_poll = True
+					stat = json.loads(response.text)
+					print "status for '%s': %s"%(job_id, stat)
+					if stat['status'] == "JOB_COMPLETED":
+						print "Job completed. Done."
+						do_poll = False
+				else:
+					print response.status_code
+					print response.text
 			time.sleep(1)
 
 	except Exception, e:

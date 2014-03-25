@@ -10,6 +10,7 @@ import logging
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, render
 from django.views.generic.base import View
+from django.http.response import Http404
 
 from etoxwsapi.v2 import schema
 
@@ -51,13 +52,13 @@ class JobsView(View):
 		
 		job_stati = list()
 		for calc_info in calc_request['req_calculations']:
+			job_id = uuid1().hex
+			job_status = job_status_schema.create_object(job_id=job_id, status="JOB_UNKNOWN")
 			try:
 				calc_info_schema = schema.get('calculation_info')
 				calc_info_schema.validate(calc_info)
-				job_id = uuid1().hex
 				job = Job(start_time=0.0, job_id=job_id)
 				job.save()
-				job_status = job_status_schema.create_object(job_id=job_id, status="JOB_UNKNOWN")
 				args = [job_id, calc_info, sdf_file]
 				if settings.ETOXWS_IMPL_V2_ASYNC:
 					args.append(multiprocessing.Lock())
@@ -81,10 +82,7 @@ class JobHandlerView(View):
 			job_status_schema = schema.get('job_status')
 			job_status = job_status_schema.create_object()
 			for key in job_status_schema.schema['properties'].keys():
-				try:
-					job_status[key] = getattr(job, key)
-				except:
-					pass
+				job_status[key] = getattr(job, key)
 			if job.status == "JOB_COMPLETED":
 				results = list()
 				qs = Result.objects.filter(job=job).order_by('cmp_id')
@@ -92,6 +90,8 @@ class JobHandlerView(View):
 					results.append(json.loads(q.result_json))
 				job_status['results'] = results
 			return HttpResponse(job_status.to_json())
+		except Job.DoesNotExist:
+			return HttpResponse("job_id '%s' not existent"%(job_id), status = 404)
 		except Exception, e:
 			msg = "Failed to retrieve job status (%s)"%(e)
 			return HttpResponse(msg, status = 500)
