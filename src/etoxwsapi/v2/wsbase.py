@@ -8,6 +8,7 @@ import time
 from cStringIO import StringIO
 
 from etoxwsapi.v2 import schema
+import traceback
 
 def _get_db_job(job_id):
 	# TODO: error handling
@@ -21,9 +22,30 @@ def _save_db_obj(obj, lock):
 	lock.release()
 
 class JobObserver():
-	def __init__(self, jid, lock):
+	def __init__(self, jid, lock, logger):
 		self.job_id = jid
 		self.lock = lock
+		self.logger = logger
+
+	def log_error(self, *args):
+		self.lock.acquire()
+		self.logger.error(*args)
+		self.lock.release()
+
+	def log_warn(self, *args):
+		self.lock.acquire()
+		self.logger.warn(*args)
+		self.lock.release()
+
+	def log_info(self, *args):
+		self.lock.acquire()
+		self.logger.info(*args)
+		self.lock.release()
+
+	def log_debug(self, *args):
+		self.lock.acquire()
+		self.logger.debug(*args)
+		self.lock.release()
 
 	def report_progress(self, cur):
 		assert(type(cur) == types.IntType)
@@ -75,8 +97,9 @@ class WebserviceImplementationBase(object):
 		
 	def calculate_impl(self, observer, file, property):
 		raise NotImplementedError("must be implemented by subclass")
-	def calculate(self, job_id, calc_info, sdf_file, lock):
-		jr = JobObserver(job_id, lock)
+	def calculate(self, job_id, calc_info, sdf_file, logger, lock):
+		logger.debug("Preparing job")
+		jr = JobObserver(job_id, lock, logger)
 		job = _get_db_job(job_id)
 		job.pid = os.getpid()
 		job.start_time = time.time()
@@ -85,7 +108,13 @@ class WebserviceImplementationBase(object):
 		job.status = "JOB_RUNNING"
 		_save_db_obj(job, lock)
 		
-		self.calculate_impl(jr, calc_info, sdf_file)
+		logger.info("handing over control to webservice implementation")
+		try:
+			self.calculate_impl(jr, calc_info, sdf_file)
+			logger.info("calculation successfully finished")
+		except Exception, e:
+			logger.error("calculate_impl exception: %s\n%s"%(e, traceback.format_exc()))
+			jr.report_status(1, str(e))
 
 		job = _get_db_job(job_id)
 		job.completion_time = time.time()

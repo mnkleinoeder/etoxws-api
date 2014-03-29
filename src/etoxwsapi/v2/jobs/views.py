@@ -6,6 +6,7 @@ import os
 import socket
 import sys
 import logging
+import time
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, render
@@ -22,6 +23,8 @@ except ImportError, e:
 	# TODO: error handling
 
 from .models import Job, Result
+
+logger = logging.getLogger(__name__)
 
 class DummyLock():
 	"""
@@ -40,7 +43,7 @@ class JobsView(View):
 		return HttpResponse(jsondata, mimetype='application/json')
 
 	def post(self, request):
-		logging.info("Calculation request from %s"%(request.META['REMOTE_ADDR']))
+		logger.info("Calculation request from %s"%(request.META['REMOTE_ADDR']))
 		job_status_schema = schema.get('job_status')
 		calc_req_schema = schema.get('calculation_request')
 		try:
@@ -55,11 +58,13 @@ class JobsView(View):
 			job_id = uuid1().hex
 			job_status = job_status_schema.create_object(job_id=job_id, status="JOB_UNKNOWN")
 			try:
+				logger.info("Submitting job for '%s': %s"%(calc_info['id'], job_id))
 				calc_info_schema = schema.get('calculation_info')
 				calc_info_schema.validate(calc_info)
 				job = Job(start_time=0.0, job_id=job_id)
 				job.save()
-				args = [job_id, calc_info, sdf_file]
+				clog = logging.getLogger("%s"%(job_id))
+				args = [job_id, calc_info, sdf_file, clog]
 				if settings.ETOXWS_IMPL_V2_ASYNC:
 					args.append(multiprocessing.Lock())
 					p = multiprocessing.Process(target=v2_impl.calculate, args=args)
@@ -67,10 +72,15 @@ class JobsView(View):
 				else:
 					args.append(DummyLock())
 					v2_impl.calculate(*args)
+				logger.info("OK: submission of '%s': %s"%(calc_info['id'], job_id))
 				job_status['status'] = "JOB_ACCEPTED"
 			except Exception, e:
-				job_status['msg'] = str(e)
-				job_status['status'] = "JOB_REJECTED"
+				logger.info("FAILED: submission of '%s': %s"%(calc_info['id'], job_id))
+				job = Job.objects.get(job_id=job_id)
+				job.completion_time = time.time()
+				job.msg = job_status['msg'] = str(e)
+				job.status = job_status['status'] = "JOB_REJECTED"
+				job.save()
 			job_stati.append(job_status)
 		return HttpResponse(json.dumps(job_stati), mimetype='application/json')
 
@@ -82,7 +92,13 @@ class JobHandlerView(View):
 			job_status_schema = schema.get('job_status')
 			job_status = job_status_schema.create_object()
 			for key in job_status_schema.schema['properties'].keys():
-				job_status[key] = getattr(job, key)
+				if key in ( "results", "calculation_info" ):
+					# results are stored in a separate DB table
+					continue
+				try:
+					job_status[key] = getattr(job, key)
+				except Exception, e:
+					logger.error("Job attribute missing: %s"%(e))
 			if job.status == "JOB_COMPLETED":
 				results = list()
 				qs = Result.objects.filter(job=job).order_by('cmp_id')

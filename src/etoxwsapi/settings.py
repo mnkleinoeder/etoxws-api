@@ -1,5 +1,6 @@
 # Django settings for etoxwsapi project.
 import os
+import logging
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -127,33 +128,23 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
-# A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
-}
-
 # should v2 webservices be executed in synchronous or asynchronous.
 # for debugging synchronous execution is easier to handle
 # can be overwritten in settings_local.py
 ETOXWS_IMPL_V2_ASYNC = True
+
+# reasonable default for log file
+# either in /var/log for system account (apache or www-data)
+# or in project dir if ran as user
+if os.getuid() < 100: # system account
+	LOG_FILE = "/var/log/etoxwsapi-v2.log"
+else:
+	log_dir = os.path.join(ROOT_DIR, 'log')
+	if not os.path.exists(log_dir):
+		os.makedirs(log_dir)
+	LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
+
+LOG_LEVEL  = "ERROR"
 
 # see http://code.djangoproject.com/wiki/SplitSettings#Multiplesettingfilesimportingfromeachother
 try:
@@ -165,4 +156,30 @@ for ws in ('ETOXWS_IMPL_V1', 'ETOXWS_IMPL_V2'):
 	if ws not in dir():
 		raise Exception("Webservice implementation class required: %s"%(ws))
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+		'formatters': {
+				'standard': {
+						'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+				},
+		},
+    'handlers': {
+				'default': {
+						'level': LOG_LEVEL,
+						'class':'logging.handlers.RotatingFileHandler',
+						'filename': LOG_FILE,
+						'maxBytes': 1024*1024*5, # 5 MB
+						'backupCount': 5,
+						'formatter':'standard',
+				},
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': LOG_LEVEL,
+            'propagate': True,
+        },
+    },
+}
 

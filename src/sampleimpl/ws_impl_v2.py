@@ -6,7 +6,6 @@ import subprocess
 import os
 import re
 import tempfile
-import logging
 
 from etoxwsapi.v2 import schema
 from etoxwsapi.v2.wsbase import WebserviceImplementationBase
@@ -63,7 +62,7 @@ class WS2(WebserviceImplementationBase):
 
 		outfile = tempfile.mktemp(suffix=".sdf")
 
-		logging.info("calculation for %s"%(calc_info['id']))
+		jobobserver.log_info("calculation for %s"%(calc_info['id']))
 
 		regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
 
