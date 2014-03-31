@@ -1,4 +1,4 @@
-WSGIPythonHome /home/modeler/venv/django1.5
+WSGIPythonHome /opt/virtualenv/etoxws-api
 
 <VirtualHost *:80>
   ServerAdmin webmaster@localhost
