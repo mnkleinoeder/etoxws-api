@@ -134,15 +134,16 @@ INSTALLED_APPS = (
 ETOXWS_IMPL_V2_ASYNC = True
 
 # reasonable default for log file
-# either in /var/log for system account (apache or www-data)
+# either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
 if os.getuid() < 100: # system account
-	LOG_FILE = "/var/log/etoxwsapi-v2.log"
+	log_dir = "/var/tmp/etox"
 else:
 	log_dir = os.path.join(ROOT_DIR, 'log')
-	if not os.path.exists(log_dir):
-		os.makedirs(log_dir)
-	LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
+
+if not os.path.exists(log_dir):
+	os.makedirs(log_dir)
+LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
 
 LOG_LEVEL  = "ERROR"
 

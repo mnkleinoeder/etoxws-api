@@ -3,7 +3,7 @@ import sys
 
 # if using ORACLE
 # oracle_home = SETME (e.g., '/opt/oracle/client/product/11.2.0/client_1')
-basepath = '/home/thomas/git/etox-django'
+basepath = '/srv/www/webapps/etoxws-api'
 sys.path.append(os.path.join(basepath, 'src'))
 
 #rdkit_base = '/opt/rdkit/lib/python2.7/site-packages'

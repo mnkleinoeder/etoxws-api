@@ -1,4 +1,4 @@
-WSGIPythonHome /opt/virtualenv/etoxwsapi
+WSGIPythonHome /home/modeler/venv/django1.5
 
 <VirtualHost *:80>
   ServerAdmin webmaster@localhost
@@ -9,20 +9,19 @@ WSGIPythonHome /opt/virtualenv/etoxwsapi
     AllowOverride None
   </Directory>
 
-  ErrorLog ${APACHE_LOG_DIR}/etoxwsapi.log
+  ErrorLog /var/log/httpd/etoxws-api-v2.error.log
+  CustomLog /var/log/httpd/etoxws-api-v2.access.log combined
 
   # Possible values include: debug, info, notice, warn, error, crit,
   # alert, emerg.
   LogLevel warn
-
-  CustomLog ${APACHE_LOG_DIR}/etoxwsapi.log combined
 
   <IfModule mod_wsgi.c>
 	  # Debian style
     #WSGIScriptAlias / /etc/apache2/sites-available/etoxws.wsgi
 
 		# RHEL style
-    WSGIScriptAlias / /etc/httpd/conf.d/etoxws.wsgi
+    WSGIScriptAlias / /srv/www/webapps/etoxws-api/deploy/etoxws.wsgi
     WSGIApplicationGroup %{GLOBAL}
     WSGIDaemonProcess etoxwsapi processes=15 threads=1
     WSGIProcessGroup etoxwsapi
