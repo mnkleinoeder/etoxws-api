@@ -137,7 +137,7 @@ ETOXWS_IMPL_V2_ASYNC = True
 # either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
 if os.getuid() < 100: # system account
-	log_dir = "/var/tmp/etox"
+	log_dir = "/var/tmp/etox-%s"%(os.getuid())
 else:
 	log_dir = os.path.join(ROOT_DIR, 'log')
 
