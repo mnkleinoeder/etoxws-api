@@ -12,13 +12,28 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
 #BASE_URL = 'http://localhost/etoxwsapi/v2'
-#BASE_URL = 'http://192.168.0.236/etoxwsapi/v2'
+#BASE_URL = 'http://192.168.178.217/etoxwsapi/v2'
+
+def print_result(ids):
+	frmt = '| %-7s | %-10s | %-10s | %-10s |'
+	for (job_id,model_id) in ids:
+		ret = requests.get('/'.join((BASE_URL, 'jobs', job_id)))
+		if ret.status_code == 200:
+			results = json.loads(ret.text)
+			print "==========================================================================="
+			print "Results for model '%s' (job: %s)\n"%(model_id, job_id)
+			print frmt%("cmp_id", "value", "AD", "RI")
+			print '-' * len(frmt%('','','',''))
+			for r in results['results']:
+				print frmt%(r['cmp_id'], r['value'], r['AD']['value'], r['RI']['value'])
 
 def main(argv=None):
 	try:
 		ret = requests.get(BASE_URL+"/dir")
 		print ret.status_code
 		models = [ m for m in json.loads(ret.text)]
+		
+		model_ids = [ model['id'] for model in models ]
 
 		print "Available models"
 		print models
@@ -51,27 +66,31 @@ def main(argv=None):
 				print "new job submitted."
 				for t in ("job_id", "status"): #, "msg"):
 					print "%s: %s"%(t, stat[t])
+
+			observe_time = 10
+			print "observing running jobs for %dsec. (or until one is completed)"%(observe_time)
+			for i in range(observe_time):
+				done = True
+				for job_id in job_ids:
+					response = requests.get(BASE_URL+"/jobs/%s"%(job_id))
+					if response.status_code == 200:
+						done = False
+						stat = json.loads(response.text)
+						print "status for '%s': %s"%(job_id, stat)
+						if stat['status'] != "JOB_RUNNING":
+							print "Job not running anymore."
+							done = True
+					else:
+						print response.status_code
+						print response.text
+				time.sleep(1)
+				if done:
+					break
 		else:
 			print "Error occurred (%s)"%(req_ret.status_code)
 			print req_ret.text
 
-		print "observing running jobs for 10sec. (or until one is completed)"
-		do_poll = True
-		while do_poll:
-			do_poll = False
-			for job_id in job_ids:
-				response = requests.get(BASE_URL+"/jobs/%s"%(job_id))
-				if response.status_code == 200:
-					do_poll = True
-					stat = json.loads(response.text)
-					print "status for '%s': %s"%(job_id, stat)
-					if stat['status'] != "JOB_RUNNING":
-						print "Job not running anymore."
-						do_poll = False
-				else:
-					print response.status_code
-					print response.text
-			time.sleep(1)
+		print_result(zip(job_ids, model_ids) )
 
 	except Exception, e:
 		print "Error occured: %s"%(e)
