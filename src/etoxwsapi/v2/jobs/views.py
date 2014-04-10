@@ -7,11 +7,13 @@ import socket
 import sys
 import logging
 import time
+import signal
 
 from django.http import HttpResponse
 from django.shortcuts import render_to_response, render
 from django.views.generic.base import View
 from django.http.response import Http404
+from django.middleware import csrf
 
 from etoxwsapi.v2 import schema
 
@@ -40,6 +42,7 @@ class JobsView(View):
 		q = Job.objects.all()
 		job_ids = [ j.job_id for j in q ]
 		jsondata = json.dumps(job_ids)
+		request.META["CSRF_COOKIE_USED"] = True
 		return HttpResponse(jsondata, mimetype='application/json')
 
 	def post(self, request):
@@ -114,5 +117,22 @@ class JobHandlerView(View):
 
 
 	def delete(self, request, job_id):
-		return HttpResponse("not yet implemented: cancelled job %s"%(job_id))
+		try:
+			job = Job.objects.get(job_id=job_id)
+			try:
+				print "killing job", job.pid
+				os.kill(job.pid, signal.SIGKILL)
+			except OSError, e:
+				logger.warn("Failed to kill job: %s (job_id: %s)"%(e, job_id))
+
+			job.status = "JOB_CANCELLED"
+			job.completion_time = time.time()
+			job.save()
+			return HttpResponse("", status = 200)
+
+		except Job.DoesNotExist:
+			return HttpResponse("job_id '%s' not existent"%(job_id), status = 404)
+		except Exception, e:
+			msg = "Failed to retrieve job status (%s)"%(e)
+			return HttpResponse(msg, status = 500)
 	

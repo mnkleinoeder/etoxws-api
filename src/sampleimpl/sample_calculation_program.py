@@ -15,6 +15,8 @@ out_str = """
    Elapsed time: 10 ms
 """
 
+SLEEP_TIME = 1
+
 def main(argv):
 	property = sys.argv[1]
 	infile = sys.argv[2]
@@ -30,7 +32,7 @@ def main(argv):
 			sys.stdout.write(out_str%{"nr": i})
 			sys.stdout.flush()
 			print >>ofp, "\t".join((str(len(property)), "0.8", "0.9"))
-			time.sleep(0.5)
+			time.sleep(SLEEP_TIME)
 	print "stop"
 		
 
