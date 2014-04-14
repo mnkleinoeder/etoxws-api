@@ -91,7 +91,7 @@ class WebserviceImplementationBase(object):
 	def _nrecord(self, sdf_file):
 		nrec = 0
 		for line in StringIO(sdf_file):
-			if '$$$$' in line:
+			if line[0] == 'M' and line.startswith("M  END"):
 				nrec += 1
 		return nrec
 		
