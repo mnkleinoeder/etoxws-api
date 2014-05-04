@@ -1,15 +1,21 @@
+"""
+calculation_info is used to define a calculation method that a webservice provides
 
-control_parameter_info = 	{
-		"type": "object",
-		"properties": {
-			"name" : { "type": "string" },
-			"display_name" : { "type": "string" },
-			"data_type" : { "enum": ["integer", "number", "string"] },
-			"description":  { "type": "string" }
-		},
-		#"required": [ "name", "display_name", "data_type" ] ,
-		"additionalProperties": False,
-	}
+Please note the member ``return_type_spec`` in the schema definition. This member is required
+for defining the return type of the calculation. This is illustrated in the following code
+fragment.
+
+::
+
+	from etoxwsapi.v2 import schema
+
+	self.dipl_id = '/Tox/Organ Tox/Phospholipidosis/DIPL/1'
+	self.dipl_1 = calculation_info.create_object(id=self.dipl_id, category="ENDPOINT", external_id = "eTOXvault ID2")
+	r_type = schema.get("result_endpoint").schema
+	r_type['properties']['value'] = { "enum": ["positive", "negative", "unknown"]}
+	self.dipl_1['return_type_spec'] = r_type
+
+"""
 
 calculation_info =  {
 		"type": "object",
@@ -32,7 +38,7 @@ calculation_info =  {
 			"control_parameter_infos" : {
 				"type": "array",
 				# how to implement validation of embedded types?
-				"items": { "$ref": "http://etoxsys.eu/schema/etoxws/v2/control_parameter_info#" },
+				"items": { "$ref": "http://etoxsys.eu/etoxwsapi/v2/schema/control_parameter_info#" },
 			},
 			"return_type_spec": {
 				"type": "object",

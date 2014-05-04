@@ -8,6 +8,15 @@ TEMPLATE_DEBUG = DEBUG
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR	= os.path.abspath(os.path.join(PROJECT_DIR, '..'))
 
+# this var will be set by Apache/WSGI script
+# in development it's ignored.
+WSGI_SCRIPT_NAME = os.environ.get('WSGI_SCRIPT_NAME', None)
+
+if WSGI_SCRIPT_NAME is not None:
+	BASE_URL = WSGI_SCRIPT_NAME
+else:
+	BASE_URL = '/etoxwsapi'
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )

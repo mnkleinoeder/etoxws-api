@@ -1,3 +1,6 @@
+"""
+Gives information about the operator of this webservice. (same as in API v1)
+"""
 
 ws_info =	{
 	"type": "object",

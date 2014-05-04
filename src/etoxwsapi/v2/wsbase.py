@@ -22,38 +22,64 @@ def _save_db_obj(obj, lock):
 	lock.release()
 
 class JobObserver():
+	"""
+	This interface is used by WS implementations to communicate with the parent django application.
+	As calculations will be performed in own threads this class provides thread-safe operations.
+	
+	Logging should only be done using the methods provided by this class.
+	"""
 	def __init__(self, jid, lock, logger):
 		self.job_id = jid
 		self.lock = lock
 		self.logger = logger
 
-	def log_error(self, *args):
+	def log_error(self, msg, *args, **kwargs):
+		"""
+		log critical error event
+		"""
 		self.lock.acquire()
 		self.logger.error(*args)
 		self.lock.release()
 
-	def log_warn(self, *args):
+	def log_warn(self, msg, *args, **kwargs):
+		"""
+		log warning (not critical)
+		"""
 		self.lock.acquire()
-		self.logger.warn(*args)
+		self.logger.warn(msg, *args, **kwargs)
 		self.lock.release()
 
-	def log_info(self, *args):
+	def log_info(self, msg, *args, **kwargs):
+		"""
+		give additional information about calculation details
+		"""
 		self.lock.acquire()
-		self.logger.info(*args)
+		self.logger.info(msg, *args, **kwargs)
 		self.lock.release()
 
-	def log_debug(self, *args):
+	def log_debug(self, msg, *args, **kwargs):
+		"""
+		give debug information (for development purpose)
+		"""
 		self.lock.acquire()
-		self.logger.debug(*args)
+		self.logger.debug(msg, *args, **kwargs)
 		self.lock.release()
 
 	def report_progress(self, cur):
+		"""
+		report progress: number of current record related to input sdfile
+		"""
 		assert(type(cur) == types.IntType)
 		job = _get_db_job(self.job_id)
 		job.currecord = cur
 		_save_db_obj(job, self.lock)
 
 	def report_status(self, retcode, errmsg):
+		"""
+		after completion of calculation report the status:
+		0 - success
+		1 - failure
+		"""
 		job = _get_db_job(self.job_id)
 		if retcode == 0:
 			stat = "JOB_COMPLETED"
@@ -64,6 +90,9 @@ class JobObserver():
 		_save_db_obj(job, self.lock)
 
 	def report_result(self, cmp_id, result_json):
+		"""
+		give result for compound with cmp_id. result data must be given as JSON object with schema result_endpoint
+		"""
 		from etoxwsapi.v2.jobs.models import Result
 		job = _get_db_job(self.job_id)
 		result = Result(job=job, cmp_id=cmp_id, result_json=result_json)
@@ -71,20 +100,31 @@ class JobObserver():
 
 # TODO: make this an interface
 class WebserviceImplementationBase(object):
+	"""
+	Adapter class to connect the webservice application with the implementation.
+	This class needs to be subclassed and the *_impl() methods need to be redefined. 
+	"""
 	def __init__(self):
 		pass
 
 	def info_impl(self):
+		"""
+		Concrete implementations need to return a ws_info JSON object
+		"""
 		raise NotImplementedError("must be implemented by subclass")
 	def info(self):
 		return self.info_impl()
 
 	def dir_impl(self):
+		"""
+		Needs to return an array of calculation_info JSON objects
+		"""
 		raise NotImplementedError("must be implemented by subclass")
 	def dir(self):
 		retval = self.dir_impl()
 		from django.conf import settings
 		if settings.DEBUG:
+			# also for WS with only one model we expect an list of calc_infos
 			assert(isinstance(json.loads(retval), types.ListType))
 		return retval
 
@@ -95,7 +135,11 @@ class WebserviceImplementationBase(object):
 				nrec += 1
 		return nrec
 		
-	def calculate_impl(self, observer, file, property):
+	def calculate_impl(self, jobobserver, calc_info, sdf_file):
+		"""
+		Implements the calculation. Use the jobobserver to report calculation progress,
+		submit results and issue logging messages.
+		"""
 		raise NotImplementedError("must be implemented by subclass")
 	def calculate(self, job_id, calc_info, sdf_file, logger, lock):
 		logger.debug("Preparing job")

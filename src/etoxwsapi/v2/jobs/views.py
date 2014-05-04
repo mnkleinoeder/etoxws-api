@@ -54,7 +54,7 @@ class JobsView(View):
 			sdf_file = calc_request['sdf_file']
 		except Exception, e:
 			msg = "Invalid input data in request (%s)"%(e)
-			return HttpResponse(msg, status = 500)
+			return HttpResponse(msg, status = 400)
 		
 		job_stati = list()
 		for calc_info in calc_request['req_calculations']:
@@ -133,6 +133,6 @@ class JobHandlerView(View):
 		except Job.DoesNotExist:
 			return HttpResponse("job_id '%s' not existent"%(job_id), status = 404)
 		except Exception, e:
-			msg = "Failed to retrieve job status (%s)"%(e)
+			msg = "Failed to delete job (%s)"%(e)
 			return HttpResponse(msg, status = 500)
 	

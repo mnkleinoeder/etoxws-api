@@ -23,7 +23,7 @@ class SchemaDefinition(object):
 	'''
 	classdocs
 	'''
-	id_base =	"http://etoxsys.eu/schema/etoxws/v2/%(name)s#"
+	id_base =	"http://etoxsys.eu/etoxwsapi/v2/schema/%(name)s#"
 	schema_version = "http://json-schema.org/draft-04/schema#"
 
 	def __init__(self, name, schema):
@@ -55,13 +55,21 @@ class SchemaDefinition(object):
 		return o
 
 _registry = None
+_documentation = None
 
-def _get_registry():
-	global _registry
+def get_registry():
+	_init_registry()
+	return _registry
+	
+def _init_registry():
+	global _registry, _documentation
+
 	if _registry:
-		return _registry
+		return
+
 	dir_impl = os.path.dirname(os.path.abspath(__file__))
 	_registry = dict()
+	_documentation = dict()
 	name_re = re.compile('^([a-z][_a-zA-Z]+)\.py$')
 	flist = [ f for f in os.listdir(dir_impl) if f.endswith('.py') ]
 	for name in flist :
@@ -75,29 +83,50 @@ def _get_registry():
 				var = getattr(mod, var_name)
 				if isinstance(var, types.DictType) and var.has_key('type'):
 					try:
-						if _registry.has_key(var_name):
-							logging.warn("schema ")
 						_registry[var_name] = SchemaDefinition(name=var_name, schema=var)
+						_documentation[var_name] = mod.__doc__
 						logging.debug("Imported schema: %s.%s"%(module_name, var_name))
 					except Exception, ee:
 						logging.warn("Could not create schema from dict '%s.%s': %s"%(module_name, var_name, ee))
 		except Exception, e:
 			logging.warn("Error while trying to import '%s': %s"%(module_name, e))
-	return _registry
-	
 
 def get(name):
-	registry = _get_registry()
+	registry = get_registry()
 	if registry.has_key(name):
 		return registry.get(name)
 	else:
 		raise LookupError("Schema '%s' not available"%(name))
+
+def get_doc(name):
+	get_registry()
+	if _documentation.has_key(name):
+		return _documentation.get(name)
+	else:
+		raise LookupError("Schema '%s' not available"%(name))
+
+def urlconf():
+	from django.conf.urls import url
+	from django.http.response import HttpResponse
+	urls = list()
+	registry = get_registry()
+	for name, schema in registry.iteritems():
+		class _View:
+			def __init__(self, schema):
+				self.schema = schema
+			def __call__(self, request):
+				jsondata = self.schema.to_json(indent=2)
+				return HttpResponse(jsondata, mimetype='application/json')
+		urls.append(url(r'%s$'%(name),  _View(schema), name='schema_%s'%(name)))
+	
+	return urls
 
 if __name__ == '__main__':
 	logging.basicConfig(level=logging.DEBUG)
 	ws_info = get('ws_info')
 	print ws_info.schema
 	print ws_info.to_json()
-	
+	print urlconf()
+	print get_doc('ws_info')
 
 	
