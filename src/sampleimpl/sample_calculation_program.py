@@ -15,7 +15,7 @@ out_str = """
    Elapsed time: 10 ms
 """
 
-SLEEP_TIME = 1
+SLEEP_TIME = 10
 
 def main(argv):
 	property = sys.argv[1]

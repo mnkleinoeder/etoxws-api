@@ -10,7 +10,7 @@ import json
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
+BASE_URL = 'http://192.168.56.100/etoxwsapi/v2'
 #BASE_URL = 'http://localhost/etoxwsapi/v2'
 #BASE_URL = 'http://192.168.178.217/etoxwsapi/v2'
 
@@ -40,7 +40,7 @@ def submit_jobs(models):
 	req_obj = calculation_request.create_object()
 
 	calculation_info = schema.get('calculation_info')
-	
+
 	req_obj.req_calculations = models
 
 	fname = os.path.join(THIS_DIR, "tiny.sdf")
@@ -48,7 +48,7 @@ def submit_jobs(models):
 		req_obj.sdf_file = fp.read()
 
 	req_ret = requests.post(BASE_URL+"/jobs/", data = req_obj.to_json())
-	
+
 	if req_ret.status_code == 200:
 		job_ids = list()
 		for stat in json.loads(req_ret.text):
@@ -81,13 +81,13 @@ def observing_jobs(job_ids, duration):
 				print response.status_code
 				print response.text
 		time.sleep(1)
-	
+
 def main(argv=None):
 	try:
 # 		client = requests.session()
 # 		ret = client.get(BASE_URL+"/dir")
 		ret = requests.get(BASE_URL+"/dir")
-		
+
 		if ret.status_code != 200:
 			print ret.text
 

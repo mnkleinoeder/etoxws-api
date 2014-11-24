@@ -36,7 +36,7 @@ job_status =	{
 		},
 		"msg" : { "type": "string" },
 	},
-	#"additionalProperties": False,
+	#"additionalProperties": True,
 }
 
 _job_status_doc = """

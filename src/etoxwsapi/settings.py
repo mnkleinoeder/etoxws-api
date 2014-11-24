@@ -1,6 +1,7 @@
 # Django settings for etoxwsapi project.
 import os
 import logging
+import sys
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -13,9 +14,9 @@ ROOT_DIR	= os.path.abspath(os.path.join(PROJECT_DIR, '..'))
 WSGI_SCRIPT_NAME = os.environ.get('WSGI_SCRIPT_NAME', None)
 
 if WSGI_SCRIPT_NAME is not None:
-	BASE_URL = WSGI_SCRIPT_NAME
+    BASE_URL = WSGI_SCRIPT_NAME
 else:
-	BASE_URL = '/etoxwsapi'
+    BASE_URL = '/etoxwsapi'
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -23,14 +24,22 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+#        'NAME': os.path.join(PROJECT_DIR, 'local.db'),                      # Or path to database file if using sqlite3.
+#        'USER': '',                      # Not used with sqlite3.
+#        'PASSWORD': '',                  # Not used with sqlite3.
+#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+#        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+#    }
+#}
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': os.path.join(PROJECT_DIR, 'local.db'),                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': "etoxwsapi_dev",
+        'USER': "etoxwsapi_dev",
+        'PASSWORD': "etoxwsapi_dev"
     }
 }
 
@@ -130,8 +139,8 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-		'etoxwsapi.v2',
-		'etoxwsapi.v2.jobs',
+        'etoxwsapi.v2',
+        'etoxwsapi.v2.jobs',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
@@ -147,50 +156,74 @@ ETOXWS_IMPL_V2_ASYNC = True
 # either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
 if os.getuid() < 100: # system account
-	log_dir = "/var/tmp/etox-%s"%(os.getuid())
+    log_dir = "/var/tmp/etox-%s"%(os.getuid())
 else:
-	log_dir = os.path.join(ROOT_DIR, 'log')
+    log_dir = os.path.join(ROOT_DIR, 'log')
 
 if not os.path.exists(log_dir):
-	os.makedirs(log_dir)
+    os.makedirs(log_dir)
 LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
 
 LOG_LEVEL  = "ERROR"
+LOG_TO_STDOUT = False
+
+# CELERY SETTINGS
+BROKER_URL = 'amqp://etoxws:etoxws@localhost:5672/etoxws'
+CELERY_RESULT_BACKEND = 'amqp'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 # see http://code.djangoproject.com/wiki/SplitSettings#Multiplesettingfilesimportingfromeachother
 try:
-	execfile(os.path.join(PROJECT_DIR, 'settings_local.py'))
+    execfile(os.path.join(PROJECT_DIR, 'settings_local.py'))
 except Exception, e:
-	print "Failed to import settings_local.py %s"%(e)
+    print "Failed to import settings_local.py %s"%(e)
 
 for ws in ('ETOXWS_IMPL_V1', 'ETOXWS_IMPL_V2'):
-	if ws not in dir():
-		raise Exception("Webservice implementation class required: %s"%(ws))
+    if ws not in dir():
+        raise Exception("Webservice implementation class required: %s"%(ws))
+
+
+handlers = ['logfile']
+if LOG_TO_STDOUT:
+    handlers.append('stdout')
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-		'formatters': {
-				'standard': {
-						'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-				},
-		},
+        'formatters': {
+                'standard': {
+                        'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+                },
+                'console': {
+                        'format': '[%(levelname)s] %(filename)s:%(lineno)d: %(message)s'
+                },
+        },
     'handlers': {
-				'default': {
-						'level': LOG_LEVEL,
-						'class':'logging.handlers.RotatingFileHandler',
-						'filename': LOG_FILE,
-						'maxBytes': 1024*1024*5, # 5 MB
-						'backupCount': 5,
-						'formatter':'standard',
-				},
+                'logfile': {
+                        'level': LOG_LEVEL,
+                        'class':'logging.handlers.RotatingFileHandler',
+                        'filename': LOG_FILE,
+                        'maxBytes': 1024*1024*5, # 5 MB
+                        'backupCount': 5,
+                        'formatter':'standard',
+                },
+                'stdout':{
+                    'level':'INFO',
+                    'class':'logging.StreamHandler',
+                    'stream': sys.stdout,
+                    'formatter':'console',
+                    'level': LOG_LEVEL,
+                },
     },
     'loggers': {
         '': {
-            'handlers': ['default'],
+            'handlers': handlers,
             'level': LOG_LEVEL,
             'propagate': True,
         },
     },
 }
+
 

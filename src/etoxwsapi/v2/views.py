@@ -1,23 +1,12 @@
-from django.core.context_processors import csrf
-from django.views.decorators.csrf import csrf_exempt
-
 from django.http import HttpResponse
+from django.conf import settings
 
-from etoxwsapi.v2 import schema
-
-try:
-	from django.conf import settings
-	v2_impl = settings.ETOXWS_IMPL_V2()
-except ImportError, e:
-	print "Implementation for webservice v1 not found in settings_local.py"
-	# TODO: error handling
-
+v2_impl = settings.ETOXWS_IMPL_V2()
 
 def info(request):
 	jsondata = v2_impl.info()
-	return HttpResponse(jsondata, mimetype='application/json')
+	return HttpResponse(jsondata, content_type='application/json')
 
-def dir(request):
+def dir(request): #@ReservedAssignment
 	jsondata = v2_impl.dir()
-	return HttpResponse(jsondata, mimetype='application/json')
-
+	return HttpResponse(jsondata, content_type='application/json')
