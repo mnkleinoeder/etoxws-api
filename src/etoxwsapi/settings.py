@@ -147,11 +147,6 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
-# should v2 webservices be executed in synchronous or asynchronous.
-# for debugging synchronous execution is easier to handle
-# can be overwritten in settings_local.py
-ETOXWS_IMPL_V2_ASYNC = True
-
 # reasonable default for log file
 # either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
@@ -174,6 +169,8 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
+ETOXWS_IMPL_V2_ASYNC = True
+
 # see http://code.djangoproject.com/wiki/SplitSettings#Multiplesettingfilesimportingfromeachother
 try:
     execfile(os.path.join(PROJECT_DIR, 'settings_local.py'))
@@ -184,6 +181,8 @@ for ws in ('ETOXWS_IMPL_V1', 'ETOXWS_IMPL_V2'):
     if ws not in dir():
         raise Exception("Webservice implementation class required: %s"%(ws))
 
+# see http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager
+CELERY_ALWAYS_EAGER = (not ETOXWS_IMPL_V2_ASYNC)
 
 handlers = ['logfile']
 if LOG_TO_STDOUT:

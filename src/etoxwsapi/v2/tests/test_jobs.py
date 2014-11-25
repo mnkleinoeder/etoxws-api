@@ -11,6 +11,13 @@ import time
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
+###########################################################################
+#
+# This test does not work anymore because of the usage of the celery
+# job manager
+#
+###########################################################################
+
 class JobsTest(TestCase):
     def _submit_job(self):
         calculation_info_schema = schema.get('calculation_info')
@@ -43,7 +50,6 @@ class JobsTest(TestCase):
         logging.info("new jobs submitted.")
         
         jobs = json.loads(response.content)
-        #logging.info(pformat(jobs))
 
         logging.info("Submitted job ids:")
         for job in jobs:
@@ -51,8 +57,6 @@ class JobsTest(TestCase):
             logging.info(job['job_id'])
 
         url = reverse("jobs")
-#        response = self.client.get(url)
-#        pprint(json.loads(response.content))
 
         poll = True
         while(poll):
@@ -68,9 +72,6 @@ class JobsTest(TestCase):
                     if job_status['status'] != "JOB_COMPLETED":
                         poll = True
                     pprint(job_status)
-        
-
-
 
 if __name__ == "__main__":
     import django

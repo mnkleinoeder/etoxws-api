@@ -15,35 +15,36 @@ out_str = """
    Elapsed time: 10 ms
 """
 
-SLEEP_TIME = 10
+SLEEP_TIME = 3
 
 def main(argv):
-	property = sys.argv[1]
-	infile = sys.argv[2]
-	outfile = sys.argv[3]
-	
-	ifp = open(infile)
-	ofp = open(outfile, "w")
+    #raise Exception("failed by purpose")
+    property = sys.argv[1]
+    infile = sys.argv[2]
+    outfile = sys.argv[3]
 
-	i = 0
-	for lno, line in enumerate(ifp):
-		if '$$$$' in line:
-			i += 1
-			sys.stdout.write(out_str%{"nr": i})
-			sys.stdout.flush()
-			print >>ofp, "\t".join((str(len(property)), "0.8", "0.9"))
-			time.sleep(SLEEP_TIME)
-	print "stop"
-		
+    ifp = open(infile)
+    ofp = open(outfile, "w")
+
+    i = 0
+    for lno, line in enumerate(ifp):
+        if '$$$$' in line:
+            i += 1
+            sys.stdout.write(out_str%{"nr": i})
+            sys.stdout.flush()
+            print >>ofp, "\t".join((str(len(property)), "0.8", "0.9"))
+            time.sleep(SLEEP_TIME)
+    print "stop"
+
 
 main(sys.argv)
 
 if __name__ == '__main__':
-	regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
-	
-	s = StringIO(out_str%{"nr":99})
-	for line in s:
-		m = regex.search(line)
-		if not m: 
-			continue
-		print m.group(1)
+    regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
+
+    s = StringIO(out_str%{"nr":99})
+    for line in s:
+        m = regex.search(line)
+        if not m:
+            continue
+        print m.group(1)

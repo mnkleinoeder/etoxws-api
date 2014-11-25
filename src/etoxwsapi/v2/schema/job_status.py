@@ -10,11 +10,11 @@ job_status =	{
  		"status" : {
  			"enum": [
 				"JOB_UNKNOWN",
- 				"JOB_REJECTED",
  				"JOB_ACCEPTED",
- 				"JOB_RUNNING",
+ 				"JOB_RUNNING", 
  				"JOB_COMPLETED",
  				"JOB_FAILED",
+ 				"JOB_REJECTED",
  				"JOB_CANCELLED"
  			],
 			#"default": "JOB_UNKNOWN"
