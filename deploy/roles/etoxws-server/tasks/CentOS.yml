@@ -5,9 +5,9 @@
     postgres_main_conf: /opt/PostgreSQL/9.2/data/pg_hba.conf
     postgres_service_name: postgresql-9.2
     python_version: 2.6
+    supervisord_conf: "/etc/supervisord.conf"
+    supervisord_conf_dir: "/etc/supervisor/conf.d"
    
-  when: ansible_distribution_major_version == "6"
-
 - fail: msg="postgres package not defined for CentOS version"
   when: not postgres_pkg_name
 
@@ -27,3 +27,12 @@
   - XXXetox
   - z_etoxws-api-v2.conf
   - z_etoxws.conf
+
+- include: install_pip_supervisord.yml
+  when: ansible_distribution_major_version == "6"
+
+- yum: name=supervisor
+  when: ansible_distribution_major_version == "7"
+
+
+  

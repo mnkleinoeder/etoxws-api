@@ -1,0 +1,12 @@
+
+
+- yum: name=supervisor state=absent
+
+- name: install recent version of supervisor from pypi
+  pip: name=supervisor state=present
+
+- template: src=supervisord.conf dest={{supervisord_conf}}
+
+- template: src=supervisord_init.d.rhel dest=/etc/init.d/supervisord mode=755
+- service: name=supervisord state=started enabled=yes
+

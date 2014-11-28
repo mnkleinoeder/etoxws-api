@@ -8,6 +8,8 @@
 - set_fact:
     postgres_service_name: postgresql
     python_version: 2.7
+    supervisord_conf: "/etc/supervisord.conf"
+    supervisord_conf_dir: "/etc/supervisor/conf.d"
 
 - name: install required packages
   apt: name="{{item}}" state=present

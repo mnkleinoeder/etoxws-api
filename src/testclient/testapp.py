@@ -54,7 +54,7 @@ def print_result(ids):
                 for r in results['results']:
                     print frmt%(_val(r, 'cmp_id'), _val(r, 'value'), _val(r, 'AD','value'), _val(r, 'RI','value'))
             else:
-                print "Job is not (yet) available: %s"%(results['status'])
+                print "Job is not (yet) available: %s (%s)"%(results['status'], results['msg'])
         else:
             print "Could not get job results: %s, %s"%(ret.status_code, ret.text)
 

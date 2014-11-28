@@ -1,6 +1,7 @@
 # Django settings for etoxwsapi project.
 import os
 import sys
+import socket
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -127,13 +128,15 @@ INSTALLED_APPS = (
     # 'django.contrib.admindocs',
 )
 
+_log_ident = BASE_URL.strip('/')
 # reasonable default for log file
 # either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
-if os.getuid() < 100: # system account
-    log_dir = "/var/tmp/etox-%s"%(os.getuid())
-else:
-    log_dir = os.path.join(ROOT_DIR, 'log')
+#if os.getuid() < 100: # system account
+#    log_dir = "/var/tmp/etoxwsapi-%s"%(os.getuid())
+#else:
+#    log_dir = os.path.join(ROOT_DIR, 'log')
+log_dir = "/var/tmp/%s-%s"%(_log_ident, os.getuid())
 
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
@@ -207,5 +210,20 @@ LOGGING = {
         },
     },
 }
+
+from kombu import Connection as _conn
+
+with _conn(BROKER_URL) as conn: #@UndefinedVariable
+    try:
+        simple_queue = conn.SimpleQueue('simple_queue')
+    except socket.error, e:
+        print "rabbitmq url: ", BROKER_URL #@UndefinedVariable
+        print "Warning: could not establish connection to rabbitmq: ",
+        if e.errno == 104:
+            print "Access problems."
+            print "Check that username, password and vhost are correct."
+        elif e.errno == 111:
+            print "Server process seems down."
+            print "Check with 'service rabbitmq-server status'"
 
 
