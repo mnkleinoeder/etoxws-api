@@ -1,14 +1,17 @@
 import os
 import sys 
 
-basepath = '/srv/www/webapps/etoxws-api'
+basepath = '{{ETOXWS_APPDIR}}'
 sys.path.append(os.path.join(basepath, 'src'))
 
-# path to virtual env
-sys.path.append('/opt/virtenv/etoxws-v2/lib/python2.6/site-packages')
+sys.path.append('{{etoxws_virtenv}}/lib/python{{python_version}}/site-packages')
+sys.path.append('{{RDKIT_DIR}}/lib/python{{python_version}}/site-packages')
 
-#rdkit_base = '/opt/rdkit/lib/python2.7/site-packages'
-#sys.path.append(rdkit_base)
+{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}
+{% if p|length > 0 %}
+sys.path.append('{{p}}')
+{% endif %} 
+{% endfor %} 
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings'
 
@@ -28,4 +31,3 @@ def application(environ, start_response):
     environ['PATH_INFO']  += "/"
 
   return _application(environ, start_response)
-

@@ -9,6 +9,6 @@ export PYTHONPATH=$PYTHONPATH:{{p}}
 {% endfor %} 
 export DJANGO_SETTINGS_MODULE=etoxwsapi.settings
 
-cd src/etoxwsapi
+cd {{ETOXWS_APPDIR}}/src/etoxwsapi
 
 echo run django with "python manage.py <action>"

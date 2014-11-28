@@ -5,6 +5,8 @@
     APACHE_SERVICE_NAME: apache2
     APACHE_USER: www-data
     APACHE_GROUP: www-data
+    APACHE_CONF_DIR: "/etc/apache2/sites-available"
+    APACHE_LOG_DIR: "/var/log/apache2"
 
 - name: Install Apache2
   apt: name="{{item}}" state=present

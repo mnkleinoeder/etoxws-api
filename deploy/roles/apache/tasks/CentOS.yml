@@ -5,6 +5,8 @@
     APACHE_SERVICE_NAME: httpd
     APACHE_USER: apache
     APACHE_GROUP: apache
+    APACHE_CONF_DIR: "/etc/httpd/conf.d"
+    APACHE_LOG_DIR: "/var/log/httpd"
 
 - name: install packages
   yum: name="{{item}}" state=latest
@@ -17,6 +19,34 @@
 - name: enable required modules
   lineinfile: >
     dest=/etc/httpd/conf/httpd.conf
-    line='LoadModule wsgi_module modules/mod_wsgi.so'
+    line='LoadModule {{item}}_module modules/mod_{{item}}.so'
+    insertbefore=BOF
+  with_items:
+  - ssl
+  - wsgi
+  notify: restart apache
+
+- name: enable required modules
+  lineinfile: >
+    dest=/etc/httpd/conf/httpd.conf
+    line='WSGISocketPrefix /var/run/wsgi'
     insertbefore=BOF
   notify: restart apache
+
+- name: disable non-standard docroot in brain-dead rhel 
+  lineinfile: >
+    dest=/etc/httpd/conf/httpd.conf
+    regexp='^DocumentRoot'
+    state=absent
+  notify: restart apache
+
+- file: path={{VHOST_CONF_DIR}} state=directory owner=root group=root
+
+- file: path={{APACHE_CONF_DIR}}/ssl.conf state=absent
+  notify: restart apache
+
+- template: src=ssl.conf dest={{APACHE_CONF_DIR}}/0-ssl.conf
+  notify: restart apache
+- template: src=vhost-template.j2 dest={{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf
+  notify: restart apache
+  

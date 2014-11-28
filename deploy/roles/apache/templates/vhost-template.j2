@@ -1,28 +1,26 @@
-
-{% if VHOST_USE_HTTP == "True" %}
+{% if APACHE_USE_HTTP == True %}
 <VirtualHost *:80>
-	ServerAdmin {{VHOST_SERVER_ADMIN}}
+	ServerAdmin {{APACHE_SERVER_ADMIN}}
 	ServerName  {{VHOST_SERVER_NAME}}
 	DocumentRoot {{VHOST_DOC_ROOT}}
-	LogLevel {{VHOST_LOG_LEVEL}}
-	CustomLog /var/log/apache2/{{VHOST_SERVER_NAME}}.com_access.log combined
-	ErrorLog  /var/log/apache2/{{VHOST_SERVER_NAME}}.com_error.log
-	Include {{VHOST_CONF_DIR}}/*.conf
+	LogLevel {{APACHE_LOG_LEVEL}}
+	CustomLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_access.log combined
+	ErrorLog  {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_error.log
+  Include {{VHOST_CONF_DIR}}/*.conf
 </VirtualHost>
 {% endif %}
 
-{% if VHOST_USE_HTTPS  == "True" %}
+{% if APACHE_USE_HTTPS  == True %}
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
-	ServerAdmin {{VHOST_SERVER_ADMIN}}
-	ServerName  {{VHOST_SERVER_NAME}}
-	DocumentRoot {{VHOST_DOC_ROOT}}
-
-    LogLevel {{VHOST_LOG_LEVEL}}
-    CustomLog /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_access.log combined
-    ErrorLog  /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_error.log
+  ServerAdmin {{APACHE_SERVER_ADMIN}}
+  ServerName  {{VHOST_SERVER_NAME}}
+  DocumentRoot {{VHOST_DOC_ROOT}}
+  LogLevel {{APACHE_LOG_LEVEL}}
+  CustomLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_access.log combined
+  ErrorLog  {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_error.log
 	<IfModule mod_rewrite.c>
-		RewriteLog /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_rewrite.log
+		RewriteLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl_rewrite.log
 		RewriteLogLevel 9
 	</IfModule>
 	SSLEngine on
@@ -42,14 +40,7 @@
 		nokeepalive ssl-unclean-shutdown \
 		downgrade-1.0 force-response-1.0
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
-	Include {{VHOST_CONF_DIR}}/*.conf
-    {% if VHOST_CONF_DIR != VHOST_CONF_DIR_SSL %}
-        {% if ansible_lsb.release == '10.04' or ansible_lsb.release == '12.04' %}
-            Include {{VHOST_CONF_DIR_SSL}}/*.conf
-        {% else %}
-            IncludeOptional {{VHOST_CONF_DIR_SSL}}/*.conf
-        {% endif %}
-    {% endif %}
+  Include {{VHOST_CONF_DIR}}/*.conf
 </VirtualHost>
 </IfModule>
 {% endif %}

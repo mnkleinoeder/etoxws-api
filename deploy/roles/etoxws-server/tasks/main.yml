@@ -6,6 +6,8 @@
 - set_fact: etoxws_pip={{etoxws_virtenv}}/bin/pip
 - set_fact: etoxws_python={{etoxws_virtenv}}/bin/python
 - set_fact: etoxws_celery={{etoxws_virtenv}}/bin/celery
+- set_fact: etoxws_wsgi={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.wsgi
+- set_fact: etoxws_conf={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.conf
 
 
 ###############################################################################
@@ -79,11 +81,7 @@
 - template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
 - template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
-#- django_manage: >
-#      command=syncdb
-#      settings=etoxwsapi.settings
-#      pythonpath={{ETOXWS_APPDIR}}/src
-#      virtualenv={{ etoxws_virtenv }}
+- shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
 
 ###############################################################################
 # enable the task management toolchain
@@ -99,8 +97,8 @@
                  write_priv=.*
                  state=present
 
-- group: name={{ETOXWS_NAME}} system=yes state=present
-- user: name={{ETOXWS_NAME}} group={{ETOXWS_NAME}} system=yes state=present
+#- group: name={{ETOXWS_NAME}} system=yes state=present
+#- user: name={{ETOXWS_NAME}} group={{ETOXWS_NAME}} system=yes state=present
 
 - file: path={{item}} state=directory
   with_items:
@@ -112,5 +110,14 @@
 
 - supervisorctl: name={{ETOXWS_NAME}} state=restarted
   when: cel|changed
+
+###############################################################################
+# apache setup
+###############################################################################
+
+- template: src="etoxws.wsgi.py.j2" dest={{etoxws_wsgi}}
+  notify: restart apache
+- template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}
+  notify: restart apache
 
 

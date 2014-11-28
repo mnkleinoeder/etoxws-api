@@ -19,11 +19,21 @@
 - lineinfile: dest="{{APACHE_PORTS_FILE}}" regexp='\s*[l|L]isten\s+443' line='Listen 443' state={{abs_or_pres}} insertbefore=BOF
   notify: restart apache
 
-- name: webapps dir
-  file: path={{APACHE_WEBAPP_DIR}} state=directory owner=root group=root
+- name: apache dirs
+  file: path={{item}} state=directory owner=root group=root
+  with_items:
+  - "{{APACHE_DOC_ROOT}}"
+  - "{{APACHE_WEBAPP_DIR}}"
+  - "{{VHOST_DOC_ROOT}}"
+  - "{{VHOST_CONF_DIR}}"
+  - "{{VHOST_SSL_DIR}}"
+
+- include: inc_selfsigned_cert.yml
+  when: APACHE_SELFSIGNED_CERT
 
 - name: ensure that we did not mess up apache config
   command: "{{APACHE_CTL}} -t"
+  changed_when: false
 
 #
 # TODO: brute-force attack protection
