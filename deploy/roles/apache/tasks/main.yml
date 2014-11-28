@@ -1,0 +1,69 @@
+---
+- include: Ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
+
+- include: CentOS.yml
+  when: ansible_distribution == "CentOS"
+
+- set_fact: abs_or_pres=absent
+- set_fact: abs_or_pres=present
+  when: APACHE_USE_HTTP
+
+- lineinfile: dest="{{APACHE_PORTS_FILE}}" regexp='\s*[l|L]isten\s+80' line='Listen 80' state={{abs_or_pres}} insertbefore=BOF
+  notify: restart apache
+
+- set_fact: abs_or_pres=absent
+- set_fact: abs_or_pres=present
+  when: APACHE_USE_HTTPS
+
+- lineinfile: dest="{{APACHE_PORTS_FILE}}" regexp='\s*[l|L]isten\s+443' line='Listen 443' state={{abs_or_pres}} insertbefore=BOF
+  notify: restart apache
+
+- name: webapps dir
+  file: path={{APACHE_WEBAPP_DIR}} state=directory owner=root group=root
+
+- name: ensure that we did not mess up apache config
+  command: "{{APACHE_CTL}} -t"
+
+#
+# TODO: brute-force attack protection
+# - fail2ban
+# - mod_security? (http://snippets.aktagon.com/snippets/563-brute-force-authentication-protection-with-modsecurity)
+# - mod_evasive? (http://wiki.ubuntuusers.de/Apache/mod_evasive)
+#
+#- include: inc_selfsigned_cert.yml
+#  when: VHOST_USE_SELFSIGNED_CERT
+#
+#- include: inc_copy_ssl_files.yml
+#  when: not VHOST_USE_SELFSIGNED_CERT
+#
+#- name: restricting file permissions of SSL key file
+#  file: path={{VHOST_SSL_DIR}}/{{VHOST_SSL_KEYFILE}} mode=0400 owner=root group=root
+#
+#- name: apache docroot
+#  file: path={{VHOST_DOC_ROOT}} state=directory owner=root group=root
+#
+#- name: create conf location
+#  file: path={{item}} state=directory owner=root group=root
+#  with_items:
+#  - "{{VHOST_CONF_DIR}}"
+#  - "{{VHOST_CONF_DIR_SSL}}"
+#
+#- name: copy basic config file
+#  template: src=vhost_common.conf.j2 dest={{VHOST_CONF_DIR}}/00-common.conf
+#  notify: restart apache
+#
+#- name: create vhost-conf
+#  template: src=vhost-template.j2 dest={{VHOST_CONF_FILE}} owner=root group=root mode=0444
+#  notify: restart apache
+#
+#- name: Enable vhosts-conf
+#  file: >
+#    src="/etc/apache2/sites-available/{{VHOST_SERVER_NAME}}.conf"
+#    dest="/etc/apache2/sites-enabled/{{VHOST_SERVER_NAME}}.conf"
+#    state=link
+#  notify: restart apache
+#
+#- name: create file to check vhost via browser
+#  copy: content="This is {{VHOST_SERVER_NAME}} ({{ansible_all_ipv4_addresses | join('/') }})"
+#    dest="{{VHOST_DOC_ROOT}}/trace"

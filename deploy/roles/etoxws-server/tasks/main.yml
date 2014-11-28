@@ -1,0 +1,95 @@
+---
+###############################################################################
+# local variables
+###############################################################################
+- set_fact: etoxws_virtenv=/opt/virtualenv/{{ETOXWS_NAME}}
+- set_fact: etoxws_pip={{etoxws_virtenv}}/bin/pip
+- set_fact: etoxws_python={{etoxws_virtenv}}/bin/python
+
+###############################################################################
+# OS dependent tasks
+###############################################################################
+- include: Ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
+
+- include: CentOS.yml
+  when: ansible_distribution == "CentOS"
+
+###############################################################################
+# setting up postgres
+# we suppose that postgres has been installed already
+# we just check that we have superuser access via sudo -u postgres
+###############################################################################
+#- lineinfile: dest={{postgres_main_conf}}
+#    state=absent
+#    regexp="^local.*md5$"
+#  register: pg1
+- lineinfile: dest={{postgres_main_conf}}
+    line="local   all         all                                         md5"
+    regexp="^local.*md5$"
+  register: pg1
+  
+- lineinfile: dest={{postgres_main_conf}}
+    line="local   all             postgres                                peer"
+    regexp="^local.*peer$"
+  register: pg2
+  
+- service: name={{postgres_service_name}} state=restarted
+  when: pg1|changed or pg2|changed
+
+- postgresql_db: name={{ETOXWS_NAME}}
+                 encoding='UTF-8'
+                 lc_collate='en_US.UTF-8'
+                 lc_ctype='en_US.UTF-8'
+                 template='template0'
+  sudo: yes
+  sudo_user: postgres
+
+- postgresql_user: db={{ETOXWS_NAME}} name={{ETOXWS_NAME}} password={{ETOXWS_NAME}}
+  sudo: yes
+  sudo_user: postgres
+
+###############################################################################
+# get the webapp code
+###############################################################################
+- name: fetch code from github
+  git: >
+    repo="https://github.com/mnkleinoeder/etoxws-api.git"
+    dest="{{ETOXWS_APPDIR}}"
+
+###############################################################################
+# setting up the virtual env
+###############################################################################
+- file: path=/opt/virtualenv state=directory mode=755
+
+- shell: virtualenv {{etoxws_virtenv}}
+    creates={{etoxws_virtenv}}
+
+- pip: requirements={{ETOXWS_APPDIR}}/src/etoxwsapi/req.pip
+    executable={{etoxws_pip}}
+
+###############################################################################
+# enable the task management toolchain
+###############################################################################
+
+- service: name=rabbitmq-server state=started
+
+- rabbitmq_vhost: name={{ETOXWS_NAME}} state=present
+
+- rabbitmq_user: user={{ETOXWS_NAME}}
+                 password={{ETOXWS_NAME}}
+                 vhost={{ETOXWS_NAME}}
+                 configure_priv=.*
+                 read_priv=.*
+                 write_priv=.*
+                 state=present
+
+# start celery as service
+
+###############################################################################
+# configuration of the webapp
+###############################################################################
+
+- template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings_local.py
+- template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=755
+

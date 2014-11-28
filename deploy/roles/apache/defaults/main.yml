@@ -1,0 +1,7 @@
+---
+APACHE_USE_HTTP: false
+APACHE_USE_HTTPS: true
+
+APACHE_SELFSIGNED_CERT: true
+
+APACHE_WEBAPP_DIR: "/srv/www/webapps"

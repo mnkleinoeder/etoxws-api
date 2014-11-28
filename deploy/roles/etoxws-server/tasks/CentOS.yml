@@ -1,0 +1,29 @@
+---
+# why the hack they have the version number in the package name? or provide a meta-package ...
+- set_fact:
+    postgres_pkg_name: postgresql92
+    postgres_main_conf: /opt/PostgreSQL/9.2/data/pg_hba.conf
+    postgres_service_name: postgresql-9.2
+    python_version: 2.6
+   
+  when: ansible_distribution_major_version == "6"
+
+- fail: msg="postgres package not defined for CentOS version"
+  when: not postgres_pkg_name
+
+- name: install required packages
+  yum: name="{{item}}" state=present
+  with_items:
+  - rabbitmq-server
+  - libyaml-devel
+  - "{{postgres_pkg_name}}"
+  - python-psycopg2
+  - sudo
+
+- name: cleanup old files from previous versions
+  file: path=/etc/httpd/conf.d/{{item}} state=absent
+  with_items:
+  - wsgi.conf
+  - XXXetox
+  - z_etoxws-api-v2.conf
+  - z_etoxws.conf

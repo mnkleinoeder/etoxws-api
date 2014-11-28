@@ -1,20 +1,11 @@
 import json
 from uuid import uuid1
-import multiprocessing
-import subprocess
-import os
-import socket
-import sys
 import logging
 import time
-import signal
 
 from django.http import HttpResponse
-from django.shortcuts import render_to_response, render
+#from django.shortcuts import render_to_response, render
 from django.views.generic.base import View
-from django.http.response import Http404
-from django.middleware import csrf
-from django.conf import settings
 
 from etoxwsapi.v2 import schema
 
@@ -24,6 +15,8 @@ from cStringIO import StringIO
 
 #from etoxwsapi.v2.jobs import tasks
 import etoxwsapi.v2.jobs.tasks
+from celery.result import AsyncResult
+from etoxwsapi.djcelery import jobmgr
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +116,7 @@ class JobsView(View):
             job = Job(start_time=time.time(), job_id=job_id, status="JOB_UNKNOWN", nrecord=nrecord)
             job.save()
             try:
-#				logger.info("Submitting job for '%s': %s"%(calc_info['id'], job_id))
+                logger.info("Submitting job for '%s': %s"%(calc_info['id'], job_id))
                 calc_info_schema = schema.get('calculation_info')
                 calc_info_schema.validate(calc_info)
 
@@ -150,6 +143,13 @@ class JobHandlerView(View):
         try:
             job = Job.objects.get(job_id=job_id)
             job_status = _conv_job(job)
+            
+            if job_status['status'] == "JOB_UNKNOWN":
+                try:
+                    cjob = AsyncResult(job_id)
+                    job_status['status'] = _map_state(cjob.state)
+                except Exception, e:
+                    logger.warn("Failed to query celery for job: %s (%s)"%(job_id, e))
 
             return HttpResponse(job_status.to_json())
         except Job.DoesNotExist:
@@ -161,11 +161,7 @@ class JobHandlerView(View):
     def delete(self, request, job_id):
         try:
             job = Job.objects.get(job_id=job_id)
-            try:
-                print "killing job", job.pid
-                os.kill(job.pid, signal.SIGKILL)
-            except OSError, e:
-                logger.warn("Failed to kill job: %s (job_id: %s)"%(e, job_id))
+            jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
 
             job.status = "JOB_CANCELLED"
             job.completion_time = time.time()

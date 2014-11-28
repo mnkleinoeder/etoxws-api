@@ -12,9 +12,12 @@ import logging
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
+#TEST_FILE = "/home/thomas/w44/moses3/testdata/maybridge.1-1000.sdf"
+TEST_FILE = os.path.join(THIS_DIR, "tiny.sdf")
+
 #BASE_URL = 'http://192.168.56.100/etoxwsapi/v2'
 BASE_URL = 'http://localhost:8001/etoxwsapi/v2'
-#BASE_URL = 'http://192.168.178.217/etoxwsapi/v2'
+#BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
 
 def _get(url):
     ret = requests.get(url)
@@ -24,6 +27,18 @@ def _get(url):
         logging.debug(ret.content)
         raise Exception("GET from '%s' failed with %s"%(url, ret.status_code))
     return ret
+
+def _val(r, k1, k2 = None):
+    try:
+        if k2:
+            return r[k1][k2]
+        else:
+            return r[k1]
+    except KeyError:
+        return 'no value!'
+    except Exception, e:
+        print type(e)
+        raise e
 
 def print_result(ids):
     frmt = '| %-7s | %-10s | %-10s | %-10s |'
@@ -37,7 +52,7 @@ def print_result(ids):
                 print frmt%("cmp_id", "value", "AD", "RI")
                 print '-' * len(frmt%('','','',''))
                 for r in results['results']:
-                    print frmt%(r['cmp_id'], r['value'], r['AD']['value'], r['RI']['value'])
+                    print frmt%(_val(r, 'cmp_id'), _val(r, 'value'), _val(r, 'AD','value'), _val(r, 'RI','value'))
             else:
                 print "Job is not (yet) available: %s"%(results['status'])
         else:
@@ -52,7 +67,7 @@ def submit_jobs(models):
 
     req_obj.req_calculations = models
 
-    fname = os.path.join(THIS_DIR, "tiny.sdf")
+    fname = TEST_FILE
     with open(fname) as fp:
         req_obj.sdf_file = fp.read()
 
@@ -75,7 +90,7 @@ def delete_job(job_id):
     ret = requests.delete(BASE_URL + '/jobs/' + job_id)
     print ret.status_code, ret.text
 
-def observing_jobs(job_ids, interval = 5, duration = 0):
+def observing_jobs(job_ids, interval = 5, duration = 0, cancel_after=-1):
     print "Observing running jobs."
     if duration:
         print "Timeout: %d seconds"%(duration)
@@ -84,15 +99,17 @@ def observing_jobs(job_ids, interval = 5, duration = 0):
     while(poll):
         poll = False
         for job_id in job_ids:
+            if i == cancel_after:
+                delete_job(job_id)
             url = '/'.join((BASE_URL, "/jobs/%s"%(job_id)))
             ret = _get(url)
             stat = ret.json()
             print "status for '%s': %s"%(job_id, stat)
             if stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
                 poll = True
+        i += 1
         if duration > 0:
-            i += interval
-            if i >= duration:
+            if i*interval >= duration:
                 poll = False
         if poll:
             time.sleep(interval)
@@ -117,7 +134,7 @@ def main(argv=None):
         for job_id in job_ids:
             assert(job_id in all_jobs)
 
-        observing_jobs(job_ids)
+        observing_jobs(job_ids) #, cancel_after=3)
 
         print_result(zip(job_ids, model_ids) )
 

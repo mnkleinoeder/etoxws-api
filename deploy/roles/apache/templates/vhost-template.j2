@@ -1,0 +1,55 @@
+
+{% if VHOST_USE_HTTP == "True" %}
+<VirtualHost *:80>
+	ServerAdmin {{VHOST_SERVER_ADMIN}}
+	ServerName  {{VHOST_SERVER_NAME}}
+	DocumentRoot {{VHOST_DOC_ROOT}}
+	LogLevel {{VHOST_LOG_LEVEL}}
+	CustomLog /var/log/apache2/{{VHOST_SERVER_NAME}}.com_access.log combined
+	ErrorLog  /var/log/apache2/{{VHOST_SERVER_NAME}}.com_error.log
+	Include {{VHOST_CONF_DIR}}/*.conf
+</VirtualHost>
+{% endif %}
+
+{% if VHOST_USE_HTTPS  == "True" %}
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+	ServerAdmin {{VHOST_SERVER_ADMIN}}
+	ServerName  {{VHOST_SERVER_NAME}}
+	DocumentRoot {{VHOST_DOC_ROOT}}
+
+    LogLevel {{VHOST_LOG_LEVEL}}
+    CustomLog /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_access.log combined
+    ErrorLog  /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_error.log
+	<IfModule mod_rewrite.c>
+		RewriteLog /var/log/apache2/{{VHOST_SERVER_NAME}}-ssl_rewrite.log
+		RewriteLogLevel 9
+	</IfModule>
+	SSLEngine on
+	SSLProtocol All -SSLv2 -SSLv3
+	SSLCertificateFile    {{VHOST_SSL_DIR}}/{{VHOST_SSL_CERTFILE}}
+	SSLCertificateKeyFile {{VHOST_SSL_DIR}}/{{VHOST_SSL_KEYFILE}}
+	{% if VHOST_SSL_CACERTFILE %}
+	SSLCACertificateFile  {{VHOST_SSL_DIR}}/{{VHOST_SSL_CACERTFILE}}
+	{% endif %}
+	<FilesMatch "\.(cgi|shtml|phtml|php)$">
+		SSLOptions +StdEnvVars
+	</FilesMatch>
+	<Directory /usr/lib/cgi-bin>
+		SSLOptions +StdEnvVars
+	</Directory>
+	BrowserMatch "MSIE [2-6]" \
+		nokeepalive ssl-unclean-shutdown \
+		downgrade-1.0 force-response-1.0
+	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+	Include {{VHOST_CONF_DIR}}/*.conf
+    {% if VHOST_CONF_DIR != VHOST_CONF_DIR_SSL %}
+        {% if ansible_lsb.release == '10.04' or ansible_lsb.release == '12.04' %}
+            Include {{VHOST_CONF_DIR_SSL}}/*.conf
+        {% else %}
+            IncludeOptional {{VHOST_CONF_DIR_SSL}}/*.conf
+        {% endif %}
+    {% endif %}
+</VirtualHost>
+</IfModule>
+{% endif %}

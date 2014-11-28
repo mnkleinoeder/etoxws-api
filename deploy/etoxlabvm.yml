@@ -1,0 +1,12 @@
+---
+- hosts: etoxlab
+  vars:
+  - APACHE_USE_HTTP: true
+#  - ETOXWS_IMPL_V2:
+#      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
+#      PYPCK: "views2"
+#      PYCLASS: "WS2"
+#  - RDKIT_DIR: "/opt/RDKIT"
+  roles:
+  - apache
+  - etoxws-server

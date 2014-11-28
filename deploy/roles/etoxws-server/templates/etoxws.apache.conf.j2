@@ -5,10 +5,9 @@
 </Directory>
 
 <IfModule mod_wsgi.c>
-  WSGIScriptAlias /etoxwsapi /srv/www/webapps/etoxws-api/deploy/etoxws.wsgi
+  WSGIScriptAlias /etoxwsapi {{VHOST_CONF_DIR}}/etoxws.wsgi
   WSGIApplicationGroup %{GLOBAL}
   WSGIDaemonProcess etoxwsapi processes=15 threads=1
   WSGIProcessGroup etoxwsapi
 </IfModule>
-
 

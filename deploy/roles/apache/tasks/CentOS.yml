@@ -1,0 +1,22 @@
+---
+- set_fact:
+    APACHE_PORTS_FILE: "/etc/httpd/conf/httpd.conf"
+    APACHE_CTL: apachectl
+    APACHE_SERVICE_NAME: httpd
+    APACHE_USER: apache
+    APACHE_GROUP: apache
+
+- name: install packages
+  yum: name="{{item}}" state=latest
+  with_items:
+  - httpd
+  - mod_ssl
+  - mod_wsgi
+  notify: restart apache
+
+- name: enable required modules
+  lineinfile: >
+    dest=/etc/httpd/conf/httpd.conf
+    line='LoadModule wsgi_module modules/mod_wsgi.so'
+    insertbefore=BOF
+  notify: restart apache

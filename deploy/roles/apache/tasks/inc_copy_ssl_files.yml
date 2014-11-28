@@ -1,0 +1,10 @@
+---
+- copy: src="{{COMMON_LOCAL_DATA_DIR}}/ssl/{{VHOST_SERVER_NAME}}/{{item}}" dest="{{VHOST_SSL_DIR}}/{{item}}"
+  with_items:
+  - "{{VHOST_SSL_KEYFILE}}"
+  - "{{VHOST_SSL_CERTFILE}}"
+
+- copy: src="{{COMMON_LOCAL_DATA_DIR}}/ssl/{{VHOST_SERVER_NAME}}/{{item}}" dest="{{VHOST_SSL_DIR}}/{{item}}"
+  with_items:
+  - "{{VHOST_SSL_CACERTFILE}}"
+  when: VHOST_SSL_CACERTFILE != ""

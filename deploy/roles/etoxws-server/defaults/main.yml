@@ -1,0 +1,15 @@
+---
+ETOXWS_NAME: etoxwsapi
+ETOXWS_APPDIR: "{{APACHE_WEBAPP_DIR}}/{{ETOXWS_NAME}}"
+
+ETOXWS_IMPL_V1:
+  PYPATH: ""
+  PYPCK: "sampleimpl.ws_impl_v1"
+  PYCLASS: "WS1"
+
+ETOXWS_IMPL_V2:
+  PYPATH: ""
+  PYPCK: "sampleimpl.ws_impl_v2"
+  PYCLASS: "WS2"
+
+RDKIT_DIR: "/opt/rdkit"

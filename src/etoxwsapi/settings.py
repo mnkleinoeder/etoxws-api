@@ -1,6 +1,5 @@
 # Django settings for etoxwsapi project.
 import os
-import logging
 import sys
 
 DEBUG = True
@@ -23,25 +22,6 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-
-#DATABASES = {
-#    'default': {
-#        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-#        'NAME': os.path.join(PROJECT_DIR, 'local.db'),                      # Or path to database file if using sqlite3.
-#        'USER': '',                      # Not used with sqlite3.
-#        'PASSWORD': '',                  # Not used with sqlite3.
-#        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-#        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-#    }
-#}
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "etoxwsapi_dev",
-        'USER': "etoxwsapi_dev",
-        'PASSWORD': "etoxwsapi_dev"
-    }
-}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -163,7 +143,6 @@ LOG_LEVEL  = "ERROR"
 LOG_TO_STDOUT = False
 
 # CELERY SETTINGS
-BROKER_URL = 'amqp://etoxws:etoxws@localhost:5672/etoxws'
 CELERY_RESULT_BACKEND = 'amqp'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
@@ -180,6 +159,10 @@ except Exception, e:
 for ws in ('ETOXWS_IMPL_V1', 'ETOXWS_IMPL_V2'):
     if ws not in dir():
         raise Exception("Webservice implementation class required: %s"%(ws))
+
+for s in ('BROKER_URL', 'DATABASES'):
+    if s not in dir():
+        raise Exception("Setting '%s' must be set in settings_local.py"%(s))
 
 # see http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager
 CELERY_ALWAYS_EAGER = (not ETOXWS_IMPL_V2_ASYNC)

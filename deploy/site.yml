@@ -1,0 +1,7 @@
+---
+- hosts: all
+  tasks:
+  # makes variable in group_vars/ available to all roles
+  - group_by: key={{ansible_distribution}}
+
+- include: etoxlabvm.yml
