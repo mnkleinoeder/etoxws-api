@@ -1,5 +1,7 @@
+<<<<<<< HEAD
 ansible==1.8.1
-Django==1.7.1
+Django==1.6.8
+#Django==1.7.1
 Fabric==1.8.0
 celery==3.1.10
 # rather old ipython to be compatible w/ python2.6
