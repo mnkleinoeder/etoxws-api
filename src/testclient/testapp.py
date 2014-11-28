@@ -16,17 +16,18 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_FILE = os.path.join(THIS_DIR, "tiny.sdf")
 
 #BASE_URL = 'http://192.168.56.100/etoxwsapi/v2'
-BASE_URL = 'http://localhost:8001/etoxwsapi/v2'
-#BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
+#BASE_URL = 'http://localhost:8001/etoxwsapi/v2'
+BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
 
 def _get(url):
     ret = requests.get(url)
 
-    if ret.status_code != 200:
-        logging.debug("Body of response:")
-        logging.debug(ret.content)
+    if ret.status_code == 200:
+        return ret
+    else:
+        logging.critical("Body of response:")
+        logging.critical(ret.content)
         raise Exception("GET from '%s' failed with %s"%(url, ret.status_code))
-    return ret
 
 def _val(r, k1, k2 = None):
     try:

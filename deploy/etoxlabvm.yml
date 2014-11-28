@@ -9,4 +9,5 @@
   - RDKIT_DIR: "/opt/RDKIT"
   roles:
   - apache
-  - etoxws-server
+  - {role: etoxws-server }
+  - {role: etoxws-server, ETOXWS_NAME: botox }

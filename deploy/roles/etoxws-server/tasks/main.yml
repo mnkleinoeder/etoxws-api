@@ -79,6 +79,12 @@
 - template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
 - template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
+#- django_manage: >
+#      command=syncdb
+#      settings=etoxwsapi.settings
+#      pythonpath={{ETOXWS_APPDIR}}/src
+#      virtualenv={{ etoxws_virtenv }}
+
 ###############################################################################
 # enable the task management toolchain
 ###############################################################################
@@ -101,7 +107,7 @@
   - "{{supervisord_conf_dir}}"
   - "/var/log/celery"
 
-- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/etoxws.celeryd.conf mode=644
+- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel
 
 - supervisorctl: name={{ETOXWS_NAME}} state=restarted

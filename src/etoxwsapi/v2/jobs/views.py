@@ -17,18 +17,12 @@ from cStringIO import StringIO
 import etoxwsapi.v2.jobs.tasks
 from celery.result import AsyncResult
 from etoxwsapi.djcelery import jobmgr
+import sys
+import traceback
 
 logger = logging.getLogger(__name__)
 
-class DummyLock():
-    """
-    Dummy for running in sync mode w/ same parameters
-    """
-    def acquire(self):
-        pass
-    def release(self):
-        pass
-
+# celery status codes:
 #PENDING
 #STARTED
 #SUCCESS
@@ -36,6 +30,7 @@ class DummyLock():
 #RETRY
 #REVOKED
 
+# API status codes:
 #"JOB_UNKNOWN",
 #"JOB_REJECTED",
 #"JOB_ACCEPTED",
@@ -75,13 +70,6 @@ def _conv_job(job):
         job_status['results'] = results
     return job_status
 
-class JobInfo:
-    def __init__(self, ci):
-        self.calc_info = ci
-        self.job_id = None
-        self.initial_state = None
-        self.msg = ""
-
 def _nrecord(sdf_file):
     nrec = 0
     for line in StringIO(sdf_file):
@@ -89,18 +77,29 @@ def _nrecord(sdf_file):
             nrec += 1
     return nrec
 
+def _wrap_method(method, request):
+    try:
+        return method(request)
+    except Exception:
+        msg = json.dumps(traceback.format_exc().splitlines())
+        return HttpResponse(msg, status = 500, content_type='application/json')
+
 class JobsView(View):
+    def post(self, request):
+        return _wrap_method(self._post, request)
     def get(self, request):
+        return _wrap_method(self._get, request)
+
+    def _get(self, request):
         q = Job.objects.all()
         job_ids = [ j.job_id for j in q ]
         jsondata = json.dumps(job_ids)
         request.META["CSRF_COOKIE_USED"] = True
         return HttpResponse(jsondata, content_type='application/json')
 
-    def post(self, request):
+    def _post(self, request):
         logger.info("Calculation request from %s"%(request.META['REMOTE_ADDR']))
         calc_req_schema = schema.get('calculation_request')
-        job_status_schema = schema.get('job_status')
         try:
             calc_request = calc_req_schema.loads(request.body)
             sdf_file = calc_request['sdf_file']
