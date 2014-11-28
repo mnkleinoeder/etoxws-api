@@ -129,6 +129,9 @@ INSTALLED_APPS = (
 )
 
 _log_ident = BASE_URL.strip('/')
+if not _log_ident:
+    _log_ident = 'etoxwsapi'
+
 # reasonable default for log file
 # either in /var/tmp for system account (apache or www-data)
 # or in project dir if ran as user
