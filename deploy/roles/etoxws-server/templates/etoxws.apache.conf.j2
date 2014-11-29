@@ -1,18 +1,20 @@
+<IfModule mod_wsgi.c>
 
 <Directory {{ETOXWS_APPDIR}}>
   Order allow,deny
   Allow from all
 </Directory>
 
-#WSGIDaemonProcess example.com python-path=/path/to/mysite.com:/path/to/venv/lib/python2.7/site-packages
-<IfModule mod_wsgi.c>
-{% for t1, t2 in (('!', ''), ('', '-ssl'))  %}
-<IfModule {{t1}}mod_ssl.c>
+{% if _ssl  %}
+<IfModule mod_ssl.c>
+{% endif %}
   WSGIScriptAlias /{{ETOXWS_NAME}} {{etoxws_wsgi}}
-  WSGIApplicationGroup %{GLOBAL}{{t2}}
-  WSGIDaemonProcess {{ETOXWS_NAME}}{{t2}} processes=15 threads=1 python-path={{etoxws_virtenv}}/lib/python{{python_version}}/site-packages
-  WSGIProcessGroup {{ETOXWS_NAME}}{{t2}}
+  WSGIApplicationGroup %{GLOBAL}{{_ssl}}
+  WSGIDaemonProcess {{ETOXWS_NAME}}{{_ssl}} processes=15 threads=1 python-path={{etoxws_virtenv}}/lib/python{{python_version}}/site-packages
+  WSGIProcessGroup {{ETOXWS_NAME}}{{_ssl}}
+{% if _ssl %}
 </IfModule>
-{% endfor %}
+{% endif %}
+
 </IfModule>
 

@@ -17,10 +17,12 @@ TEST_FILE = os.path.join(THIS_DIR, "tiny.sdf")
 
 #BASE_URL = 'http://192.168.56.100/etoxwsapi/v2'
 #BASE_URL = 'http://localhost:8001/etoxwsapi/v2'
-BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
+#BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
+BASE_URL = 'https://192.168.178.217/etoxwsapi_dev/v2'
 
+SSL_VERIFY=False
 def _get(url):
-    ret = requests.get(url)
+    ret = requests.get(url, verify=SSL_VERIFY)
 
     if ret.status_code == 200:
         return ret
@@ -46,7 +48,7 @@ def print_result(ids):
     for (job_id,model_id) in ids:
         print "==========================================================================="
         print "Results for model '%s' (job: %s)\n"%(model_id, job_id)
-        ret = requests.get('/'.join((BASE_URL, 'jobs', job_id)))
+        ret = _get('/'.join((BASE_URL, 'jobs', job_id)))
         if ret.status_code == 200:
             results = json.loads(ret.text)
             if results['status'] == "JOB_COMPLETED":
@@ -72,7 +74,7 @@ def submit_jobs(models):
     with open(fname) as fp:
         req_obj.sdf_file = fp.read()
 
-    req_ret = requests.post(BASE_URL+"/jobs/", data = req_obj.to_json())
+    req_ret = requests.post(BASE_URL+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY)
 
     if req_ret.status_code == 200:
         job_ids = list()
@@ -88,7 +90,7 @@ def submit_jobs(models):
     return job_ids
 
 def delete_job(job_id):
-    ret = requests.delete(BASE_URL + '/jobs/' + job_id)
+    ret = requests.delete(BASE_URL + '/jobs/' + job_id, verify=SSL_VERIFY)
     print ret.status_code, ret.text
 
 def observing_jobs(job_ids, interval = 5, duration = 0, cancel_after=-1):

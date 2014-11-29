@@ -7,6 +7,7 @@
 	CustomLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_access.log combined
 	ErrorLog  {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_error.log
   Include {{VHOST_CONF_DIR}}/*.conf
+  Include {{VHOST_CONF_DIR}}/*.conf-nossl
 </VirtualHost>
 {% endif %}
 
@@ -41,6 +42,7 @@
 		downgrade-1.0 force-response-1.0
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
   Include {{VHOST_CONF_DIR}}/*.conf
+  Include {{VHOST_CONF_DIR}}/*.conf-ssl
 </VirtualHost>
 </IfModule>
 {% endif %}

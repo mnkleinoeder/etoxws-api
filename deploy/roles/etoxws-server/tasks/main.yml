@@ -117,7 +117,13 @@
 
 - template: src="etoxws.wsgi.py.j2" dest={{etoxws_wsgi}}
   notify: restart apache
-- template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}
+
+- set_fact: _ssl=""
+- template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}-nossl
+  notify: restart apache
+
+- set_fact: _ssl="-ssl"
+- template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}-ssl
   notify: restart apache
 
 
