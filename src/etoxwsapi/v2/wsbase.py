@@ -36,16 +36,21 @@ class WebserviceImplementationBase(object):
     def pmmdinfo_impl(self):
         """
         """
+        info = dict()
+        for t in ('PMMD name', 'PMMD status', 'Provider', 'Administrator'):
+            info[t] = 'n/a'
         try:
-            info = dict()
             with open('/etc/etoxws-release', 'r') as rel_info:
                 info = dict()
                 for l in rel_info:
-                    t = l.split(':', 1)
-                    info[t[0].strip()] = t[1].strip()
-            return json.dumps(info) 
+                    try:
+                        t = l.split(':', 1)
+                        info[t[0].strip()] = t[1].strip()
+                    except:
+                        pass
         except Exception, e:
             print e
+        return json.dumps(info) 
 
     def pmmdinfo(self):
         return self.pmmdinfo_impl()
