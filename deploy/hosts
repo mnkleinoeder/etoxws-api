@@ -1,8 +1,8 @@
-[etoxlab_local]
-localhost
-
 [etoxlab]
+###############################################################################
 # whatever IP or hostname of eTOXlab to be configured
-#192.168.0.233
-192.168.178.217
+# use localhost when running within eTOXlab or your development machine
+# otherwise add all machine IP's to deploy to
+###############################################################################
+localhost
 #192.168.56.152

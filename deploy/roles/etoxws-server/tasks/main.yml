@@ -33,9 +33,16 @@
     regexp="^local.*md5$"
   register: pg1
   
+# order is important: next line must come before the md5 line
+# otherwise 'sudo - postgres psql' fails
+- name: remove peer line in order to trigger correct order
+  lineinfile: dest={{postgres_main_conf}}
+    regexp="^local.*peer$"
+    state=absent
 - lineinfile: dest={{postgres_main_conf}}
     line="local   all             postgres                                peer"
     regexp="^local.*peer$"
+    insertbefore='^local.*md5$'
   register: pg2
   
 - service: name={{postgres_service_name}} state=restarted
@@ -56,10 +63,11 @@
 ###############################################################################
 # get the webapp code
 ###############################################################################
+#    repo="/root/etoxws-api/"
 #    repo="https://github.com/mnkleinoeder/etoxws-api.git"
 - name: fetch code from github
   git: >
-    repo="/root/etoxws-api/"
+    repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
 
 ###############################################################################
