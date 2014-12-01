@@ -165,7 +165,7 @@ ETOXWS_IMPL_V2:
 
    ETOXWS_IMPL_V2:
       PYPATH: "/home/modeler/soft/eTOXlab/ws/"
-      PYPCK: "sampleimpl.ws_impl_v2"
+      PYPCK: "views2"
       PYCLASS: "WS2"
 
 ETOXWS_NPROC
@@ -190,7 +190,7 @@ Requires the etoxws virtual env loaded.
 
    ~$ . /opt/virtualenv/etoxwsapi/bin/activate
    (etoxws-v2)~$ cd ~/git/etoxws-api/src/testclient
-   (etoxws-v2)~/git/etoxws-api/src/testclient$ 
+   (etoxws-v2)~/git/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
    (etoxws-v2)~/git/etoxws-api/src/testclient$ python testapp.py --help
    usage: testapp.py [-h] [-b BASEURL] [-l LOGLEV] [-t TESTFILE] [-p N] [-d N]
                      [-c N]
