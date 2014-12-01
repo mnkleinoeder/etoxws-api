@@ -96,7 +96,7 @@
 # enable the task management toolchain
 ###############################################################################
 
-- service: name=rabbitmq-server state=started
+- service: name=rabbitmq-server state=started enabled=yes
 - rabbitmq_vhost: name={{MQ_VHOST}} state=present
 - rabbitmq_user: user={{MQ_USERNAME}}
                  password={{MQ_PASSWD}}
