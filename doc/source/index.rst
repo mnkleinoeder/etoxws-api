@@ -9,6 +9,7 @@ eTOX webservice API v2's documentation
 Contents:
 
 .. toctree::
+   :maxdepth: 2
    
    intro
    apispec
