@@ -121,13 +121,20 @@ You should be ready to run ansible:
 
 .. code-block:: bash
 
-   (ansible)~/upgrade$ ansible-playbook site.yml -vv
+   (ansible)~/upgrade/etoxws-api/deploy$ ansible-playbook site.yml -vv
 
 Ansible should now download all required packages and bits-and-pieces and configure the task management toolchain
 as well as integration with the apache webserver.
 
 Start a web-browser and enter \https://<ip_or_hostname>/etoxwsapi/v2/info. You should see a JSON string corresponding to
 the information given in the webservice implementation class.
+
+.. note:: The SSL certificate for the virtual host is self-signed. Therefore, all browser will issue a certificate error
+   when the webservice is accessed by a browser. This is not a problem for the webservice infrastructure as
+   eTOXsys is aware of those self-signed certificate and can ignore the warnings when accessing.
+
+.. note:: Ansible is designed to establish a certain configuration state as expressed in simple yaml files. Therefore, Ansible
+   can be run several times safely. If the state is already reached no further changes will be performed.
 
 Ansible variables
 ~~~~~~~~~~~~~~~~~
