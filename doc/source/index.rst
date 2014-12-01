@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to eTOX webservice API v2's documentation
-=================================================
+eTOX webservice API v2's documentation
+======================================
 
 Contents:
 
@@ -13,6 +13,7 @@ Contents:
    intro
    apispec
    referenceimpl
+   deployment
 
 
 .. Indices and tables

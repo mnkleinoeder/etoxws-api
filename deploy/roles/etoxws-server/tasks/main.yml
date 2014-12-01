@@ -56,7 +56,7 @@
   sudo: yes
   sudo_user: postgres
 
-- postgresql_user: db={{ETOXWS_NAME}} name={{ETOXWS_NAME}} password={{ETOXWS_NAME}}
+- postgresql_user: db={{PG_DBNAME}} name={{PG_USERNAME}} password={{PG_PASSWD}}
   sudo: yes
   sudo_user: postgres
 
@@ -69,6 +69,7 @@
   git: >
     repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
+  notify: reload apache
 
 ###############################################################################
 # setting up the virtual env
@@ -96,10 +97,10 @@
 ###############################################################################
 
 - service: name=rabbitmq-server state=started
-- rabbitmq_vhost: name={{ETOXWS_NAME}} state=present
-- rabbitmq_user: user={{ETOXWS_NAME}}
-                 password={{ETOXWS_NAME}}
-                 vhost={{ETOXWS_NAME}}
+- rabbitmq_vhost: name={{MQ_VHOST}} state=present
+- rabbitmq_user: user={{MQ_USERNAME}}
+                 password={{MQ_PASSWD}}
+                 vhost={{MQ_VHOST}}
                  configure_priv=.*
                  read_priv=.*
                  write_priv=.*

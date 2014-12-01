@@ -1,51 +1,36 @@
 The reference implementation
 ============================
 
+Introduction
+------------
+
 The eTOXsys prediction webservice API v2 is available as Django application.
 The idea is to have a ready-to-use webapplication that can easily be integrated with existing
 prediction workflows such as eTOXlab. Only a few methods have to be implemented in order to
 result in a API v2 compliant webservice application.
 
-Implementation details
-----------------------
+Installation
+------------
 
-How to integrate your own models
---------------------------------
+The source code is available on \GitHub: https://github.com/mnkleinoeder/etoxws-api.git
 
-The required python packages are listed in the file ``/etoxws-v2/src/etoxwsapi/req.pip``.
-We recommend to work with a ``virtualenv`` as described next.
+Several components are required to run the reference implementation
 
-Python setup
-~~~~~~~~~~~~
+* Django 1.6.* (Django 1.7 is not supported on CentOS 6 b/c of old Python version 2.6.*)
+* A DBMS such as MySQL, MariaDB, or Postgres
+* Celery running as background service
+* RabbitMQ running as background service
 
-#. Create a virtualenv
+The database backend and the rabbitmq messaging queue are configured in
+``/path/to/etoxwsapi/src/etoxwsapi/settings_local.py``. A sample configuration is given in the corresponding
+``settings_local.py.in`` file.
 
-::
+It is not required to do this setup manually. The entire process of setting up the environment, the
+webapplication and the apache webserver configuration can be performed automatically as documented here:
+:doc:`deployment`.
 
-   thomas@ubuntu:~$ mkdir venv
-   thomas@ubuntu:~$ cd venv/
-   thomas@ubuntu:~/venv$ virtualenv django1.5
-   New python executable in django1.5/bin/python
-   Installing distribute.....done.
-   Installing pip...............done.
-   thomas@ubuntu:~/venv$ . django1.5/bin/activate
-   (django1.5)thomas@ubuntu:~/venv$
-
-
-Prepare the django app
-~~~~~~~~~~~~~~~~~~~~~~
-
-Clone the code from !GitHub::
-
-   git clone https://github.com/mnkleinoeder/etoxws-api.git
-
-
-   (django1.5)thomas@ubuntu:~/etoxwsapi$ cd src/
-   (django1.5)thomas@ubuntu:~/etoxwsapi/src$ export PYTHONPATH=$(pwd)
-   (django1.5)thomas@ubuntu:~/etoxwsapi/src$ cd etoxwsapi/
-   (django1.5)thomas@ubuntu:~/etoxwsapi/src/etoxwsapi$ pip install -r req.pip
-   (django1.5)thomas@ubuntu:~/etoxwsapi/src/etoxwsapi$ python manage.py syncdb
-   (django1.5)thomas@ubuntu:~/etoxwsapi/src/etoxwsapi$ python manage.py runserver
+Integration of prediction workflows
+-----------------------------------
 
 Adapter to calculation module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,7 +62,7 @@ Implementation
 ~~~~~~~~~~~~~~
 
 #. create a new python module
-#. set the PYTHONPATH to ``/path/to/etoxws-api/src``
+#. set the PYTHONPATH to ``/path/to/etoxwsapi/src``
 #. import required classes and packages from etoxwsapi::
 
       from etoxwsapi.v2 import schema

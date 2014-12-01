@@ -3,18 +3,25 @@
 # overwrite and define values from settings.py as needed
 #
 
+BROKER_URL = 'amqp://etoxws:etoxws@localhost:5672/etoxws'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': "etoxwsapi_dev",
+        'USER': "etoxwsapi_dev",
+        'PASSWORD': "etoxwsapi_dev"
+    }
+}
+
 from sampleimpl.ws_impl_v1 import WS1
 from sampleimpl.ws_impl_v2 import WS2
 
 ETOXWS_IMPL_V1 = WS1
 ETOXWS_IMPL_V2 = WS2
 
-# Only for debugging: set to False in order to run the calculation implementation
-# in the same process as the webservice
-# For production only use a value of True here! 
 ETOXWS_IMPL_V2_ASYNC = True
 
 LOG_LEVEL = "INFO"
 
 LOG_TO_STDOUT = True
-

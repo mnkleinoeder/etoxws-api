@@ -1,6 +1,7 @@
 import types
 import json
 from cStringIO import StringIO
+import logging
 
 # TODO: make this an interface
 class WebserviceImplementationBase(object):
@@ -33,28 +34,6 @@ class WebserviceImplementationBase(object):
             assert(isinstance(json.loads(retval), types.ListType))
         return retval
 
-    def pmmdinfo_impl(self):
-        """
-        """
-        info = dict()
-        for t in ('PMMD name', 'PMMD status', 'Provider', 'Administrator'):
-            info[t] = 'n/a'
-        try:
-            with open('/etc/etoxws-release', 'r') as rel_info:
-                info = dict()
-                for l in rel_info:
-                    try:
-                        t = l.split(':', 1)
-                        info[t[0].strip()] = t[1].strip()
-                    except:
-                        pass
-        except Exception, e:
-            print e
-        return json.dumps(info) 
-
-    def pmmdinfo(self):
-        return self.pmmdinfo_impl()
-
     def _nrecord(self, sdf_file):
         nrec = 0
         for line in StringIO(sdf_file):
@@ -71,5 +50,27 @@ class WebserviceImplementationBase(object):
 
     # calculate is now a celery task consuming calculate_impl
 #	def calculate(self, job_id, calc_info, sdf_file, logger, lock):
+
+    def pmmdinfo(self):
+        """
+        Returns information on Predictive Module Modelers Declaration (PMMD) for this
+        module.
+        By default parses /etc/etoxws-release.
+        """
+        info = dict()
+        for t in ('PMMD name', 'PMMD status', 'Provider', 'Administrator'):
+            info[t] = 'n/a'
+        try:
+            with open('/etc/etoxws-release', 'r') as rel_info:
+                info = dict()
+                for l in rel_info:
+                    try:
+                        t = l.split(':', 1)
+                        info[t[0].strip()] = t[1].strip()
+                    except:
+                        pass
+        except Exception, e:
+            logging.warn("Couldn't parse /etc/etoxws-release: %s"%(e))
+        return json.dumps(info) 
 
 

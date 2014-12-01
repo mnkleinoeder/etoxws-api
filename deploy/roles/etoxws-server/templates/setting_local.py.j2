@@ -4,14 +4,14 @@
 # ALL EDITS will be overwritten when ansible is run again.
 #
 
-BROKER_URL = 'amqp://{{ETOXWS_NAME}}:{{ETOXWS_NAME}}@localhost:5672/{{ETOXWS_NAME}}'
+BROKER_URL = 'amqp://{{MQ_USERNAME}}:{{MQ_PASSWD}}@localhost:5672/{{MQ_VHOST}}'
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "{{ETOXWS_NAME}}",
-        'USER': "{{ETOXWS_NAME}}",
-        'PASSWORD': "{{ETOXWS_NAME}}"
+        'NAME': "{{PG_DBNAME}}",
+        'USER': "{{PG_USERNAME}}",
+        'PASSWORD': "{{PG_PASSWD}}"
     }
 }
 

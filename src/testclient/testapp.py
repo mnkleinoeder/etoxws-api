@@ -9,18 +9,20 @@ from etoxwsapi.v2 import schema
 import json
 from pprint import pprint
 import logging
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
-#TEST_FILE = "/home/thomas/w44/moses3/testdata/maybridge.1-1000.sdf"
 TEST_FILE = os.path.join(THIS_DIR, "tiny.sdf")
-
-#BASE_URL = 'http://192.168.56.100/etoxwsapi/v2'
-#BASE_URL = 'http://localhost:8001/etoxwsapi/v2'
-#BASE_URL = 'http://192.168.178.217:8001/etoxwsapi/v2'
-BASE_URL = 'https://192.168.178.217/etoxwsapi_dev/v2'
-
+BASE_URL = 'https://localhost/etoxwsapi/v2'
+LOG_LEV = "WARN"
 SSL_VERIFY=False
+
+_POLL_INTERVALL = 5
+_DURATION = -1
+_DELETE_AFTER = -1
+
 def _get(url):
     ret = requests.get(url, verify=SSL_VERIFY)
 
@@ -93,7 +95,7 @@ def delete_job(job_id):
     ret = requests.delete(BASE_URL + '/jobs/' + job_id, verify=SSL_VERIFY)
     print ret.status_code, ret.text
 
-def observing_jobs(job_ids, interval = 5, duration = 0, cancel_after=-1):
+def observing_jobs(job_ids, interval, duration, cancel_after):
     print "Observing running jobs."
     if duration:
         print "Timeout: %d seconds"%(duration)
@@ -117,8 +119,39 @@ def observing_jobs(job_ids, interval = 5, duration = 0, cancel_after=-1):
         if poll:
             time.sleep(interval)
 
+class CLIError(Exception):
+    '''Generic exception to raise and log different fatal errors.'''
+    def __init__(self, msg):
+        super(CLIError).__init__(type(self))
+        self.msg = "E: %s" % msg
+    def __str__(self):
+        return self.msg
+    def __unicode__(self):
+        return self.msg
+
 def main(argv=None):
+    program_name = os.path.basename(sys.argv[0])
+
+    global BASE_URL, LOG_LEV, TEST_FILE
     try:
+        # Setup argument parser
+        parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
+        parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=BASE_URL)
+        parser.add_argument("-l", "--log-level", dest="loglev", help="set verbosity level [default: %(default)s] (see python logging module)", default=LOG_LEV)
+        parser.add_argument("-t", "--test-file", dest="testfile", help="SDFile to be used for the test run. [default: %(default)s]", default=TEST_FILE )
+        parser.add_argument("-p", "--poll-interval", dest="poll", type=int, help="poll status each N sec [default: %(default)s]", metavar="N", default= _POLL_INTERVALL)
+        parser.add_argument("-d", "--duration", dest="duration", type=int, help="stop this program after N sec [default: %(default)s]", metavar="N", default= _DURATION)
+        parser.add_argument("-c", "--delete-after", dest="delete", type=int, help="issue a DELETE request after N polls [default: %(default)s]", metavar="N", default= _DELETE_AFTER)
+
+        # Process arguments
+        args = parser.parse_args()
+
+        FORMAT = "%(levelname)s: %(message)s"
+        logging.basicConfig(level=logging.getLevelName(args.loglev), format=FORMAT)
+
+        BASE_URL = args.baseurl
+        TEST_FILE = args.testfile
+
         url = '/'.join((BASE_URL, 'dir'))
         ret = _get(url)
 
@@ -133,21 +166,24 @@ def main(argv=None):
         url = '/'.join((BASE_URL, 'jobs'))
         ret = _get(url)
         all_jobs = ret.json()
-        
+
         for job_id in job_ids:
             assert(job_id in all_jobs)
 
-        observing_jobs(job_ids) #, cancel_after=3)
+        observing_jobs(job_ids, interval=args.poll, duration=args.duration, cancel_after=args.delete)
 
         print_result(zip(job_ids, model_ids) )
 
+    except KeyboardInterrupt:
+        ### handle keyboard interrupt ###
+        pass
     except Exception, e:
-        print "Error occurred."
-        print "%s"%(e)
-        return 1
+        indent = len(program_name) * " "
+        sys.stderr.write(program_name + ": " + str(e) + "\n")
+        sys.stderr.write(indent + "  for help use --help")
+        raise e
+        return 2
     return 0
 
 if __name__ == "__main__":
-    FORMAT = "%(levelname)s: %(message)s"
-    logging.basicConfig(level=logging.WARN, format=FORMAT)
     sys.exit(main())

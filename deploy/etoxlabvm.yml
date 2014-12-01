@@ -8,6 +8,6 @@
       PYCLASS: "WS2"
   - RDKIT_DIR: "/opt/RDKIT"
   roles:
-  - apache
-  - {role: etoxws-server }
+  - { role: apache }
+  - { role: etoxws-server }
 #  - {role: etoxws-server, ETOXWS_NAME: etoxwsapi_dev }
