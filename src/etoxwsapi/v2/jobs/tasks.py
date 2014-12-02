@@ -30,12 +30,24 @@ class JobObserver():
         self.completion_time = 0
 
     def log_error(self, msg, *args, **kwargs):
+        """
+				report error
+        """
         self.logger.error(msg, *args, **kwargs)
     def log_warn(self, msg, *args, **kwargs):
+        """
+				report warning
+        """
         self.logger.warn(msg, *args, **kwargs)
     def log_info(self, msg, *args, **kwargs):
+        """
+				informational message
+        """
         self.logger.info(msg, *args, **kwargs)
     def log_debug(self, msg, *args, **kwargs):
+        """
+				information just for debugging purpose
+        """
         self.logger.debug(msg, *args, **kwargs)
 
     def _finalize(self):
