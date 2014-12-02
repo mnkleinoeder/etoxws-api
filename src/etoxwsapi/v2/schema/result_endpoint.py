@@ -22,7 +22,7 @@ result_endpoint =	{
 				"success": { "type": "boolean" },
 				"message": { "type": "string" },
 			},
-			"required": [ "value", "success" ],
+			"required": [ "success" ],
 			"additionalProperties": False,
 		},
 		"RI" : {
@@ -33,7 +33,7 @@ result_endpoint =	{
 				"success": { "type": "boolean" },
 				"message": { "type": "string" },
 			},
-			"required": [ "value", "success" ],
+			"required": [ "success" ],
 			"additionalProperties": False,
 		},
 	},

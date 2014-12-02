@@ -1,7 +1,7 @@
 [program:{{ETOXWS_NAME}}]
 command = {{etoxws_celery}} -A etoxwsapi.djcelery worker --loglevel=info {% if ETOXWS_NPROC|int > 0 %} -c {{ETOXWS_NPROC}}{% endif %}
 
-environment = LD_LIBRARY_PATH="{{RDKIT_DIR}}/lib",PYTHONPATH="{{ETOXWS_APPDIR}}/src:/opt/rdkit/lib/python{{python_version}}/site-packages{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}{% if p|length > 0 %}:{{p}}{% endif %}{% endfor %}" 
+environment = LD_LIBRARY_PATH="{{RDKIT_DIR}}/lib",PYTHONPATH="{{ETOXWS_APPDIR}}/src:/opt/rdkit/lib/python{{python_version}}/site-packages{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}{% if p|length > 0 %}:{{p}}{% endif %}{% endfor %}{% if pydevd|length > 0 %}:{{pydevd}}{% endif %}" 
 autorestart = true
 autostart = true
 user = {{APACHE_USER}}

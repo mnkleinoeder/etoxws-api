@@ -1,6 +1,10 @@
 Deployment of the reference implementation with Ansible
 =======================================================
 
+.. role:: py(code)
+   :language: py
+   :class: highlight
+
 Introduction
 ------------
 
@@ -212,5 +216,123 @@ Requires the etoxws virtual env loaded.
      -c N, --delete-after N
                            issue a DELETE request after N polls [default: -1]
    
+Maintainance
+------------
+
+.. note::
+   The configuration files are managed by Ansible as described above. Manual edits will be overwritten
+   when Ansible is executed again.
+
+.. note::
+   In this page it is referred to a variable ``{{HOSTNAME}}``. ``{{HOSTNAME}}`` is assigned by DHCP or
+   set in ``/etc/hostname``.
+
+Linux services are maintained by the ``service`` command, eg. ``service apache2 reload``. Following the service names are
+documented. Please enter ``service <service name> <action>`` as root or by sudo in order to achieve a certain management
+action.
+ 
+Webserver (apache/httpd)
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Configuration files
+'''''''''''''''''''
+
+``CentOS``:
+   ``/etc/apache2/sites-available/{{HOSTNAME}}.d/``
+``Ubuntu``:
+   ``/etc/httpd/conf.d/{{HOSTNAME}}.d/``
+
+``/srv/www/webapps/etoxwsapi/src/etoxwsapi/settings_local.py``
+   Configuration of the Django webapplication.
+
+Service
+'''''''
+
+``CentOS``:
+   service name: ``httpd``
+``Ubuntu``:
+   service name: ``apache2``
+
+Log files
+'''''''''
+``CentOS``:
+   log base dir: ``/var/log/httpd/``
+``Ubuntu``:
+   log base dir: ``/var/log/apache2/``
+
+Each virtual host, both w/ or w/o SSL support will have two dedicated log file, one for stderr and one for stdout.
+Filename are derived from the virtual hostname, e.g., ``/var/log/httpd/etoxws-v2-ssl.com_error.log``.
+
+Task queue (Celery/Supervisor)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The package used for job management and queuing, ``celery``, is controlled by a service management tool called ``supervisord``. 
+On CentOS 6.x a rather old version (2.x) is available in the official software repos. Therefore, ansible is 
+installing a recent version from PyPi.
+On Ubuntu 12.04/14.04 the official repositories provide a reasonable recent version (3.x) and those are used.
+
+Configuration files
+'''''''''''''''''''
+
+``OS independent``:
+   ``/etc/supervisor/conf.d/etoxwsapi.celeryd.conf``
+
+Service
+'''''''
+
+``OS independent``:
+   service name: ``supervisord``
+
+``supervisord`` is designed to controll any kind of Linux services. The individual services are managed by
+a tool called ``supervisorctl``:
+
+``supervisorctl`` is used to control the etoxwsapi task queue:
+
+status:
+   ``supervisorctl status etoxwsapi``
+restart:
+   ``supervisorctl restart etoxwsapi``
+
+For further commands: ``supervisorctl help``
+
+Debugging
+---------
+
+If ``ETOXWS_PRODUCTION`` is ``false`` (ie. the application runs in debug mode) a remote debugging tool is delivered and
+ready to use: the PyDev remote debugger (http://pydev.org/manual_adv_remote_debugger.html).
+
+Just set a breakpoint at an arbitrary location in your code by adding the following line of code:
+
+Debugging on ``localhost``:
+
+   :py:`import pydevd; pydevd.settrace()`
+
+Debugging remotely, ie., your development machine is, e.g., ``192.168.1.236`` (the machine were your Eclipse is running and 
+the PyDev debugging server has been started):
+
+   :py:`import pydevd; pydevd.settrace("192.168.1.236")`
+
+.. note::
+   After modifications to your webservice implementation code please restart celery with ``supervisorctl restart etoxwsapi``.
+
+Please refer also to http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev.
+
+Example
+~~~~~~~
+
+Let us assume we want to debug the ``calculate_impl`` method in ``/home/modeler/soft/eTOXlab/ws/view2.py``. So, we start
+the pydev debugger on ``192.168.1.236`` (your develpment machine) and add the settrace call to the beginning of our method.
+
+Finally, we reload celery ``supervisorctl reload etoxwsapi`` and triggering the calculation (using the testapp.py). In Eclipse/PyDev
+we should now see the code as below -- stopped at the line where the breakpoint was set.
+
+.. code-block:: py
+   :emphasize-lines: 3
+
+   def calculate_impl(self, jobobserver, calc_info, sdf_file):   
+     import pydevd; pydevd.settrace("192.168.1.236")
+   
+     itag  = self.my_tags[calc_info ['id']]      # -e tag for predict.py
+     itype = self.my_type[calc_info ['id']]      # quant/qualit endpoint
 
 

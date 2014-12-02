@@ -44,7 +44,7 @@
     regexp="^local.*peer$"
     insertbefore='^local.*md5$'
   register: pg2
-  
+
 - service: name={{postgres_service_name}} state=restarted
   when: pg1|changed or pg2|changed
 
@@ -121,6 +121,18 @@
 #            option=files
 #            value="{{supervisord_conf_dir}}/*.conf"
 #  register: cel1
+
+# PyDev debugger support if not in production mode
+# see: http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev
+# and  http://pydev.org/manual_adv_remote_debugger.html
+- set_fact: pydevd=""
+  when: ETOXWS_PRODUCTION
+
+- set_fact: pydevd=/opt/pydevd/pysrc
+  when: not ETOXWS_PRODUCTION
+- file: path=/opt/pydevd state=directory
+- unarchive: src=pydevd.tgz dest=/opt/pydevd/
+  when: not ETOXWS_PRODUCTION
 
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel
