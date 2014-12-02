@@ -1,20 +1,29 @@
-<IfModule mod_wsgi.c>
-
-<Directory {{ETOXWS_APPDIR}}>
-  Order allow,deny
-  Allow from all
-</Directory>
-
 {% if _ssl  %}
 <IfModule mod_ssl.c>
 {% endif %}
-  WSGIScriptAlias /{{ETOXWS_NAME}} {{etoxws_wsgi}}
-  WSGIApplicationGroup %{GLOBAL}{{_ssl}}
-  WSGIDaemonProcess {{ETOXWS_NAME}}{{_ssl}} processes=15 threads=1 python-path={{etoxws_virtenv}}/lib/python{{python_version}}/site-packages
-  WSGIProcessGroup {{ETOXWS_NAME}}{{_ssl}}
+
+<IfModule mod_wsgi.c>
+
+{% for d in (VHOST_CONF_DIR, ETOXWS_APPDIR) %}
+<Directory {{d}}>
+
+{% if APACHE_VERSION == "2.4"  %}
+  Require all granted
+{% else %}
+  Order allow,deny
+  Allow from all
+{% endif %}
+
+</Directory>
+{% endfor %}
+
+WSGIScriptAlias /{{ETOXWS_NAME}} {{etoxws_wsgi}}
+WSGIApplicationGroup %{GLOBAL}{{_ssl}}
+WSGIDaemonProcess {{ETOXWS_NAME}}{{_ssl}} processes=15 threads=1 python-path={{etoxws_virtenv}}/lib/python{{python_version}}/site-packages
+WSGIProcessGroup {{ETOXWS_NAME}}{{_ssl}}
+
+</IfModule>
+
 {% if _ssl %}
 </IfModule>
 {% endif %}
-
-</IfModule>
-

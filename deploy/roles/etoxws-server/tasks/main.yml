@@ -91,6 +91,8 @@
 - template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
+  register: r
+  changed_when: not "Installed 0 object(s) from 0 fixture(s)" in r.stdout
 
 ###############################################################################
 # enable the task management toolchain
@@ -113,6 +115,12 @@
   with_items:
   - "{{supervisord_conf_dir}}"
   - "/var/log/celery"
+
+#- ini_file: dest="{{supervisord_conf}}"
+#            section=include
+#            option=files
+#            value="{{supervisord_conf_dir}}/*.conf"
+#  register: cel1
 
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel

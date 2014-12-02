@@ -8,6 +8,12 @@
     APACHE_CONF_DIR: "/etc/httpd/conf.d"
     APACHE_LOG_DIR: "/var/log/httpd"
 
+- name: apache dirs
+  file: path="{{item}}" state=directory owner=root group=root
+  with_items:
+  - "{{VHOST_CONF_DIR}}"
+  - "{{VHOST_SSL_DIR}}"
+
 - name: install packages
   yum: name="{{item}}" state=latest
   with_items:
@@ -47,6 +53,7 @@
 
 - template: src=ssl.conf dest={{APACHE_CONF_DIR}}/0-ssl.conf
   notify: restart apache
+
 - template: src=vhost-template.j2 dest={{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf
   notify: restart apache
-  
+

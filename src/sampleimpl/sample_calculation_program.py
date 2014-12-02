@@ -33,7 +33,7 @@ def main(argv):
             sys.stdout.write(out_str%{"nr": i})
             sys.stdout.flush()
             print >>ofp, "\t".join((str(len(property)), "0.8", "0.9"))
-#            time.sleep(SLEEP_TIME)
+            time.sleep(SLEEP_TIME)
     print "stop"
 
 
