@@ -1,4 +1,9 @@
 ---
+###############################################################################
+# Use the PYPATH variable to add your own paths.
+# Just add as it was a normal PYTHONPATH,
+# PYPATH: "/home/modeler/soft/eTOXlab/ws/:MY_PATH1:MY_PATH2"
+###############################################################################
 - hosts: etoxlab
   vars:
   - APACHE_USE_HTTP: true
