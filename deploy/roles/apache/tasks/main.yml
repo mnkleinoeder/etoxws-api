@@ -9,6 +9,7 @@
   with_items:
   - "{{APACHE_DOC_ROOT}}"
   - "{{APACHE_WEBAPP_DIR}}"
+  - "{{VHOST_DOC_ROOT}}"
 
 - include: Ubuntu.yml
   when: ansible_distribution == "Ubuntu"

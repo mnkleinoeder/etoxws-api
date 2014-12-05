@@ -7,7 +7,7 @@ import requests
 import time
 from etoxwsapi.v2 import schema
 import json
-from pprint import pprint
+import pprint
 import logging
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -109,7 +109,8 @@ def observing_jobs(job_ids, interval, duration, cancel_after):
             url = '/'.join((BASE_URL, "/jobs/%s"%(job_id)))
             ret = _get(url)
             stat = ret.json()
-            print "status for '%s': %s"%(job_id, stat)
+            print "status for '%s': %s (progress: %s/%s)"%(job_id, stat['status'], stat['currecord'], stat['nrecord'])
+            logging.debug(stat)
             if stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
                 poll = True
         i += 1
@@ -137,11 +138,13 @@ def main(argv=None):
         # Setup argument parser
         parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter)
         parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=BASE_URL)
+        parser.add_argument("-i", "--ids", dest="ids", help="comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", default=None)
         parser.add_argument("-l", "--log-level", dest="loglev", help="set verbosity level [default: %(default)s] (see python logging module)", default=LOG_LEV)
         parser.add_argument("-t", "--test-file", dest="testfile", help="SDFile to be used for the test run. [default: %(default)s]", default=TEST_FILE )
         parser.add_argument("-p", "--poll-interval", dest="poll", type=int, help="poll status each N sec [default: %(default)s]", metavar="N", default= _POLL_INTERVALL)
         parser.add_argument("-d", "--duration", dest="duration", type=int, help="stop this program after N sec [default: %(default)s]", metavar="N", default= _DURATION)
         parser.add_argument("-c", "--delete-after", dest="delete", type=int, help="issue a DELETE request after N polls [default: %(default)s]", metavar="N", default= _DELETE_AFTER)
+        parser.add_argument("-n", "--dry-run", action='store_true', help="don't trigger calculation")
 
         # Process arguments
         args = parser.parse_args()
@@ -152,27 +155,46 @@ def main(argv=None):
         BASE_URL = args.baseurl
         TEST_FILE = args.testfile
 
+        #import pydevd; pydevd.settrace()
+        ids = list()
+        try:
+            ids = args.ids.split(',')
+        except Exception, e:
+            pass
+
         url = '/'.join((BASE_URL, 'dir'))
         ret = _get(url)
 
-        models = [ m for m in json.loads(ret.text)]
-        model_ids = [ model['id'] for model in models ]
-
+        all_models = [ m for m in json.loads(ret.text)]
         print "Available models"
-        pprint(models)
+        for i, model in enumerate(all_models):
+            print "id: %-100s [%s]"%(model['id'],  '\t'.join(["%s: '%s'"%(k, model[k]) for k in ("category", "external_id")]))
 
-        job_ids = submit_jobs(models)
+        logging.debug(pprint.pformat(all_models))
 
-        url = '/'.join((BASE_URL, 'jobs'))
-        ret = _get(url)
-        all_jobs = ret.json()
-
-        for job_id in job_ids:
-            assert(job_id in all_jobs)
-
-        observing_jobs(job_ids, interval=args.poll, duration=args.duration, cancel_after=args.delete)
-
-        print_result(zip(job_ids, model_ids) )
+        if not args.dry_run:
+            models = list()
+            model_ids = list()
+            for model in all_models:
+                id_ = model['id']
+                if len(ids) > 0 and not id_ in ids:
+                    # skip if we got ids from cli
+                    continue
+                models.append(model)
+                model_ids.append(id_)
+    
+            job_ids = submit_jobs(models)
+    
+            url = '/'.join((BASE_URL, 'jobs'))
+            ret = _get(url)
+            all_jobs = ret.json()
+    
+            for job_id in job_ids:
+                assert(job_id in all_jobs)
+    
+            observing_jobs(job_ids, interval=args.poll, duration=args.duration, cancel_after=args.delete)
+    
+            print_result(zip(job_ids, model_ids) )
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###

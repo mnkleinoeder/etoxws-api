@@ -12,10 +12,16 @@
     supervisord_conf_dir: "/etc/supervisor/conf.d"
 
 - name: install required packages
-  apt: name="{{item}}" state=present
+  apt: name="{{item}}" state=present update_cache=yes
   with_items:
+  - supervisor
   - rabbitmq-server
   - libyaml-dev
+  - postgresql
+  - python-psycopg2
+  - build-essential
+  - git
+  - python-virtualenv
+  - python-dev
+  - libpq-dev
   - sudo
-  
-  

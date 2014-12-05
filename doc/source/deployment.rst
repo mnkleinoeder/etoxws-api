@@ -295,8 +295,34 @@ restart:
 
 For further commands: ``supervisorctl help``
 
+Log files
+'''''''''
+
+``OS independent``:
+   ``/var/log/celery/etoxwsapi.log``
+
+All log messages from the webservice implementation (eg., :py:`jobobserver.log_info("my message")`) will appear in this log file.
+
 Debugging
 ---------
+
+Observing the log files
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Log-files should be tracked:
+
+.. code-block:: bash
+
+   tailf /var/log/celery/etoxwsapi.log
+
+and 
+
+.. code-block:: bash
+
+   tailf /var/log/httpd/etoxws-v2-ssl.com_error.log
+
+Using a debugger
+~~~~~~~~~~~~~~~~
 
 If ``ETOXWS_PRODUCTION`` is ``false`` (ie. the application runs in debug mode) a remote debugging tool is delivered and
 ready to use: the PyDev remote debugger (http://pydev.org/manual_adv_remote_debugger.html).
@@ -318,7 +344,7 @@ the PyDev debugging server has been started):
 Please refer also to http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev.
 
 Example
-~~~~~~~
+'''''''
 
 Let us assume we want to debug the ``calculate_impl`` method in ``/home/modeler/soft/eTOXlab/ws/view2.py``. So, we start
 the pydev debugger on ``192.168.1.236`` (your develpment machine) and add the settrace call to the beginning of our method.

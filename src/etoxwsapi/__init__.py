@@ -1,5 +1,2 @@
-
-try:
-    from .djcelery import jobmgr
-except Exception, e:
-    print e
+# trigger instantiation of celery app on startup
+from .djcelery import jobmgr

@@ -7,11 +7,16 @@
     APACHE_GROUP: www-data
     APACHE_CONF_DIR: "/etc/apache2/sites-available"
     APACHE_LOG_DIR: "/var/log/apache2"
+- set_fact:
+    _vhost_conf: "{{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}"
 
 # on trusty and later version 2.4 has been introduced
 - set_fact:
     APACHE_VERSION: "2.4"
     APACHE_INCLUDE_CONF: IncludeOptional
+  when: ansible_lsb.release | version_compare('14.04', '>=')
+- set_fact:
+    _vhost_conf: "{{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf"
   when: ansible_lsb.release | version_compare('14.04', '>=')
 
 - name: apache dirs
@@ -21,7 +26,7 @@
   - "{{VHOST_SSL_DIR}}"
 
 - name: Install Apache2
-  apt: name="{{item}}" state=present
+  apt: name="{{item}}" state=present update_cache=yes
   with_items:
   - apache2
   - apache2-utils
@@ -42,7 +47,7 @@
   when: ansible_lsb.release | version_compare('14.04', '>=')
   notify: restart apache
 
-- template: src=vhost-template.j2 dest={{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}
+- template: src=vhost-template.j2 dest={{_vhost_conf}}
   notify: restart apache
 
 - shell: a2ensite {{VHOST_SERVER_NAME}}
@@ -56,6 +61,8 @@
   with_items:
   - default
   - default-ssl
+  - 000-default
+  - 000-default-ssl
   
   notify: restart apache
 
