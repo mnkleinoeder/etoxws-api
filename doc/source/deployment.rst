@@ -193,9 +193,9 @@ Requires the etoxws virtual env loaded.
 .. code-block:: bash
 
    ~$ . /opt/virtualenv/etoxwsapi/bin/activate
-   (etoxws-v2)~$ cd ~/git/etoxws-api/src/testclient
-   (etoxws-v2)~/git/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
-   (etoxws-v2)~/git/etoxws-api/src/testclient$ python testapp.py --help
+   (etoxws-v2)~$ cd ~/upgrade/git/etoxws-api/src/testclient
+   (etoxws-v2)~/upgrade/git/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
+   (etoxws-v2)~/upgrade/git/etoxws-api/src/testclient$ python testapp.py --help
    usage: testapp.py [-h] [-b BASEURL] [-l LOGLEV] [-t TESTFILE] [-p N] [-d N]
                      [-c N]
    
@@ -209,7 +209,7 @@ Requires the etoxws virtual env loaded.
                            logging module)
      -t TESTFILE, --test-file TESTFILE
                            SDFile to be used for the test run. [default:
-                           ~/git/etoxws-api/src/testclient/tiny.sdf]
+                           ~/upgrade/git/etoxws-api/src/testclient/tiny.sdf]
      -p N, --poll-interval N
                            poll status each N sec [default: 5]
      -d N, --duration N    stop this program after N sec [default: -1]
@@ -224,10 +224,10 @@ Maintainance
    when Ansible is executed again.
 
 .. note::
-   In this page it is referred to a variable ``{{HOSTNAME}}``. ``{{HOSTNAME}}`` is assigned by DHCP or
+   In this section you'll find references to a variable ``{{HOSTNAME}}``. ``{{HOSTNAME}}`` is assigned by DHCP or
    set in ``/etc/hostname``.
 
-Linux services are maintained by the ``service`` command, eg. ``service apache2 reload``. Following the service names are
+Linux services are maintained by the ``service`` command, eg. ``service httpd reload``. Following the service names are
 documented. Please enter ``service <service name> <action>`` as root or by sudo in order to achieve a certain management
 action.
  
@@ -238,9 +238,9 @@ Configuration files
 '''''''''''''''''''
 
 ``CentOS``:
-   ``/etc/apache2/sites-available/{{HOSTNAME}}.d/``
-``Ubuntu``:
    ``/etc/httpd/conf.d/{{HOSTNAME}}.d/``
+``Ubuntu``:
+   ``/etc/apache2/sites-available/{{HOSTNAME}}.d/``
 
 ``/srv/www/webapps/etoxwsapi/src/etoxwsapi/settings_local.py``
    Configuration of the Django webapplication.
@@ -261,7 +261,7 @@ Log files
    log base dir: ``/var/log/apache2/``
 
 Each virtual host, both w/ or w/o SSL support will have two dedicated log file, one for stderr and one for stdout.
-Filename are derived from the virtual hostname, e.g., ``/var/log/httpd/etoxws-v2-ssl.com_error.log``.
+Filenames are derived from the virtual hostname, e.g., ``/var/log/httpd/etoxws-v2-ssl.com_error.log``.
 
 Task queue (Celery/Supervisor)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -269,7 +269,7 @@ Task queue (Celery/Supervisor)
 The package used for job management and queuing, ``celery``, is controlled by a service management tool called ``supervisord``. 
 On CentOS 6.x a rather old version (2.x) is available in the official software repos. Therefore, ansible is 
 installing a recent version from PyPi.
-On Ubuntu 12.04/14.04 the official repositories provide a reasonable recent version (3.x) and those are used.
+On Ubuntu 12.04/14.04 the official repositories provide a reasonable recent version (3.x) and this one is intalled and used.
 
 Configuration files
 '''''''''''''''''''
