@@ -82,6 +82,10 @@
 - pip: requirements={{ETOXWS_APPDIR}}/src/etoxwsapi/req.pip
     executable={{etoxws_pip}}
 
+- pip: name=argparse
+    executable={{etoxws_pip}}
+  when: ansible_distribution == "CentOS"
+
 ###############################################################################
 # configuration of the webapp
 ###############################################################################
