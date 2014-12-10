@@ -193,9 +193,9 @@ Requires the etoxws virtual env loaded.
 .. code-block:: bash
 
    ~$ . /opt/virtualenv/etoxwsapi/bin/activate
-   (etoxws-v2)~$ cd ~/upgrade/git/etoxws-api/src/testclient
-   (etoxws-v2)~/upgrade/git/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
-   (etoxws-v2)~/upgrade/git/etoxws-api/src/testclient$ python testapp.py --help
+   (etoxws-v2)~$ cd ~/upgrade/etoxws-api/src/testclient
+   (etoxws-v2)~/upgrade/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
+   (etoxws-v2)~/upgrade/etoxws-api/src/testclient$ python testapp.py --help
    usage: testapp.py [-h] [-b BASEURL] [-l LOGLEV] [-t TESTFILE] [-p N] [-d N]
                      [-c N]
    
@@ -209,7 +209,7 @@ Requires the etoxws virtual env loaded.
                            logging module)
      -t TESTFILE, --test-file TESTFILE
                            SDFile to be used for the test run. [default:
-                           ~/upgrade/git/etoxws-api/src/testclient/tiny.sdf]
+                           ~/upgrade/etoxws-api/src/testclient/tiny.sdf]
      -p N, --poll-interval N
                            poll status each N sec [default: 5]
      -d N, --duration N    stop this program after N sec [default: -1]
