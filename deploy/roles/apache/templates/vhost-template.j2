@@ -4,10 +4,10 @@
 	ServerName  {{VHOST_SERVER_NAME}}
 	DocumentRoot {{VHOST_DOC_ROOT}}
 	LogLevel {{APACHE_LOG_LEVEL}}
-	CustomLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_access.log combined
-	ErrorLog  {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_error.log
-  {{APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf
-  {{APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf-nossl
+	CustomLog {{SYS_APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_access.log combined
+	ErrorLog  {{SYS_APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}.com_error.log
+  {{SYS_APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf
+  {{SYS_APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf-nossl
 </VirtualHost>
 {% endif %}
 
@@ -18,10 +18,10 @@
   ServerName  {{VHOST_SERVER_NAME}}
   DocumentRoot {{VHOST_DOC_ROOT}}
   LogLevel {{APACHE_LOG_LEVEL}}
-  CustomLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_access.log combined
-  ErrorLog  {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_error.log
+  CustomLog {{SYS_APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_access.log combined
+  ErrorLog  {{SYS_APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl.com_error.log
 	<IfModule mod_rewrite.c>
-		RewriteLog {{APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl_rewrite.log
+		RewriteLog {{SYS_APACHE_LOG_DIR}}/{{VHOST_SERVER_NAME}}-ssl_rewrite.log
 		RewriteLogLevel 9
 	</IfModule>
 	SSLEngine on
@@ -41,8 +41,8 @@
 		nokeepalive ssl-unclean-shutdown \
 		downgrade-1.0 force-response-1.0
 	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
-  {{APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf
-  {{APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf-ssl
+  {{SYS_APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf
+  {{SYS_APACHE_INCLUDE_CONF}} {{VHOST_CONF_DIR}}/*.conf-ssl
 </VirtualHost>
 </IfModule>
 {% endif %}

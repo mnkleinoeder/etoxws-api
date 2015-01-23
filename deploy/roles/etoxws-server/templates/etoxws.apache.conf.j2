@@ -7,7 +7,7 @@
 {% for d in (VHOST_CONF_DIR, ETOXWS_APPDIR) %}
 <Directory {{d}}>
 
-{% if APACHE_VERSION == "2.4"  %}
+{% if SYS_APACHE_VERSION == "2.4"  %}
   Require all granted
 {% else %}
   Order allow,deny
@@ -17,8 +17,29 @@
 </Directory>
 {% endfor %}
 
+Alias /{{ETOXWS_NAME}}/doc {{ETOXWS_APPDIR}}/doc/build/html
+
+<Location /{{ETOXWS_NAME}}/v2/schema/>
+{% if SYS_APACHE_VERSION == "2.4"  %}
+  Require all granted
+{% else %}
+  Order allow,deny
+  Allow from all
+{% endif %}
+</Location>
+
+<Location /{{ETOXWS_NAME}}>
+{% if SYS_APACHE_VERSION == "2.4"  %}
+  AuthMerging Or
+  Require local
+{% else %}
+  Order allow,deny
+  Allow from all
+{% endif %}
+</Location>
+
 WSGIScriptAlias /{{ETOXWS_NAME}} {{etoxws_wsgi}}
-WSGIApplicationGroup %{GLOBAL}{{_ssl}}
+WSGIApplicationGroup %{GLOBAL}
 WSGIDaemonProcess {{ETOXWS_NAME}}{{_ssl}} processes=15 threads=1 python-path={{etoxws_virtenv}}/lib/python{{python_version}}/site-packages
 WSGIProcessGroup {{ETOXWS_NAME}}{{_ssl}}
 

@@ -1,22 +1,22 @@
 ---
 - set_fact:
-    APACHE_PORTS_FILE: "/etc/apache2/ports.conf"
-    APACHE_CTL: apache2ctl
-    APACHE_SERVICE_NAME: apache2
-    APACHE_USER: www-data
-    APACHE_GROUP: www-data
-    APACHE_CONF_DIR: "/etc/apache2/sites-available"
-    APACHE_LOG_DIR: "/var/log/apache2"
+    SYS_APACHE_SERVICE: apache2
+    SYS_APACHE_USER: www-data
+    SYS_APACHE_GROUP: www-data
+    SYS_APACHE_PORTS_FILE: "/etc/apache2/ports.conf"
+    SYS_APACHE_CTL: apache2ctl
+    SYS_APACHE_CONF_DIR: "/etc/apache2/sites-available"
+    SYS_APACHE_LOG_DIR: "/var/log/apache2"
 - set_fact:
-    _vhost_conf: "{{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}"
+    _vhost_conf: "{{SYS_APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}"
 
 # on trusty and later version 2.4 has been introduced
 - set_fact:
-    APACHE_VERSION: "2.4"
-    APACHE_INCLUDE_CONF: IncludeOptional
+    SYS_APACHE_VERSION: "2.4"
+    SYS_APACHE_INCLUDE_CONF: IncludeOptional
   when: ansible_lsb.release | version_compare('14.04', '>=')
 - set_fact:
-    _vhost_conf: "{{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf"
+    _vhost_conf: "{{SYS_APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf"
   when: ansible_lsb.release | version_compare('14.04', '>=')
 
 - name: apache dirs

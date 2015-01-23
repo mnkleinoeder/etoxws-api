@@ -168,7 +168,7 @@ def main(argv=None):
         all_models = [ m for m in json.loads(ret.text)]
         print "Available models"
         for i, model in enumerate(all_models):
-            print "id: %-100s [%s]"%(model['id'],  '\t'.join(["%s: '%s'"%(k, model[k]) for k in ("category", "external_id")]))
+            print "id: %-100s [%s]"%(model['id'],  '\t'.join(["%s: '%s'"%(k, model.get(k, 'N/A')) for k in ("category", "external_id")]))
 
         logging.debug(pprint.pformat(all_models))
 

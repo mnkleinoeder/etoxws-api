@@ -1,10 +1,10 @@
 ---
 - name: start apache
-  service: name={{APACHE_SERVICE_NAME}} state=started
+  service: name={{SYS_APACHE_SERVICE}} state=started
 
 - name: restart apache
-  service: name={{APACHE_SERVICE_NAME}} state=restarted
+  service: name={{SYS_APACHE_SERVICE}} state=restarted
 
 - name: reload apache
-  service: name={{APACHE_SERVICE_NAME}} state=reloaded
+  service: name={{SYS_APACHE_SERVICE}} state=reloaded
 

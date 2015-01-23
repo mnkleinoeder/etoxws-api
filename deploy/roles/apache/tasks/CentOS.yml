@@ -1,12 +1,12 @@
 ---
 - set_fact:
-    APACHE_PORTS_FILE: "/etc/httpd/conf/httpd.conf"
-    APACHE_CTL: apachectl
-    APACHE_SERVICE_NAME: httpd
-    APACHE_USER: apache
-    APACHE_GROUP: apache
-    APACHE_CONF_DIR: "/etc/httpd/conf.d"
-    APACHE_LOG_DIR: "/var/log/httpd"
+    SYS_APACHE_SERVICE: httpd
+    SYS_APACHE_USER: apache
+    SYS_APACHE_GROUP: apache
+    SYS_APACHE_PORTS_FILE: "/etc/httpd/conf/httpd.conf"
+    SYS_APACHE_CTL: apachectl
+    SYS_APACHE_CONF_DIR: "/etc/httpd/conf.d"
+    SYS_APACHE_LOG_DIR: "/var/log/httpd"
 
 - name: apache dirs
   file: path="{{item}}" state=directory owner=root group=root
@@ -48,12 +48,12 @@
 
 - file: path={{VHOST_CONF_DIR}} state=directory owner=root group=root
 
-- file: path={{APACHE_CONF_DIR}}/ssl.conf state=absent
+- file: path={{SYS_APACHE_CONF_DIR}}/ssl.conf state=absent
   notify: restart apache
 
-- template: src=ssl.conf dest={{APACHE_CONF_DIR}}/0-ssl.conf
+- template: src=ssl.conf dest={{SYS_APACHE_CONF_DIR}}/0-ssl.conf
   notify: restart apache
 
-- template: src=vhost-template.j2 dest={{APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf
+- template: src=vhost-template.j2 dest={{SYS_APACHE_CONF_DIR}}/{{VHOST_SERVER_NAME}}.conf
   notify: restart apache
 

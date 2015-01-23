@@ -9,7 +9,7 @@ sys.path.append('{{RDKIT_DIR}}/lib/python{{python_version}}/site-packages')
 
 {% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}
 {% if p|length > 0 %}
-sys.path.append('{{p}}')
+sys.path.extend('{{p}}'.split(':'))
 {% endif %} 
 {% endfor %} 
 
