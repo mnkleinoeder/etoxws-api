@@ -95,6 +95,7 @@
 - template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
+    chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
   register: r
   changed_when: not "Installed 0 object(s) from 0 fixture(s)" in r.stdout
 
