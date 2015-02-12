@@ -69,6 +69,7 @@ class WS2(WebserviceImplementationBase):
         p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], infile, outfile]
                                                 ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        jobobserver.report_progress(0)
         while True:
             retcode = p.poll() #returns None while subprocess is running
             line = p.stdout.readline()

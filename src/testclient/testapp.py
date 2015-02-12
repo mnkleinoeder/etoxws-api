@@ -185,7 +185,7 @@ def main(argv=None):
     
             job_ids = submit_jobs(models)
     
-            url = '/'.join((BASE_URL, 'jobs'))
+            url = '/'.join((BASE_URL, 'jobs/'))
             ret = _get(url)
             all_jobs = ret.json()
     
