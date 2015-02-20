@@ -1,0 +1,10 @@
+[program:{{ETOXWS_NAME}}-flower]
+command = {{etoxws_celery}} -A etoxwsapi.djcelery flower --address=0.0.0.0 --port=5555 --url_prefix={{ETOXWS_NAME}}/tasks --basic_auth=etoxws:etoxws
+
+environment = LD_LIBRARY_PATH="{{RDKIT_DIR}}/lib",PYTHONPATH="{{ETOXWS_APPDIR}}/src:/opt/rdkit/lib/python{{python_version}}/site-packages{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}{% if p|length > 0 %}:{{p}}{% endif %}{% endfor %}{% if pydevd|length > 0 %}:{{pydevd}}{% endif %}" 
+autorestart = true
+autostart = true
+user = {{SYS_APACHE_USER}}
+stdout_logfile = /var/log/celery/{{ETOXWS_NAME}}-flower.log
+stderr_logfile = /var/log/celery/{{ETOXWS_NAME}}-flower.log
+
