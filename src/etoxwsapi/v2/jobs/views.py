@@ -19,6 +19,7 @@ from celery.result import AsyncResult
 from etoxwsapi.djcelery import jobmgr
 import sys
 import traceback
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class JobsView(View):
                 calc_info_schema = schema.get('calculation_info')
                 calc_info_schema.validate(calc_info)
 
-                cjob = etoxwsapi.v2.jobs.tasks.calculate.apply_async((calc_info, sdf_file), task_id=job_id)  #@UndefinedVariable
+                cjob = etoxwsapi.v2.jobs.tasks.calculate.apply_async((calc_info, sdf_file), task_id=job_id, retry=False)  #@UndefinedVariable
 
                 job.status = _map_state(cjob.state)
             except Exception, e:
@@ -139,8 +140,8 @@ class JobsView(View):
 
 class JobHandlerView(View):
     def get(self, request, job_id):
+        job = get_object_or_404(Job, job_id=job_id)
         try:
-            job = Job.objects.get(job_id=job_id)
             job_status = _conv_job(job)
             
             if job_status['status'] == "JOB_UNKNOWN":
@@ -151,24 +152,27 @@ class JobHandlerView(View):
                     logger.warn("Failed to query celery for job: %s (%s)"%(job_id, e))
 
             return HttpResponse(job_status.to_json())
-        except Job.DoesNotExist:
-            return HttpResponse("job_id '%s' not existent"%(job_id), status = 404)
         except Exception, e:
             msg = "Failed to retrieve job status (%s)"%(e)
             return HttpResponse(msg, status = 500)
 
     def delete(self, request, job_id):
+        job = get_object_or_404(Job, job_id=job_id)
         try:
-            job = Job.objects.get(job_id=job_id)
-            jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
+            cjob = AsyncResult(job_id)
+            if not cjob.ready():
+                jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
 
-            job.status = "JOB_CANCELLED"
-            job.completion_time = time.time()
-            job.save()
+            #job.status = "JOB_CANCELLED"
+            #job.completion_time = time.time()
+            #job.save()
             return HttpResponse("", status = 200)
-
-        except Job.DoesNotExist:
-            return HttpResponse("job_id '%s' not existent"%(job_id), status = 404)
         except Exception, e:
             msg = "Failed to delete job (%s)"%(e)
             return HttpResponse(msg, status = 500)
+        finally:
+            try:
+                job.delete()
+            except Exception as e:
+                logger.warn("Failed to delete job: %s"%(job_id))
+

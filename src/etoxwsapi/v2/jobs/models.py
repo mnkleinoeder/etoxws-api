@@ -16,3 +16,14 @@ class Result(models.Model):
     job = models.ForeignKey(Job)
     cmp_id = models.IntegerField()
     result_json = models.TextField()
+
+# Post-save handler for DBConfig models will update the settings.DATABASES dict
+from django.db.models.signals import post_save, pre_delete, post_delete
+from django.dispatch import receiver
+from django.conf import settings
+
+@receiver(pre_delete, sender=Result)
+def delete_handler_results(sender, **kwargs):
+    inst = kwargs.get('instance')
+    print "deleting result for job: %s"%(inst.job)
+    

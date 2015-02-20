@@ -2,3 +2,4 @@
 *.pyo
 .*project
 .settings/
+make_env.sh

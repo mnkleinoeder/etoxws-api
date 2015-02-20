@@ -15,11 +15,20 @@
   yum: name="{{item}}" state=present
   with_items:
   - rabbitmq-server
+  - librabbitmq
   - libyaml-devel
   - "{{postgres_pkg_name}}"
   - python-psycopg2
   - sudo
+  - byobu
 
+- name: create link for rabbitmq-plugins in /usr/local/bin
+  file: src=/usr/lib/rabbitmq/bin/{{item}} dest=/usr/local/bin/{{item}} state=link
+  with_items:
+  - rabbitmq-defaults
+  - rabbitmq-env
+  - rabbitmq-plugins
+  
 - name: cleanup old files from previous versions
   file: path=/etc/httpd/conf.d/{{item}} state=absent
   with_items:

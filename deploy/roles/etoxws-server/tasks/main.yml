@@ -111,7 +111,12 @@
                  configure_priv=.*
                  read_priv=.*
                  write_priv=.*
+                 tags=administrator
                  state=present
+
+- rabbitmq_user: user=guest state=absent
+
+- rabbitmq_plugin: names=rabbitmq_management state=enabled
 
 #- group: name={{ETOXWS_NAME}} system=yes state=present
 #- user: name={{ETOXWS_NAME}} group={{ETOXWS_NAME}} system=yes state=present

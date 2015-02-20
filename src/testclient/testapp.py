@@ -106,7 +106,7 @@ def observing_jobs(job_ids, interval, duration, cancel_after):
         for job_id in job_ids:
             if i == cancel_after:
                 delete_job(job_id)
-            url = '/'.join((BASE_URL, "/jobs/%s"%(job_id)))
+            url = '/'.join((BASE_URL, "jobs", job_id))
             ret = _get(url)
             stat = ret.json()
             print "status for '%s': %s (progress: %s/%s)"%(job_id, stat['status'], stat['currecord'], stat['nrecord'])
