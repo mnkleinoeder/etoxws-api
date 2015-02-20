@@ -69,6 +69,8 @@
   git: >
     repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
+    version=monitoring
+    force=yes
   notify: reload apache
 
 ###############################################################################
@@ -145,10 +147,13 @@
   when: not ETOXWS_PRODUCTION
 
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
-  register: cel
+  register: cel1
+
+- template: src="etoxws.flower.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.conf mode=644
+  register: cel2
 
 - supervisorctl: name={{ETOXWS_NAME}} state=restarted
-  when: cel|changed
+  when: cel1|changed or cel2|changed
 
 ###############################################################################
 # apache setup
