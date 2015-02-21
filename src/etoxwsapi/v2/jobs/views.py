@@ -161,7 +161,13 @@ class JobHandlerView(View):
         try:
             cjob = AsyncResult(job_id)
             if not cjob.ready():
-                jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
+                # subprocesses are not killed after revoke even with terminate=True
+                # before enabling this we need to implement a method to kill
+                # all child processes otherwise the queue is freed and a new calculation
+                # is started while the old one is still running.
+                # for now, no other choice than waiting until the process has finished.
+                #
+                #jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
                 job.status = "JOB_CANCELLED"
                 job.completion_time = time.time()
                 job.save()
