@@ -162,17 +162,11 @@ class JobHandlerView(View):
             cjob = AsyncResult(job_id)
             if not cjob.ready():
                 jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
-
-            #job.status = "JOB_CANCELLED"
-            #job.completion_time = time.time()
-            #job.save()
+                job.status = "JOB_CANCELLED"
+                job.completion_time = time.time()
+                job.save()
             return HttpResponse("", status = 200)
         except Exception, e:
             msg = "Failed to delete job (%s)"%(e)
             return HttpResponse(msg, status = 500)
-        finally:
-            try:
-                job.delete()
-            except Exception as e:
-                logger.warn("Failed to delete job: %s"%(job_id))
 

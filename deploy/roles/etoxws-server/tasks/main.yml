@@ -48,7 +48,15 @@
 - service: name={{postgres_service_name}} state=restarted
   when: pg1|changed or pg2|changed
 
-- postgresql_db: name={{ETOXWS_NAME}}
+- set_fact:
+    etoxws_db_token: "{{ETOXWS_NAME|replace('.','_')}}"
+
+- postgresql_db: name='{{etoxws_db_token}}' state=absent
+  sudo: yes
+  sudo_user: postgres
+  when: ETOXWS_CLEAN_DB | bool
+
+- postgresql_db: name={{etoxws_db_token}}
                  encoding='UTF-8'
                  lc_collate='en_US.UTF-8'
                  lc_ctype='en_US.UTF-8'
@@ -56,7 +64,7 @@
   sudo: yes
   sudo_user: postgres
 
-- postgresql_user: db={{PG_DBNAME}} name={{PG_USERNAME}} password={{PG_PASSWD}}
+- postgresql_user: db={{etoxws_db_token}} name={{etoxws_db_token}} password={{ETOXWS_SERVICE_PASSWD}}
   sudo: yes
   sudo_user: postgres
 
@@ -108,7 +116,7 @@
 - service: name=rabbitmq-server state=started enabled=yes
 - rabbitmq_vhost: name={{MQ_VHOST}} state=present
 - rabbitmq_user: user={{MQ_USERNAME}}
-                 password={{MQ_PASSWD}}
+                 password={{ETOXWS_SERVICE_PASSWD}}
                  vhost={{MQ_VHOST}}
                  configure_priv=.*
                  read_priv=.*

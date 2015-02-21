@@ -48,14 +48,23 @@ WSGIProcessGroup {{ETOXWS_NAME}}{{_ssl}}
 {% if _ssl %}
 </IfModule>
 
+ProxyPreserveHost On
 AllowEncodedSlashes On
-ProxyPass        /{{ETOXWS_NAME}}/queue/api http://localhost:15672/api nocanon
-ProxyPass        /{{ETOXWS_NAME}}/queue/    http://localhost:15672/
-ProxyPassReverse /{{ETOXWS_NAME}}/queue/    http://localhost:15672/
 
-ProxyPass        /{{ETOXWS_NAME}}/tasks/    http://localhost:5555/
-ProxyPassReverse /{{ETOXWS_NAME}}/tasks/    http://localhost:5555/
+<Location /{{ETOXWS_NAME}}/rabbitmq/api>
+ProxyPass        http://localhost:15672/api nocanon
+</Location>
 
+<Location /{{ETOXWS_NAME}}/rabbitmq>
+ProxyPass         http://localhost:15672
+ProxyPassReverse  http://localhost:15672
+</Location>
+
+<Location /{{ETOXWS_NAME}}/celery>
+RequestHeader set X-SCHEME https
+ProxyPass           http://localhost:15555
+ProxyPassReverse    http://localhost:15555
+</Location>
 
 {% endif %}
 

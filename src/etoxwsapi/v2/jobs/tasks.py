@@ -93,7 +93,7 @@ class JobObserver():
         result = Result(job=job, cmp_id=cmp_id, result_json=result_json)
         result.save()
 
-@jobmgr.task(bind=True, name='etoxwsapi.v2.jobs.tasks.calculate')
+@jobmgr.task(bind=True, ignore_result=True, name='etoxwsapi.v2.jobs.tasks.calculate')
 def calculate(self, calc_info, sdf_file): #, logger, lock):
     #import pydevd; pydevd.settrace()
     jobid = self.request.id
