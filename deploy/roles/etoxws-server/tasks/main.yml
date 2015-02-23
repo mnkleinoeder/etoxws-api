@@ -73,11 +73,11 @@
 ###############################################################################
 #    repo="/root/etoxws-api/"
 #    repo="https://github.com/mnkleinoeder/etoxws-api.git"
+#    version=monitoring
 - name: fetch code from github
   git: >
     repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
-    version=monitoring
     force=yes
   notify: reload apache
 

@@ -73,6 +73,18 @@ class JobObserver():
         job.status = "JOB_RUNNING"
         job.save()
 
+    def report_started(self, pid=None):
+        """
+        indicate that the calculation has started. If an external program has been started by
+        subprocess submit the pid as argument.
+        """
+        
+        job = Job.objects.get(job_id=self.job_id)
+        job.status = "JOB_RUNNING"
+        if pid:
+            job.pid = pid
+        job.save()
+
     def report_status(self, retcode, errmsg):
         """
         after completion of calculation report the status:
