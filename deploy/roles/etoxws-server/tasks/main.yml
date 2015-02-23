@@ -79,6 +79,7 @@
     repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
     force=yes
+    version=master
   notify: reload apache
 
 ###############################################################################
@@ -153,6 +154,14 @@
 - file: path=/opt/pydevd state=directory
 - unarchive: src=pydevd.tgz dest=/opt/pydevd/
   when: not ETOXWS_PRODUCTION
+
+- lineinfile: dest="/home/modeler/soft/eTOXlab/ws/views2.py"
+    insertbefore="(\s+)while True:"
+    line="        jobobserver.report_started(p.pid)"
+
+- lineinfile: "dest=/home/modeler/soft/eTOXlab/ws/views2.py
+    state=absent
+    line='        jobobserver.report_progress(0) # indicate that calculation has been started'"
 
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel1

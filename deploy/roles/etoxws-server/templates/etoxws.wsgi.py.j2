@@ -7,6 +7,10 @@ sys.path.append(os.path.join(basepath, 'src'))
 sys.path.append('{{etoxws_virtenv}}/lib/python{{python_version}}/site-packages')
 sys.path.append('{{RDKIT_DIR}}/lib/python{{python_version}}/site-packages')
 
+{% if not ETOXWS_PRODUCTION|bool %}
+sys.path.append('{{pydevd}}')
+{% endif %}
+
 {% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}
 {% if p|length > 0 %}
 sys.path.extend('{{p}}'.split(':'))

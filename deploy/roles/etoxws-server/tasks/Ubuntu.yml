@@ -10,6 +10,7 @@
     python_version: 2.7
     supervisord_conf: "/etc/supervisor/supervisord.conf"
     supervisord_conf_dir: "/etc/supervisor/conf.d"
+    supervisor_service_name: supervisor
 
 - name: install required packages
   apt: name="{{item}}" state=present update_cache=yes

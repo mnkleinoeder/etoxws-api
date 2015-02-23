@@ -21,7 +21,7 @@ import sys
 import traceback
 from django.shortcuts import get_object_or_404
 import os
-import signal
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,6 @@ class JobHandlerView(View):
                     job_status['status'] = _map_state(cjob.state)
                 except Exception, e:
                     logger.warn("Failed to query celery for job: %s (%s)"%(job_id, e))
-
             return HttpResponse(job_status.to_json())
         except Exception, e:
             msg = "Failed to retrieve job status (%s)"%(e)
@@ -161,11 +160,22 @@ class JobHandlerView(View):
     def delete(self, request, job_id):
         job = get_object_or_404(Job, job_id=job_id)
         try:
+            logger.info("Entering DELETE for job: %s"%(job_id))
+            #import pydevd; pydevd.settrace('192.168.0.234')
             cjob = AsyncResult(job_id)
             if not cjob.ready():
                 if job.pid > 0:
+                    logger.info("Trying to kill job subprocess and all children: %s"(job_id))
                     try:
-                        os.kill(job.pid, signal.SIGKILL)
+                        parent = psutil.Process(job.pid)
+                        logger.info("Command line was: %s (%s)"%(parent.cmdline(), parent.pid))
+                        for child in parent.children(recursive=True):
+                            try:
+                                logger.info("Found child process: %s (%s)"%(child.cmdline(), child.pid))
+                                child.kill()
+                            except Exception, e:
+                                logger.warn("%s"%(e))
+                        parent.kill()
                     except Exception, e:
                         logger.warn("%s"%(e))
                 jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
