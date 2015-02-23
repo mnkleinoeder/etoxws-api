@@ -152,6 +152,7 @@ class JobHandlerView(View):
                     job_status['status'] = _map_state(cjob.state)
                 except Exception, e:
                     logger.warn("Failed to query celery for job: %s (%s)"%(job_id, e))
+
             return HttpResponse(job_status.to_json())
         except Exception, e:
             msg = "Failed to retrieve job status (%s)"%(e)
@@ -165,7 +166,7 @@ class JobHandlerView(View):
             cjob = AsyncResult(job_id)
             if not cjob.ready():
                 if job.pid > 0:
-                    logger.info("Trying to kill job subprocess and all children: %s"(job_id))
+                    logger.info("Trying to kill job subprocess and all children: %s"%(job_id))
                     try:
                         parent = psutil.Process(job.pid)
                         logger.info("Command line was: %s (%s)"%(parent.cmdline(), parent.pid))
