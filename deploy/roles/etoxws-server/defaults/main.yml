@@ -14,6 +14,9 @@ ETOXWS_IMPL_V2:
 
 RDKIT_DIR: "/opt/rdkit"
 
+# if true the database is deleted and re-created
+ETOXWS_CLEAN_DB: false
+
 ETOXWS_PRODUCTION: true
 # 0: use default by celery which is nr of cores availabe
 ETOXWS_NPROC: 0
