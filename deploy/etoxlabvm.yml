@@ -8,15 +8,15 @@
   vars:
   - APACHE_USE_HTTP: true
   - ETOXWS_IMPL_V2:
-      PYPATH: "/home/modeler/soft/eTOXlab/ws/:/var/tmp"
+      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
       PYPCK: "views2"
       PYCLASS: "WS2"
   - RDKIT_DIR: "/opt/RDKIT"
   roles:
   - { role: apache }
   - { role: etoxws-server,
+      ETOXWS_CLEAN_DB: True,
       ETOXWS_PRODUCTION: True,
 #      ETOXWS_SERVICE_PASSWD: secret,
-      ETOXWS_CLEAN_DB: True
     }
 #  - {role: etoxws-server, ETOXWS_NAME: etoxwsapi_dev }
