@@ -11,6 +11,7 @@ import pprint
 import logging
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+import traceback
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -95,7 +96,7 @@ def delete_job(job_id):
     ret = requests.delete(BASE_URL + '/jobs/' + job_id, verify=SSL_VERIFY)
     print ret.status_code, ret.text
 
-def observing_jobs(job_ids, interval, duration, cancel_after):
+def observing_jobs(jobs, interval, duration, cancel_after):
     print "Observing running jobs."
     if duration:
         print "Timeout: %d seconds"%(duration)
@@ -103,13 +104,13 @@ def observing_jobs(job_ids, interval, duration, cancel_after):
     i = 0
     while(poll):
         poll = False
-        for job_id in job_ids:
+        for job_id,model_id in jobs:
             if i == cancel_after:
                 delete_job(job_id)
             url = '/'.join((BASE_URL, "jobs", job_id))
             ret = _get(url)
             stat = ret.json()
-            print "status for '%s': %s (progress: %s/%s)"%(job_id, stat['status'], stat['currecord'], stat['nrecord'])
+            print "status for '%s': %s (%s)"%(job_id, stat['status'], model_id) # stat['currecord'], stat['nrecord'])
             logging.debug(stat)
             if stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
                 poll = True
@@ -144,6 +145,8 @@ def main(argv=None):
         parser.add_argument("-p", "--poll-interval", dest="poll", type=int, help="poll status each N sec [default: %(default)s]", metavar="N", default= _POLL_INTERVALL)
         parser.add_argument("-d", "--duration", dest="duration", type=int, help="stop this program after N sec [default: %(default)s]", metavar="N", default= _DURATION)
         parser.add_argument("-c", "--delete-after", dest="delete", type=int, help="issue a DELETE request after N polls [default: %(default)s]", metavar="N", default= _DELETE_AFTER)
+        parser.add_argument("-C", "--cleanup", action='store_true', dest="do_cleanup", help="tries to delete all existing jobs")
+        parser.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="print summary and quit", nargs='?', default=None, required=False)
         parser.add_argument("-n", "--dry-run", action='store_true', help="don't trigger calculation")
 
         # Process arguments
@@ -152,36 +155,87 @@ def main(argv=None):
         FORMAT = "%(levelname)s: %(message)s"
         logging.basicConfig(level=logging.getLevelName(args.loglev), format=FORMAT)
 
+        DRY_RUN = args.dry_run
+        if args.dry_run:
+            print ""
+            print "-n is deprecated: Use -P to print VM summary."
+            print ""
+
         BASE_URL = args.baseurl
         TEST_FILE = args.testfile
 
-        #import pydevd; pydevd.settrace()
-        ids = list()
-        try:
-            ids = args.ids.split(',')
-        except Exception, e:
-            pass
-
         url = '/'.join((BASE_URL, 'dir'))
         ret = _get(url)
-
+        
         all_models = [ m for m in json.loads(ret.text)]
-        print "Available models"
-        for i, model in enumerate(all_models):
-            print "id: %-100s [%s]"%(model['id'],  '\t'.join(["%s: '%s'"%(k, model.get(k, 'N/A')) for k in ("category", "external_id")]))
-
         logging.debug(pprint.pformat(all_models))
 
-        if not args.dry_run:
+        if args.do_cleanup:
+            url = '/'.join((BASE_URL, 'jobs/'))
+            ret = _get(url)
+            for job_id in json.loads(ret.text):
+                print url+job_id
+                requests.delete(url+job_id)
+            
+        elif args.print_summary:
+            DRY_RUN = True
+            
+            url = '/'.join((BASE_URL, 'info'))
+            ret = _get(url)
+            info = json.loads(ret.text)
+
+            delim = 160 * '='
+            if args.print_summary == 'trac':
+                print "=== %s ==="%(info['provider'])
+            else:
+                print delim
+                msg = "Webservice information:"
+                print msg
+                print '-' * len(msg)
+                
+                for k in ('provider', 'homepage', 'admin', 'admin_email'):
+                    print "%-12s: %s"%(k, info[k])
+            
+            if args.print_summary == 'trac':
+                frmt = '|| {{{%-100s}}} ||'
+                for model in sorted([ m['id'] for m in all_models]):
+                    print frmt%(model)
+            else:
+                print delim
+                frmt = '| %-3s | %-100s | %-15s | %-100s |'
+                print "Available models:"
+    
+                header = frmt%("#", "ID", "category", "external_id")
+                print '-' * len(header)
+                print header
+                print '-' * len(header)
+                for i, model in enumerate(all_models):
+                    print frmt%(i, model['id'], model.get('category', 'N/A'), model.get('external_id', 'N/A'))
+                print '-' * len(header)
+        else:
+            #import pydevd; pydevd.settrace()
+            ids = list()
+            if args.ids:
+                for mid in args.ids.split(','):
+                    if mid[0] == '/':
+                        ids.append(mid)
+                    else:
+                        try:
+                            ids.append(all_models[int(mid)]['id'])
+                        except Exception, e:
+                            logging.warn("Could not convert index %s"%(e))
+                        
+            
+
             models = list()
             model_ids = list()
             for model in all_models:
-                id_ = model['id']
-                if len(ids) > 0 and not id_ in ids:
-                    # skip if we got ids from cli
+                model_id = model['id']
+                if ids and not model_id in ids:
+                    # not in ids given by -i option
                     continue
                 models.append(model)
-                model_ids.append(id_)
+                model_ids.append(model_id)
     
             job_ids = submit_jobs(models)
     
@@ -192,9 +246,9 @@ def main(argv=None):
             for job_id in job_ids:
                 assert(job_id in all_jobs)
     
-            observing_jobs(job_ids, interval=args.poll, duration=args.duration, cancel_after=args.delete)
+            observing_jobs(zip(job_ids, model_ids), interval=args.poll, duration=args.duration, cancel_after=args.delete)
     
-            print_result(zip(job_ids, model_ids) )
+            print_result(zip(job_ids, model_ids))
 
     except KeyboardInterrupt:
         ### handle keyboard interrupt ###
@@ -202,9 +256,9 @@ def main(argv=None):
     except Exception, e:
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + str(e) + "\n")
-        sys.stderr.write(indent + "  for help use --help")
-        raise e
-        return 2
+        sys.stderr.write(indent + "  for help use --help\n")
+        sys.stderr.write(traceback.format_exc())
+        return 1
     return 0
 
 if __name__ == "__main__":

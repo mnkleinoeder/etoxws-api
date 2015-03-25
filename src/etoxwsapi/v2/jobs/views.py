@@ -128,8 +128,8 @@ class JobsView(View):
             except Exception, e:
                 try:
                     cjob.revoke()
-                except Exception, e:
-                    logging.warn("Error while trying to revoke failed job: %s"%(e))
+                except Exception, ee:
+                    logging.warn("Error while trying to revoke failed job: %s"%(ee))
                 job.completion_time = time.time()
                 job.msg = str(e)
                 job.status = "JOB_REJECTED"

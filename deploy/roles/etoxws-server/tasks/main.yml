@@ -98,32 +98,23 @@
   when: ansible_distribution == "CentOS"
 
 ###############################################################################
-# configuration of the webapp
-###############################################################################
-
-- template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings_local.py
-- template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
-- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
-
-- shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
-    chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
-  register: r
-  changed_when: not "Installed 0 object(s) from 0 fixture(s)" in r.stdout
-
-###############################################################################
 # enable the task management toolchain
 ###############################################################################
 
 - service: name=rabbitmq-server state=started enabled=yes
 - rabbitmq_vhost: name={{MQ_VHOST}} state=present
+
+- rabbitmq_user: user={{MQ_USERNAME}}
+                 state=absent
+
 - rabbitmq_user: user={{MQ_USERNAME}}
                  password={{ETOXWS_SERVICE_PASSWD}}
                  vhost={{MQ_VHOST}}
                  configure_priv=.*
                  read_priv=.*
                  write_priv=.*
-                 tags=administrator
                  state=present
+                 #tags=administrator
 
 - rabbitmq_user: user=guest state=absent
 
@@ -136,6 +127,19 @@
   with_items:
   - "{{supervisord_conf_dir}}"
   - "/var/log/celery"
+
+###############################################################################
+# configuration of the webapp
+###############################################################################
+
+- template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings_local.py
+- template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
+- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
+
+- shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
+    chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
+  register: r
+  changed_when: not "Installed 0 object(s) from 0 fixture(s)" in r.stdout
 
 #- ini_file: dest="{{supervisord_conf}}"
 #            section=include
@@ -158,10 +162,12 @@
 - lineinfile: dest="/home/modeler/soft/eTOXlab/ws/views2.py"
     insertbefore="(\s+)while True:"
     line="        jobobserver.report_started(p.pid)"
+  ignore_errors: true
 
 - lineinfile: "dest=/home/modeler/soft/eTOXlab/ws/views2.py
     state=absent
     line='        jobobserver.report_progress(0) # indicate that calculation has been started'"
+  ignore_errors: true
 
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel1
