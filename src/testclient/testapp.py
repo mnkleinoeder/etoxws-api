@@ -153,6 +153,7 @@ def main(argv=None):
         args = parser.parse_args()
 
         FORMAT = "%(levelname)s: %(message)s"
+        print args.loglev
         logging.basicConfig(level=logging.getLevelName(args.loglev), format=FORMAT)
 
         DRY_RUN = args.dry_run
@@ -166,7 +167,7 @@ def main(argv=None):
 
         url = '/'.join((BASE_URL, 'dir'))
         ret = _get(url)
-        
+
         all_models = [ m for m in json.loads(ret.text)]
         logging.debug(pprint.pformat(all_models))
 
@@ -175,11 +176,11 @@ def main(argv=None):
             ret = _get(url)
             for job_id in json.loads(ret.text):
                 print url+job_id
-                requests.delete(url+job_id)
-            
+                requests.delete(url+job_id, verify=SSL_VERIFY)
+
         elif args.print_summary:
             DRY_RUN = True
-            
+
             url = '/'.join((BASE_URL, 'info'))
             ret = _get(url)
             info = json.loads(ret.text)
@@ -192,25 +193,25 @@ def main(argv=None):
                 msg = "Webservice information:"
                 print msg
                 print '-' * len(msg)
-                
+
                 for k in ('provider', 'homepage', 'admin', 'admin_email'):
                     print "%-12s: %s"%(k, info[k])
-            
+
             if args.print_summary == 'trac':
                 frmt = '|| {{{%-100s}}} ||'
                 for model in sorted([ m['id'] for m in all_models]):
                     print frmt%(model)
             else:
                 print delim
-                frmt = '| %-3s | %-100s | %-15s | %-100s |'
+                frmt = '| %-3s | %-100s | %-9s | %-15s | %-100s |'
                 print "Available models:"
-    
-                header = frmt%("#", "ID", "category", "external_id")
+
+                header = frmt%("#", "ID", "version", "category", "external_id")
                 print '-' * len(header)
                 print header
                 print '-' * len(header)
                 for i, model in enumerate(all_models):
-                    print frmt%(i, model['id'], model.get('category', 'N/A'), model.get('external_id', 'N/A'))
+                    print frmt%(i, model['id'], model.get('version', '1'), model.get('category', 'N/A'), model.get('external_id', 'N/A'))
                 print '-' * len(header)
         else:
             #import pydevd; pydevd.settrace()
@@ -224,8 +225,8 @@ def main(argv=None):
                             ids.append(all_models[int(mid)]['id'])
                         except Exception, e:
                             logging.warn("Could not convert index %s"%(e))
-                        
-            
+
+
 
             models = list()
             model_ids = list()
@@ -236,18 +237,18 @@ def main(argv=None):
                     continue
                 models.append(model)
                 model_ids.append(model_id)
-    
+
             job_ids = submit_jobs(models)
-    
+
             url = '/'.join((BASE_URL, 'jobs/'))
             ret = _get(url)
             all_jobs = ret.json()
-    
+
             for job_id in job_ids:
                 assert(job_id in all_jobs)
-    
+
             observing_jobs(zip(job_ids, model_ids), interval=args.poll, duration=args.duration, cancel_after=args.delete)
-    
+
             print_result(zip(job_ids, model_ids))
 
     except KeyboardInterrupt:

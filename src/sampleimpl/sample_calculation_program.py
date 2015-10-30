@@ -20,8 +20,9 @@ SLEEP_TIME = 3
 def main(argv):
     #raise Exception("failed by purpose")
     property = sys.argv[1]
-    infile = sys.argv[2]
-    outfile = sys.argv[3]
+    version = sys.argv[2]
+    infile = sys.argv[3]
+    outfile = sys.argv[4]
 
     ifp = open(infile)
     ofp = open(outfile, "w")

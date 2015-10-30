@@ -26,12 +26,12 @@ calculation_info =  {
 					"METABOLISM",
 				]
 			},
-			"id" : { 
+			"id" : {
 						"type": "string",
 						"pattern": "^(/[^/]+)+/\d+$",
 						"description": "'/' separated hierarchical description, eg. '/Toxicity/Organ Toxicity/Phospholipidosis/DIPL/1'"
 			},
-			"external_id" : { 
+			"external_id" : {
 							"type": "string",
 							"description": "reference to meta data repository (eTOXvault)."
 			},
@@ -39,6 +39,10 @@ calculation_info =  {
 				"type": "array",
 				# how to implement validation of embedded types?
 				"items": { "$ref": "http://etoxsys.eu/etoxwsapi/v2/schema/control_parameter_info#" },
+			},
+			"version": {
+				"type": "string",
+				"pattern": "^\d+$",
 			},
 			"return_type_spec": {
 				"type": "object",

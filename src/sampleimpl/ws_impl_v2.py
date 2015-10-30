@@ -22,17 +22,25 @@ class WS2(WebserviceImplementationBase):
         """
         create calculation info with default value data type (number)
         """
-        self.ames_id = '/Tox/Genotox/Mutagen/AMES/1'
-        self.ames_1 = calculation_info.create_object(id=self.ames_id, category="ENDPOINT", external_id = "eTOXvault ID1")
-        self.ames_1['return_type_spec'] = schema.get("result_endpoint").schema
+        self.ames1_id = '/Tox/Genotox/Mutagen/AMES/1'
+        self.ames1_1 = calculation_info.create_object(id=self.ames1_id, category="ENDPOINT")
+        self.ames1_1['return_type_spec'] = schema.get("result_endpoint").schema
 
-        self.my_models.append(self.ames_1)
+        self.my_models.append(self.ames1_1)
+
+        """
+        create calculation info with default value data type (number)
+        """
+        self.ames1_2 = calculation_info.create_object(id=self.ames1_id, category="ENDPOINT", version="2")
+        self.ames1_2['return_type_spec'] = schema.get("result_endpoint").schema
+
+        self.my_models.append(self.ames1_2)
 
         """
         define a categorical return type
         """
         self.dipl_id = '/Tox/Organ Tox/Phospholipidosis/DIPL/1'
-        self.dipl_1 = calculation_info.create_object(id=self.dipl_id, category="ENDPOINT", external_id = "eTOXvault ID2")
+        self.dipl_1 = calculation_info.create_object(id=self.dipl_id, category="ENDPOINT")
         r_type = schema.get("result_endpoint").schema
         r_type['properties']['value'] = { "enum": ["positive", "negative", "unknown"]}
         self.dipl_1['return_type_spec'] = r_type
@@ -62,11 +70,15 @@ class WS2(WebserviceImplementationBase):
 
         outfile = tempfile.mktemp(suffix=".sdf")
 
-        jobobserver.log_info("calculation for %s"%(calc_info['id']))
+        jobobserver.log_info("calculation for %s (version %s)"%(calc_info['id'], calc_info['version']))
 
         regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
 
-        p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], infile, outfile]
+        #
+        # check the version
+        #
+
+        p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], calc_info['version'], infile, outfile]
                                                 ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         jobobserver.report_started(p.pid)

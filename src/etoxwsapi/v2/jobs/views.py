@@ -120,21 +120,23 @@ class JobsView(View):
             try:
                 logger.info("Submitting job for '%s': %s"%(calc_info['id'], job_id))
                 calc_info_schema = schema.get('calculation_info')
+                if not calc_info.has_key('version'):
+                    calc_info['version'] = '1'
                 calc_info_schema.validate(calc_info)
 
                 cjob = etoxwsapi.v2.jobs.tasks.calculate.apply_async((calc_info, sdf_file), task_id=job_id, retry=False)  #@UndefinedVariable
 
                 job.status = _map_state(cjob.state)
             except Exception, e:
+                job.completion_time = time.time()
+                job.msg = json.dumps(traceback.format_exc().splitlines())
+                job.status = "JOB_REJECTED"
+                logger.warn("Failed submission of '%s': %s"%(calc_info['id'], e))
+                job.save()
                 try:
                     cjob.revoke()
                 except Exception, ee:
                     logging.warn("Error while trying to revoke failed job: %s"%(ee))
-                job.completion_time = time.time()
-                job.msg = str(e)
-                job.status = "JOB_REJECTED"
-                logger.warn("Failed submission of '%s': %s"%(calc_info['id'], e))
-                job.save()
 
             jobs.append(_conv_job(job))
 
@@ -145,7 +147,7 @@ class JobHandlerView(View):
         job = get_object_or_404(Job, job_id=job_id)
         try:
             job_status = _conv_job(job)
-            
+
             if job_status['status'] == "JOB_UNKNOWN":
                 try:
                     cjob = AsyncResult(job_id)
