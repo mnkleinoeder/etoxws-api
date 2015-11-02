@@ -49,7 +49,7 @@ calculation_info =  {
 				"description": "JSON schema for specifying the return data"
 			}
 		},
-		"required": [ "id", "category" ] ,
+		"required": [ "id", "category", "version" ] ,
 		"additionalProperties": False,
 	}
 

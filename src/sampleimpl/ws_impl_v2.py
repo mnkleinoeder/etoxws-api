@@ -23,7 +23,7 @@ class WS2(WebserviceImplementationBase):
         create calculation info with default value data type (number)
         """
         self.ames1_id = '/Tox/Genotox/Mutagen/AMES/1'
-        self.ames1_1 = calculation_info.create_object(id=self.ames1_id, category="ENDPOINT")
+        self.ames1_1 = calculation_info.create_object(id=self.ames1_id, category="ENDPOINT", version="1")
         self.ames1_1['return_type_spec'] = schema.get("result_endpoint").schema
 
         self.my_models.append(self.ames1_1)
@@ -40,7 +40,7 @@ class WS2(WebserviceImplementationBase):
         define a categorical return type
         """
         self.dipl_id = '/Tox/Organ Tox/Phospholipidosis/DIPL/1'
-        self.dipl_1 = calculation_info.create_object(id=self.dipl_id, category="ENDPOINT")
+        self.dipl_1 = calculation_info.create_object(id=self.dipl_id, category="ENDPOINT", version="1")
         r_type = schema.get("result_endpoint").schema
         r_type['properties']['value'] = { "enum": ["positive", "negative", "unknown"]}
         self.dipl_1['return_type_spec'] = r_type
