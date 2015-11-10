@@ -26,7 +26,7 @@ _POLL_INTERVALL = 5
 _DURATION = -1
 _DELETE_AFTER = -1
 
-def _get(url):
+def http_get(url):
     ret = requests.get(url, verify=SSL_VERIFY)
 
     if ret.status_code == 200:
@@ -59,27 +59,26 @@ class CLIError(Exception):
         return self.msg
 
 class WSClientHandler(object):
-    def __init__(self, args):
+    def __init__(self, prog, args):
+        self.prog = prog
         self.args = args
-        FORMAT = "%(levelname)s: %(message)s"
-        logging.basicConfig(level=logging.getLevelName(self.args.loglev), format=FORMAT)
 
         url = '/'.join((self.args.baseurl, 'info'))
-        ret = _get(url)
+        ret = http_get(url)
         self.wsinfo = json.loads(ret.text)
         logging.debug(pprint.pformat(self.wsinfo))
 
         url = '/'.join((self.args.baseurl, 'dir'))
-        ret = _get(url)
+        ret = http_get(url)
         self.models = [ m for m in json.loads(ret.text)]
         logging.debug(pprint.pformat(self.models))
 
-    def _print_result(self, ids):
+    def _print_result(self, jobs):
         frmt = '| %-7s | %-10s | %-10s | %-10s |'
-        for (job_id,model_id) in ids:
+        for (job_id,model_id) in jobs:
             print "==========================================================================="
             print "Results for model '%s' (job: %s)\n"%(model_id, job_id)
-            ret = _get('/'.join((self.args.baseurl, 'jobs', job_id)))
+            ret = http_get('/'.join((self.args.baseurl, 'jobs', job_id)))
             if ret.status_code == 200:
                 results = json.loads(ret.text)
                 if results['status'] == "JOB_COMPLETED":
@@ -108,8 +107,8 @@ class WSClientHandler(object):
 
         if req_ret.status_code == 200:
             job_ids = list()
-            for stat in json.loads(req_ret.text):
-                job_ids.append(stat['job_id'])
+            for i, stat in enumerate(json.loads(req_ret.text)):
+                job_ids.append( (stat['job_id'], "%s (version %s)"%(models[i]['id'], models[i]['version'])) )
                 print "======================================================================"
                 print "new job submitted."
                 for t in ("job_id", "status"): #, "msg"):
@@ -117,13 +116,15 @@ class WSClientHandler(object):
         else:
             raise Exception("Failed to submit jobs (%s): %s"%(req_ret.status_code, req_ret.text))
 
+#            model_ids.append("%s (version %s)"%(model['id'], model['version']))
+
         return job_ids
 
     def _delete_job(self, job_id):
         ret = requests.delete(self.args.baseurl + '/jobs/' + job_id, verify=SSL_VERIFY)
         #print ret.status_code, ret.text
 
-    def _observing_jobs(self, jobs, interval, duration, cancel_after):
+    def _observing_jobs(self, jobs, interval=_POLL_INTERVALL, duration=_DURATION, cancel_after=_DELETE_AFTER):
         print "Observing running jobs."
         if duration:
             print "Timeout: %d seconds"%(duration)
@@ -135,7 +136,7 @@ class WSClientHandler(object):
                 if i == cancel_after:
                     self._delete_job(job_id)
                 url = '/'.join((self.args.baseurl, "jobs", job_id))
-                ret = _get(url)
+                ret = http_get(url)
                 stat = ret.json()
                 print "status for '%s': %s (%s)"%(job_id, stat['status'], model_id) # stat['currecord'], stat['nrecord'])
                 logging.debug(stat)
@@ -149,34 +150,8 @@ class WSClientHandler(object):
                 time.sleep(interval)
 
 
-    def dispatch(self, func_name):
-        program_name = "bla"
-        try:
-            f = getattr(self, func_name)
-            f()
-        except KeyboardInterrupt:
-            ### handle keyboard interrupt ###
-            print "Ctrl-C"
-        except Exception, e:
-            indent = len(program_name) * " "
-            sys.stderr.write(program_name + ": " + str(e) + "\n")
-            sys.stderr.write(indent + "  for help use --help\n")
-            sys.stderr.write(traceback.format_exc())
-            return 1
-        return 0
-
-    def cleanup(self):
-        if self.args.do_cleanup:
-            url = '/'.join((self.args.baseurl, 'jobs/'))
-            ret = _get(url)
-            for job_id in json.loads(ret.text):
-                print url+job_id
-                requests.delete(url+job_id, verify=SSL_VERIFY)
-
-    def test(self):
-        #import pydevd; pydevd.settrace()
+    def _get_selected_models(self):
         models = list()
-        model_ids = list()
 
         req_ids = list()
         if self.args.ids:
@@ -188,20 +163,82 @@ class WSClientHandler(object):
             if req_ids and not ( i in req_ids ):
                 continue
             models.append(model)
-            model_ids.append("%s (version %s)"%(model['id'], model['version']))
+        return models
 
-        job_ids = self._submit_jobs(models)
+    def dispatch(self, func_name):
+        try:
+            f = getattr(self, func_name)
+            f()
+        except KeyboardInterrupt, ki:
+            ### handle keyboard interrupt ###
+            print ki
+            print ""
+        except Exception, e:
+            indent = len(self.prog) * " "
+            sys.stderr.write(self.prog + ": " + str(e) + "\n")
+            sys.stderr.write(indent + "  for help use --help\n")
+            sys.stderr.write(traceback.format_exc())
+            return 1
+        return 0
 
+    def cleanup(self):
         url = '/'.join((self.args.baseurl, 'jobs/'))
-        ret = _get(url)
-        all_jobs = ret.json()
+        ret = http_get(url)
+        for job_id in json.loads(ret.text):
+            print url+job_id
+            requests.delete(url+job_id, verify=SSL_VERIFY)
 
-        for job_id in job_ids:
+    def _make_prop_entry(self, model, meta, val):
+        mid = model['id']
+        label, n = mid.split('/')[-2:]
+        return ">  <%s #%s version%s (%s)%s>\n%s\n\n"%(label, n, model['version'], self.wsinfo['provider'], meta, val)
+
+    def calc(self):
+        models = self._get_selected_models()
+        jobs   = self._submit_jobs(models)
+        self._observing_jobs(jobs)
+
+        infp = open(self.args.infile, 'rU')
+        outfp = open(self.args.outfile, 'w')
+
+        outrecs = list()
+        for sdfrec in infp.read().split('$$$$\n')[:-1]:
+            rec = sdfrec.rstrip() + '\n\n'
+            outrecs.append( rec )
+
+        for i, (job_id,model_id) in enumerate(jobs):
+            ret = http_get('/'.join((self.args.baseurl, 'jobs', job_id)))
+            if ret.status_code == 200:
+                data = json.loads(ret.text)
+                if data['status'] == "JOB_COMPLETED":
+                    results = data['results']
+                    for r in results:
+                        icmp = int(r['cmp_id'])
+                        outrecs[icmp] += self._make_prop_entry(models[i], "", _val(r, 'value'))
+                        outrecs[icmp] += self._make_prop_entry(models[i], ":ADAN", _val(r, 'AD','value'))
+                        outrecs[icmp] += self._make_prop_entry(models[i], ":RI", _val(r, 'RI','value'))
+                else:
+                    print "Job is not (yet) available: %s (%s)"%(results['status'], results['msg'])
+            else:
+                print "Could not get job results: %s, %s"%(ret.status_code, ret.text)
+        for rec in outrecs:
+            print >>outfp, rec+'$$$$'
+
+    def test(self):
+        #import pydevd; pydevd.settrace()
+
+        models = self._get_selected_models()
+        jobs   = self._submit_jobs(models)
+
+        # test for consistency of job ids
+        url = '/'.join((self.args.baseurl, 'jobs/'))
+        ret = http_get(url)
+        all_jobs = ret.json()
+        for job_id,_ in jobs:
             assert(job_id in all_jobs)
 
-        self._observing_jobs(zip(job_ids, model_ids), interval=self.args.poll, duration=self.args.duration, cancel_after=self.args.delete)
-
-        self._print_result(zip(job_ids, model_ids))
+        self._observing_jobs(jobs, interval=self.args.poll, duration=self.args.duration, cancel_after=self.args.delete)
+        self._print_result(jobs)
 
     def dir_info(self):
         delim = 160 * '='
@@ -240,7 +277,7 @@ class CLI(object):
         # Setup argument parser
         parser = ArgumentParser(
             formatter_class=RawDescriptionHelpFormatter,
-            description='Command line interface to the eTOX webservice API',
+            description='Command line interface to access the eTOX webservices (based on API v2)',
         )
 
         parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=_BASE_URL)
@@ -253,26 +290,33 @@ class CLI(object):
         parser_test.add_argument("-p", "--poll-interval", dest="poll", type=int, help="poll status each N sec [default: %(default)s]", metavar="N", default= _POLL_INTERVALL)
         parser_test.add_argument("-d", "--duration", dest="duration", type=int, help="stop this program after N sec [default: %(default)s]", metavar="N", default= _DURATION)
         parser_test.add_argument("-c", "--delete-after", dest="delete", type=int, help="issue a DELETE request after N polls [default: %(default)s]", metavar="N", default= _DELETE_AFTER)
-        parser_test.add_argument("-C", "--cleanup", action='store_true', dest="do_cleanup", help="tries to delete all existing jobs")
 
         parser_test.add_argument("-t", "--test-file", dest="infile", help="SDFile to be used for the test run. [default: %(default)s]", default=_INFILE )
         parser_test.add_argument("-i", "--ids", dest="ids", help="comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", default=None)
 
         parser_test.set_defaults(func='test')
 
-#        parser.add_subparsers('command', help='Subcommand to run')
+        parser_calc = subparsers.add_parser('calc', help='calculation help')
+        parser_calc.set_defaults(func='calc')
+        parser_calc.add_argument("-I", "--input-file", dest="infile", help="SDFile to be used as input file for calculations.", required=True )
+        parser_calc.add_argument("-O", "--output-file", dest="outfile", help="SDFile to be used as output file.", required=True )
+        parser_calc.add_argument("-i", "--ids", dest="ids", help="comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", default=None)
 
-#         parser_calc = subparsers.add_parser('calc', help='calculation help')
-#         parser_calc.set_defaults(func=calc)
-#
-        parser_dir = subparsers.add_parser('info', help='dir help')
+        parser_dir = subparsers.add_parser('info', help='prints info and dir from webservice implementation running at base url')
         parser_dir.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="output format", nargs='?', default=None, required=False)
         parser_dir.set_defaults(func='dir_info')
+
+        parser_dir = subparsers.add_parser('cleanup', help='cancels and deletes jobs')
+        parser_dir.set_defaults(func='cleanup')
 
         args = parser.parse_args()
         #print args
 
-        handler = WSClientHandler(args)
+        FORMAT = "%(levelname)s: %(message)s"
+        logging.basicConfig(level=logging.getLevelName(args.loglev), format=FORMAT)
+
+
+        handler = WSClientHandler(parser.prog, args)
 
         return handler.dispatch(args.func)
 
