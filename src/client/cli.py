@@ -191,7 +191,7 @@ class WSClientHandler(object):
     def _make_prop_entry(self, model, meta, val):
         mid = model['id']
         label, n = mid.split('/')[-2:]
-        return ">  <%s #%s version%s (%s)%s>\n%s\n\n"%(label, n, model['version'], self.wsinfo['provider'], meta, val)
+        return ">  <%s v%s (%s)%s>\n%s\n\n"%(mid, model['version'], self.wsinfo['provider'], meta, val)
 
     def calc(self):
         models = self._get_selected_models()
