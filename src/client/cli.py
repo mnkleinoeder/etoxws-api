@@ -43,7 +43,7 @@ def _val(r, k1, k2 = None):
         else:
             return r[k1]
     except KeyError:
-        return 'no value!'
+        return 'n/a'
     except Exception, e:
         print type(e)
         raise e
@@ -108,7 +108,7 @@ class WSClientHandler(object):
         if req_ret.status_code == 200:
             job_ids = list()
             for i, stat in enumerate(json.loads(req_ret.text)):
-                job_ids.append( (stat['job_id'], "%s (version %s)"%(models[i]['id'], models[i]['version'])) )
+                job_ids.append( (stat['job_id'], "%s (version %s)"%(models[i]['id'], models[i].get('version', '1'))) )
                 print "======================================================================"
                 print "new job submitted."
                 for t in ("job_id", "status"): #, "msg"):
@@ -191,7 +191,9 @@ class WSClientHandler(object):
     def _make_prop_entry(self, model, meta, val):
         mid = model['id']
         label, n = mid.split('/')[-2:]
-        return ">  <%s v%s (%s)%s>\n%s\n\n"%(mid, model['version'], self.wsinfo['provider'], meta, val)
+        return ">  <%s #%s (%s, version %s)%s>\n%s\n\n"%(label, n, self.wsinfo['provider'], model.get('version', '1'), meta, val)
+
+        #return ">  <%s v%s (%s)%s>\n%s\n\n"%(mid, model.get('version', '1'), self.wsinfo['provider'], meta, val)
 
     def calc(self):
         models = self._get_selected_models()
@@ -282,7 +284,6 @@ class CLI(object):
 
         parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=_BASE_URL)
         parser.add_argument("-l", "--log-level", dest="loglev", help="set verbosity level [default: %(default)s] (see python logging module)", default=_LOG_LEV)
-        parser.add_argument("-t", "--test-file", dest="infile", help="SDFile to be used for the test run. [default: %(default)s]", default=_INFILE )
 
         subparsers = parser.add_subparsers(help='available subcommands')
 
