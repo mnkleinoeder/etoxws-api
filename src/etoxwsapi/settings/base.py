@@ -1,6 +1,7 @@
 # Django settings for etoxwsapi project.
 import os
 import sys
+import socket
 
 from .secret_key import SECRET_KEY #@UnusedImport @UnresolvedImport
 
