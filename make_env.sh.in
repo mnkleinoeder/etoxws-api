@@ -1,16 +1,17 @@
 # sample file for setting up the environment for running the webapp
 # copy to a "make_env.sh" and adapt paths below. Don't checkin the copied file.
 
-. <PATH_TO_VENV>
-
-RDKIT_DIR=/opt/rdkit
+# set the following paths
+VENV=<PATH_TO_VENV>
 ETOXWSAPI_DIR=<PATH_TO_ETOXWSAPI>
 
+# defaults for etoxlab. otherwise reset next two vars  
+IMPL_DIR=/home/modeler/soft/eTOXlab/ws/
+RDKIT_DIR=/opt/RDKIT
+
+. $VENV/bin/activate
+
 export LD_LIBRARY_PATH=$RDKIT_DIR/lib
-export PYTHONPATH=$ETOXWSAPI_DIR/src:$RDKIT_DIR/lib/python2.7/site-packages
- 
-export PYTHONPATH=$PYTHONPATH
+export PYTHONPATH=$IMPL_DIR:$ETOXWSAPI_DIR/src:$RDKIT_DIR/lib/python2.7/site-packages
  
 export DJANGO_SETTINGS_MODULE=etoxwsapi.settings
-
-echo 'cd to "src/etoxwsapi" and run django with "python manage.py <action>"'

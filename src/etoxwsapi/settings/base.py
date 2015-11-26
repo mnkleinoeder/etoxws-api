@@ -1,13 +1,14 @@
 # Django settings for etoxwsapi project.
 import os
 import sys
-import socket
 
-DEBUG = True
+from .secret_key import SECRET_KEY #@UnusedImport @UnresolvedImport
+
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR	= os.path.abspath(os.path.join(PROJECT_DIR, '..'))
+ROOT_DIR	= os.path.abspath(os.path.join(PROJECT_DIR, '..', '..'))
 
 # this var will be set by Apache/WSGI script
 # in development it's ignored.
@@ -86,9 +87,6 @@ STATICFILES_FINDERS = (
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = ')4e(5k!5s$i^r_6&wb!^+&nc$xe(xa@8x&-67l91+h4ma6qz7c'
-
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
@@ -157,19 +155,10 @@ CELERYD_POOL_RESTARTS = True
 
 ETOXWS_IMPL_V2_ASYNC = True
 
-# see http://code.djangoproject.com/wiki/SplitSettings#Multiplesettingfilesimportingfromeachother
 try:
     execfile(os.path.join(PROJECT_DIR, 'settings_local.py'))
 except Exception, e:
-    print "Failed to import settings_local.py %s"%(e)
-
-for ws in ('ETOXWS_IMPL_V1', 'ETOXWS_IMPL_V2'):
-    if ws not in dir():
-        raise Exception("Webservice implementation class required: %s"%(ws))
-
-for s in ('BROKER_URL', 'DATABASES'):
-    if s not in dir():
-        raise Exception("Setting '%s' must be set in settings_local.py"%(s))
+    sys.stderr.write( "Ignoring missing settings_local.py: %s"%(e) )
 
 # see http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager
 CELERY_ALWAYS_EAGER = (not ETOXWS_IMPL_V2_ASYNC)
@@ -214,20 +203,4 @@ LOGGING = {
         },
     },
 }
-
-from kombu import Connection as _conn
-
-with _conn(BROKER_URL) as conn: #@UndefinedVariable
-    try:
-        simple_queue = conn.SimpleQueue('simple_queue')
-    except socket.error, e:
-        print "rabbitmq url: ", BROKER_URL #@UndefinedVariable
-        print "Warning: could not establish connection to rabbitmq: ",
-        if e.errno == 104:
-            print "Access problems."
-            print "Check that username, password and vhost are correct."
-        elif e.errno == 111:
-            print "Server process seems down."
-            print "Check with 'service rabbitmq-server status'"
-
 
