@@ -12,8 +12,16 @@
       PYPCK: "views2"
       PYCLASS: "WS2"
   - RDKIT_DIR: "/opt/RDKIT"
+  tasks:
+  - name: cleanup old and outdated directories
+    file: path="/srv/www/webapps/etoxws" state=absent
+    with_items:
+    - "/srv/www/webapps/etoxws"
+    - "/srv/www/webapps/etoxws-api"
+    - "/etc/httpd/conf.d/etox.d"
   roles:
-  - { role: apache }
+  - { role: apache ,
+        tags: apache }
   - { role: etoxws-server,
       ETOXWS_CLEAN_DB: True,
       ETOXWS_PRODUCTION: True,

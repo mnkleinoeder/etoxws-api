@@ -3,6 +3,9 @@
 # Use the PYPATH variable to add your own paths.
 # Just add as it was a normal PYTHONPATH,
 # PYPATH: "/home/modeler/soft/eTOXlab/ws/:MY_PATH1:MY_PATH2"
+#
+# copy this file 'cp etoxlabvm.yml.in etoxlabvm.yml'
+#
 ###############################################################################
 - hosts: etoxlab
   vars:
@@ -15,8 +18,8 @@
   roles:
   - { role: apache }
   - { role: etoxws-server,
-      ETOXWS_PRODUCTION: True,
-#      ETOXWS_SERVICE_PASSWD: secret,
-      ETOXWS_CLEAN_DB: True
+        ETOXWS_PRODUCTION: True,
+#       ETOXWS_SERVICE_PASSWD: secret,
+        ETOXWS_CLEAN_DB: True
     }
 #  - {role: etoxws-server, ETOXWS_NAME: etoxwsapi_dev }

@@ -3,11 +3,10 @@
 # whatever IP or hostname of eTOXlab to be configured
 # use localhost when running within eTOXlab or your development machine
 # otherwise add all machine IP's to deploy to
+#
+# copy this file "cp hosts.in hosts" and edit the copy
+#
 ###############################################################################
-192.168.178.219
+
 #localhost
 #192.168.56.101
-#192.168.56.152
-#192.168.178.210
-#192.168.0.239
-
