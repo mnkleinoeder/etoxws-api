@@ -8,7 +8,7 @@ Deployment of the reference implementation with Ansible
 Introduction
 ------------
 
-The new webservice implementation as released on 2014-12-01 requires several components installed and configured:
+The webservice implementation for API version 2 as released on 2014-12-01 requires several components installed and configured:
 
 * Postgres and a database with r/w access
 * Celery running as background service
@@ -31,10 +31,7 @@ Requirements
 
 * Check that the target machine has access to the internet
 * You need root access to the target machine
-* Deployment has been tested on \CentOS 6.5 and Ubuntu 12.04.
-
-Preparation
------------
+* Deployment has been tested on \CentOS 6.5 and Ubuntu 12.04 or 14.04
 
 Backup
 ~~~~~~
@@ -68,28 +65,10 @@ example the target is the local machine:
 
 The last command should return ``root`` w/o asking for a password.
 
-Install ansible in a virtualenv
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Preparation
+-----------
 
-Run the following commands
-
-.. code-block:: bash
-
-   ~$ mkdir upgrade
-   ~$ cd upgrade/
-   ~/upgrade$ virtualenv ansible
-   ~/upgrade$ . ansible/bin/activate
-   (ansible)~/upgrade$ pip install ansible==1.8.1
-
-Check that ansible is now available:
-
-.. code-block:: bash
-
-   (ansible)~/upgrade$ ansible --version
-   ansible 1.8.1
-
-Execution
----------
+For the preparation steps required to execute the deployment process please this section: :ref:`prepare-env`
 
 Download and configure the deployment code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -185,37 +164,10 @@ which means: detect the number of cores and use this number.
 
 Testing
 -------
-The webapp code provides a testing tool for submitting test jobs and observing the calculation progress via the webservice
-interface.
 
-Requires the etoxws virtual env loaded.
+Please refer to the section:
+:doc:`testing`.
 
-.. code-block:: bash
-
-   ~$ . /opt/virtualenv/etoxwsapi/bin/activate
-   (etoxws-v2)~$ cd ~/upgrade/etoxws-api/src/testclient
-   (etoxws-v2)~/upgrade/etoxws-api/src/testclient$ export PYTHONPATH=$PWD/..
-   (etoxws-v2)~/upgrade/etoxws-api/src/testclient$ python testapp.py --help
-   usage: testapp.py [-h] [-b BASEURL] [-l LOGLEV] [-t TESTFILE] [-p N] [-d N]
-                     [-c N]
-   
-   optional arguments:
-     -h, --help            show this help message and exit
-     -b BASEURL, --base-url BASEURL
-                           base url of webservice to be tested [default:
-                           https://localhost/etoxwsapi/v2]
-     -l LOGLEV, --log-level LOGLEV
-                           set verbosity level [default: WARN] (see python
-                           logging module)
-     -t TESTFILE, --test-file TESTFILE
-                           SDFile to be used for the test run. [default:
-                           ~/upgrade/etoxws-api/src/testclient/tiny.sdf]
-     -p N, --poll-interval N
-                           poll status each N sec [default: 5]
-     -d N, --duration N    stop this program after N sec [default: -1]
-     -c N, --delete-after N
-                           issue a DELETE request after N polls [default: -1]
-   
 Maintainance
 ------------
 
@@ -320,45 +272,4 @@ and
 .. code-block:: bash
 
    tailf /var/log/httpd/etoxws-v2-ssl.com_error.log
-
-Using a debugger
-~~~~~~~~~~~~~~~~
-
-If ``ETOXWS_PRODUCTION`` is ``false`` (ie. the application runs in debug mode) a remote debugging tool is delivered and
-ready to use: the PyDev remote debugger (http://pydev.org/manual_adv_remote_debugger.html).
-
-Just set a breakpoint at an arbitrary location in your code by adding the following line of code:
-
-Debugging on ``localhost``:
-
-   :py:`import pydevd; pydevd.settrace()`
-
-Debugging remotely, ie., your development machine is, e.g., ``192.168.1.236`` (the machine were your Eclipse is running and 
-the PyDev debugging server has been started):
-
-   :py:`import pydevd; pydevd.settrace("192.168.1.236")`
-
-.. note::
-   After modifications to your webservice implementation code please restart celery with ``supervisorctl restart etoxwsapi``.
-
-Please refer also to http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev.
-
-Example
-'''''''
-
-Let us assume we want to debug the ``calculate_impl`` method in ``/home/modeler/soft/eTOXlab/ws/view2.py``. So, we start
-the pydev debugger on ``192.168.1.236`` (your develpment machine) and add the settrace call to the beginning of our method.
-
-Finally, we reload celery ``supervisorctl reload etoxwsapi`` and triggering the calculation (using the testapp.py). In Eclipse/PyDev
-we should now see the code as below -- stopped at the line where the breakpoint was set.
-
-.. code-block:: py
-   :emphasize-lines: 3
-
-   def calculate_impl(self, jobobserver, calc_info, sdf_file):   
-     import pydevd; pydevd.settrace("192.168.1.236")
-   
-     itag  = self.my_tags[calc_info ['id']]      # -e tag for predict.py
-     itype = self.my_type[calc_info ['id']]      # quant/qualit endpoint
-
 

@@ -17,7 +17,12 @@ sys.path.extend('{{p}}'.split(':'))
 {% endif %} 
 {% endfor %} 
 
-os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings'
+{% if ETOXWS_PRODUCTION %}
+os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.prod'
+{% else %}
+# load settings for etoxlab
+os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.etoxlabdev'
+{% endif %} 
 
 import django.core.handlers.wsgi
 application = django.core.handlers.wsgi.WSGIHandler()

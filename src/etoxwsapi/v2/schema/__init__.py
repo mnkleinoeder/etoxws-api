@@ -101,7 +101,7 @@ def get(name):
 def get_doc(name):
 	get_registry()
 	if _documentation.has_key(name):
-		return _documentation.get(name)
+		return _documentation.get(name) or "No documentation available"
 	else:
 		raise LookupError("Schema '%s' not available"%(name))
 

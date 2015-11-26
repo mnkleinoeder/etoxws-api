@@ -104,8 +104,8 @@
 - service: name=rabbitmq-server state=started enabled=yes
 - rabbitmq_vhost: name={{MQ_VHOST}} state=present
 
-- rabbitmq_user: user={{MQ_USERNAME}}
-                 state=absent
+#- rabbitmq_user: user={{MQ_USERNAME}}
+#                 state=absent
 
 - rabbitmq_user: user={{MQ_USERNAME}}
                  password={{ETOXWS_SERVICE_PASSWD}}
@@ -131,10 +131,14 @@
 ###############################################################################
 # configuration of the webapp
 ###############################################################################
+- name: copy helper script for setting the runtime env
+  template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
 
-- template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings_local.py
-- template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
-- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
+- name: copy production settings
+  template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings/settings_local.py
+  when: ETOXWS_PRODUCTION|bool
+
+#- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
     chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
@@ -151,13 +155,13 @@
 # see: http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev
 # and  http://pydev.org/manual_adv_remote_debugger.html
 - set_fact: pydevd=""
-  when: ETOXWS_PRODUCTION
+  when: ETOXWS_PRODUCTION|bool
 
 - set_fact: pydevd=/opt/pydevd/pysrc
-  when: not ETOXWS_PRODUCTION
+  when: not ETOXWS_PRODUCTION|bool
 - file: path=/opt/pydevd state=directory
 - unarchive: src=pydevd.tgz dest=/opt/pydevd/
-  when: not ETOXWS_PRODUCTION
+  when: not ETOXWS_PRODUCTION|bool
 
 - lineinfile: dest="/home/modeler/soft/eTOXlab/ws/views2.py"
     insertbefore="(\s+)while True:"

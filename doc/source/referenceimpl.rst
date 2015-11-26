@@ -21,11 +21,7 @@ Several components are required to run the reference implementation
 * Celery running as background service
 * RabbitMQ running as background service
 
-The database backend and the rabbitmq messaging queue are configured in
-``/path/to/etoxwsapi/src/etoxwsapi/settings_local.py``. A sample configuration is given in the corresponding
-``settings_local.py.in`` file.
-
-It is not required to do this setup manually. The entire process of setting up the environment, the
+It is not required to do the setup manually. The entire process of setting up the environment, the
 webapplication and the apache webserver configuration can be performed automatically as documented here:
 :doc:`deployment`.
 
@@ -43,23 +39,26 @@ located in the module ``etoxwsapi.v2.wsbase``.  This class defines abstract meth
 the  webservice. These methods have to be implemented by the adapter (i.e., a subclass of
 ``etoxwsapi.v2.wsbase.WebserviceImplementationBase``).
 
-The connection between the django app and the calculation adapter is made in the file
-``etoxwsapi/settings_local.py``. This file is shipped as template (settings_local.py.in).
-Please rename to settings_local.py and set the implementation class(es) in that file.
+The connection between the django app and the calculation adapter is made via the Django settings mechanism
+``etoxwsapi/settings/*.py``.
 
-Furthermore, the settings_local.py file contains a variable for controlling if the django app implements
-synchronous or asynchronous execution of jobs. In the production version the webservice should be
-asynchronous. During development and debugging a synchronous execution is favorable.
+* the default development setting ``etoxwsapi/settings/dev.py`` loads the sample implementation.
+* there is a etoxlab specific dev settings file ``etoxwsapi/settings/etoxlabdev.py`` which connects the etoxlab implementation class.
+* in production the prod settings are loaded and the actual settings injected via a settings_local.py file.
 
+The settings to be used are defined by an environment variable ``DJANGO_SETTINGS_MODULE``,
+e.g., ``export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.etoxlabdev`` for loading the etoxlab specific settings. See also :ref:`runtime-env`.
+ 
 The package contains a sample implementation of the webservice adapter in the ``sampleimpl`` directory.
 This example should demonstrate how to implement the calculation adapter.
 
 The actual implementation should be located outside of the etoxwsapi django application and also not
-stored in the same git repository. The connection can easily be done using PYTHONPATH and
-``settings_local.py``.
+stored in the same git repository. The connection can easily be done using PYTHONPATH and the settings mechanism.
 
 Implementation
 ~~~~~~~~~~~~~~
+
+Please refer to :ref:`prepare-env` in order to have a working environment.
 
 #. create a new python module
 #. set the PYTHONPATH to ``/path/to/etoxwsapi/src``
@@ -114,10 +113,8 @@ A schema object can be used to create new self validating instances of a schema
 Testing the implementation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A python application is available in the ``src/testclient`` directory as a test client.
-
-First, the webservice has to be started (``python manage.py runserver``, see above). The test client
-can now be executed with ``python testapp.py``.
+During installation it is recommended to start the components in development mode as described here:
+:doc:`testing`.
 
 Class documentation
 -------------------

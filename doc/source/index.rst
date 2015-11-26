@@ -14,6 +14,7 @@ Contents:
    intro
    apispec
    referenceimpl
+   testing
    deployment
 
 

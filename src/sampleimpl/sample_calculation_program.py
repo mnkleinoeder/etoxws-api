@@ -15,7 +15,7 @@ out_str = """
    Elapsed time: 10 ms
 """
 
-SLEEP_TIME = 3
+SLEEP_TIME = 0
 
 def main(argv):
     #raise Exception("failed by purpose")
