@@ -1,8 +1,10 @@
 from .base import *  # @UnusedWildImport
+import socket
+
 
 DEBUG = True
 
-BROKER_URL = 'amqp://etoxwsapi_dev:etoxwsapi@localhost:5672/etoxwsapi_dev'
+BROKER_URL = 'amqp://etoxwsapi_dev:etoxwsapi_dev@localhost:5672/etoxwsapi_dev'
 
 DATABASES = {
     'default': {
