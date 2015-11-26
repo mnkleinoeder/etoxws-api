@@ -7,6 +7,7 @@ from etoxwsapi.djcelery import jobmgr
 from django.conf import settings
 from etoxwsapi.v2.jobs.models import Job
 import time
+import traceback
 v2_impl = settings.ETOXWS_IMPL_V2()
 
 from celery.utils.log import get_task_logger
@@ -115,5 +116,8 @@ def calculate(self, calc_info, sdf_file): #, logger, lock):
     try:
         v2_impl.calculate_impl(jr, calc_info, sdf_file)
     except Exception, e:
+        logger.error("Exception occurred: %s"%(e))
+        for l in traceback.format_exc().splitlines():
+            logger.error(l)
         jr.report_status(1, str(e))
     jr._finalize()

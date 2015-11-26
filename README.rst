@@ -4,7 +4,8 @@ eTOX Prediction webservice API
 About the eTOX project
 ----------------------
 
-   The eTOX project aims to develop a drug safety database from the pharmaceutical industry legacy toxicology reports > and public toxicology data; innovative in silico strategies and novel software tools to better predict the
+   The eTOX project aims to develop a drug safety database from the pharmaceutical industry legacy toxicology reports 
+   and public toxicology data; innovative in silico strategies and novel software tools to better predict the
    toxicological profiles of small molecules in early stages of the drug development pipeline
 
 (Citation from http://www.etoxproject.eu/)
