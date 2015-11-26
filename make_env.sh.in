@@ -2,8 +2,8 @@
 # copy to a "make_env.sh" and adapt paths below. Don't checkin the copied file.
 
 # set the following paths
-VENV=<PATH_TO_VENV>
-ETOXWSAPI_DIR=<PATH_TO_ETOXWSAPI>
+VENV=/home/modeler/etoxws/venv
+ETOXWSAPI_DIR=/home/modeler/etoxws/etoxws-api
 
 # defaults for etoxlab. otherwise reset next two vars  
 IMPL_DIR=/home/modeler/soft/eTOXlab/ws/
@@ -12,6 +12,6 @@ RDKIT_DIR=/opt/RDKIT
 . $VENV/bin/activate
 
 export LD_LIBRARY_PATH=$RDKIT_DIR/lib
-export PYTHONPATH=$IMPL_DIR:$ETOXWSAPI_DIR/src:$RDKIT_DIR/lib/python2.7/site-packages
+export PYTHONPATH=$IMPL_DIR:$ETOXWSAPI_DIR/src
  
-export DJANGO_SETTINGS_MODULE=etoxwsapi.settings
+export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.etoxlabdev
