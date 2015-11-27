@@ -55,6 +55,8 @@ machine.
 
 .. code-block:: bash
 
+   etoxws-v2:~ $> cd etoxws
+   etoxws-v2:~/etoxws $> . venv/bin/activate
    (venv)etoxws-v2:~/etoxws/etoxws-api/deploy $> ansible-playbook site.yml -vv -e ETOXWS_PRODUCTION=false
    
 This process will create a development database and job queue. 

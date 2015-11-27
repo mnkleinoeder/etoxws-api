@@ -68,23 +68,10 @@ The last command should return ``root`` w/o asking for a password.
 Preparation
 -----------
 
-For the preparation steps required to execute the deployment process please this section: :ref:`prepare-env`
+For the preparation steps required to execute the deployment process please refer to this section: :ref:`prepare-env`.
 
-Download and configure the deployment code
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: bash
-
-   (ansible)~/upgrade$ git clone https://github.com/mnkleinoeder/etoxws-api.git
-   (ansible)~/upgrade$ cd etoxws-api/deploy
-   
-Now, open the file ``hosts``. You'll find ``localhost`` in the section ``[etoxlab]``. This section contains all eTOXlab instances
-that the implementation should be deployed to - by default only to the local machine. You can add further host machines here,
-eg., if you have a master copy of eTOXlab your are logged in currently (localhost) and a dedicated instance to host the online-version of your prediction
-webservices to be used by eTOXsys.
-
-Further, please open the file ``etoxlabvm.yml``. Check that the variables in the ``vars`` section are correct. The defaults are
-suitable for a recent eTOXlab version. Otherwise, change to fit to your local setup.
+.. note:: If you have already a development environment you can just (re-)use the virtual env and the API code.
+   Otherwise follow the steps described in :ref:`prepare-env` first and return to these instructions afterwards.
 
 Apache setup
 ~~~~~~~~~~~~
@@ -104,9 +91,11 @@ You should be ready to run ansible:
 
 .. code-block:: bash
 
-   (ansible)~/upgrade/etoxws-api/deploy$ ansible-playbook site.yml -vv
+   etoxws-v2:~ $> cd etoxws
+   etoxws-v2:~/etoxws $> . venv/bin/activate
+   (venv)etoxws-v2:~/etoxws/etoxws-api/deploy $> ansible-playbook site.yml -vv
 
-Ansible should now download all required packages and bits-and-pieces and configure the task management toolchain
+Ansible should now download all required packages and bits-and-pieces and configure the task management tool-chain
 as well as integration with the apache webserver.
 
 Start a web-browser and enter \https://<ip_or_hostname>/etoxwsapi/v2/info. You should see a JSON string corresponding to
