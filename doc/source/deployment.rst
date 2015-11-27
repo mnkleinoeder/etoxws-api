@@ -76,7 +76,7 @@ For the preparation steps required to execute the deployment process please refe
    Otherwise follow the steps described in :ref:`prepare-env` first and return to these instructions afterwards.
 
 Apache setup
-~~~~~~~~~~~~
+------------
 
 Per default apache is installed and a virtual host configuration is created. This virtual host will support SSL encryption.
 
@@ -87,7 +87,7 @@ in the ``etoxlabvm.yml`` file. In that case you have to define the two variables
 * ``APACHE_WEBAPP_DIR``: location where the webapp code will be located (eg.: ``/srv/www/webapps``)
 
 Running Ansible
-~~~~~~~~~~~~~~~
+---------------
 
 You should be ready to run ansible:
 

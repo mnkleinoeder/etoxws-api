@@ -173,10 +173,13 @@
     line='        jobobserver.report_progress(0) # indicate that calculation has been started'"
   ignore_errors: true
 
+- set_fact: _cel_variant=""
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.conf mode=644
   register: cel1
 
-- template: src="etoxws.flower.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.conf mode=644
+- set_fact: _cel_variant="-flower"
+- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.conf mode=644
+  when: ETOXWS_PRODUCTION|bool
   register: cel2
 
 - supervisorctl: name={{ETOXWS_NAME}} state=restarted
