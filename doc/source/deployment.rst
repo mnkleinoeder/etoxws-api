@@ -247,6 +247,9 @@ All log messages from the webservice implementation (eg., :py:`jobobserver.log_i
 Debugging
 ---------
 
+For debugging please create a :doc:`development environment <testing>` and refer to these sections: :ref:`testing-client` and :ref:`testing-debug`.
+
+
 Observing the log files
 ~~~~~~~~~~~~~~~~~~~~~~~
 

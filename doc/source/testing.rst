@@ -113,6 +113,9 @@ In the second terminal please follow these instructions:
    Starting development server at http://0.0.0.0:8000/
    Quit the server with CONTROL-C.
 
+
+.. _testing-client:
+
 The test client
 ---------------
 
@@ -160,6 +163,8 @@ Please refer to sections :ref:`start-job-queue` and :ref:`start-dev-server`.
 If you are about to develop and debug the integration of your predictions you will have three active terminal windows open:
 the job queue, the development server, and one for executing the client program. As soon as you start the client program
 such as ``python src/client/cli.py test`` you will see corresponding log output in all three terminals.
+
+.. _testing-debug:
 
 Using a debugger
 ~~~~~~~~~~~~~~~~
