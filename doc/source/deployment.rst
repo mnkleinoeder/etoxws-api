@@ -39,6 +39,8 @@ Backup
 Before you start the deployment process it is recommended to make a backup of your system. For the eTOXlab virtual machine (or any virtual 
 machine based system) just take a snapshot of the current state of the VM (see https://www.virtualbox.org/manual/ch01.html#snapshots).
 
+.. _ssh-setup:
+
 Password-free SSH access to the target machine(s)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
