@@ -5,96 +5,47 @@ Deployment of the reference implementation with Ansible
    :language: py
    :class: highlight
 
+.. important::
+   If you have performed the procedure in December 2014, please first delete the old code: `rm -rf ~/upgrade`.
+
 Introduction
 ------------
-
-The webservice implementation for API version 2 as released on 2014-12-01 requires several components installed and configured:
-
-* Postgres and a database with r/w access
-* Celery running as background service
-* \RabbitMQ running as background service and a message queue available for celery
-
-Also, the HTTP communication between the eTOXsys components should be encrypted, both for the online version and the in-house versions
-(as requested by industry partners). 
 
 In order to assist all modelers with the setup of the required components the reference implementation provides a
 deployment procedure using Ansible (http://www.ansible.com). Also HTTPS is configured automatically by this procedure.
 
-This page guides you through the steps required to deploy the new implementation and required components.
-
-.. note:: This guide is written in a general manner, so the webservice implementation can be deployed on any
-   CentOS/Ubuntu based system. If you want to install on a local eTOXlab virtual machine just log into eTOXlab
-   as normal and work as user ``modeler`` and with host ``localhost`` as target machine.
+This page guides you through the steps required to deploy or update the implementation and all required components.
 
 Requirements
 ------------
 
 * Check that the target machine has access to the internet
-* You need root access to the target machine
-* Deployment has been tested on \CentOS 6.5 and Ubuntu 12.04 or 14.04
+* This procedure has been designed for and carefully tested on the eTOXlab virtual machine environment 
 
-Backup
-~~~~~~
-
-Before you start the deployment process it is recommended to make a backup of your system. For the eTOXlab virtual machine (or any virtual 
-machine based system) just take a snapshot of the current state of the VM (see https://www.virtualbox.org/manual/ch01.html#snapshots).
-
-.. _ssh-setup:
-
-Password-free SSH access to the target machine(s)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Make sure that you have a SSH authentication key pair in $HOME/.ssh: 
-
-.. code-block:: bash
-
-   ~$ ls .ssh/id_*
-   .ssh/id_rsa  .ssh/id_rsa.pub
-
-If not create authentication keys with ``ssh-keygen``. Just press enter when the program asks for setting a passphrase.
-
-.. code-block:: bash
-
-   ~$ ssh-keygen 
-
-Copy the public key to the target machine(s) with ``ssh-copy-id`` (the default root password for eTOXlab is ``etoxws``). In the following
-example the target is the local machine:
-
-.. code-block:: bash
-
-   ssh-copy-id root@localhost
-   ssh root@localhost whoami
-
-The last command should return ``root`` w/o asking for a password.
+* Please check the :ref:`deploy-appendix` for further information
 
 Preparation
 -----------
 
-For the preparation steps required to execute the deployment process please refer to this section: :ref:`prepare-env`.
+In order to execute the upgrade procedure a local instance of the code and a working configuration must be created first.
 
-.. note:: If you have already a development environment you can just (re-)use the virtual env and the API code.
-   Otherwise follow the steps described in :ref:`prepare-env` first and return to these instructions afterwards.
+Please run the following steps. 
 
-Apache setup
-------------
+.. include:: inc_create_venv.rst
 
-Per default apache is installed and a virtual host configuration is created. This virtual host will support SSL encryption.
-
-If you deploy to a machine that has already a working virtual host configuration (including SSL support) you can comment out the ``{ role: apache }`` 
-in the ``etoxlabvm.yml`` file. In that case you have to define the two variables
-
-* ``VHOST_CONF_DIR``: location of the virtual host configuration directory.
-* ``APACHE_WEBAPP_DIR``: location where the webapp code will be located (eg.: ``/srv/www/webapps``)
+Now, you should be ready for executing the upgrade process as described in the next section.
 
 Running Ansible
 ---------------
 
-You should be ready to run ansible:
+The upgrade process is executed by Ansible within the virtual environment as created in the previous step:
+
+.. include:: inc_prepare_venv.rst
+
+Finally, execute ansible (if you get an authentication error please refer to :ref:`ssh-setup`).
 
 .. code-block:: bash
 
-   etoxws-v2:~ $> cd etoxws
-   etoxws-v2:~/etoxws $> . venv/bin/activate
    (venv)etoxws-v2:~/etoxws/etoxws-api/deploy $> ansible-playbook site.yml -vv
 
 Ansible should now download all required packages and bits-and-pieces and configure the task management tool-chain
@@ -110,54 +61,27 @@ the information given in the webservice implementation class.
 .. note:: Ansible is designed to establish a certain configuration state as expressed in simple yaml files. Therefore, Ansible
    can be run several times safely. If the state is already reached no further changes will be performed.
 
-Ansible variables
-~~~~~~~~~~~~~~~~~
-The deployment can be adjusted by several variables as defined in ``deploy/roles/etoxws-server/defaults/main.yml``. Variables are redefined in
-the ``vars`` section of the ``etoxlabvm.yml`` file.
-
-.. note:: The defaults should perfectly work for eTOXlab. No need to change those variables.
-
-The main variables are as follows:
-
-ETOXWS_NAME
-   Name of the instance. Used as default for all kind of configuration, such as DB name, username, password as well
-   as baseurl (i.e., \https://<hostname>/{{ETOXWS_NAME}} and virtual env (i.e., ``/opt/virtualenv/{{ETOXWS_NAME}}``).
-
-   default:
-
-::
-   
-   ETOXWS_NAME: etoxwsapi
-
-
-ETOXWS_IMPL_V2:
-   yaml dict with path, package name and class name of the webservice implementation class (v2)
-
-   default (defined in ``etoxlabvm.yml``):
-   
-::
-
-   ETOXWS_IMPL_V2:
-      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
-      PYPCK: "views2"
-      PYCLASS: "WS2"
-
-ETOXWS_NPROC
-   number of processor cores used simultanously for calculations. Jobs are queued if all nodes are occupied and new jobs are submitted.
-   
-   default:  
-
-::
-
-   ETOXWS_NPROC: 0
-
-which means: detect the number of cores and use this number.
-
 Testing
 -------
 
-Please refer to the section:
-:doc:`testing`.
+Run-time environment
+~~~~~~~~~~~~~~~~~~~~
+
+A few environment variables have to be set in order to start testing. Create a helper script as follows which will set these variables:   
+
+.. include:: inc_makeenv.rst
+
+The test client
+~~~~~~~~~~~~~~~
+
+.. include:: inc_testclient.rst
+
+For instance, the next sample command will run a very basic test with your local models:
+
+.. code-block:: bash
+
+   (venv)etoxws-v2:~/etoxws/etoxws-api $> python src/client/cli.py -b http://localhost/etoxwsapi/v2 test
+
 
 Maintainance
 ------------
@@ -266,4 +190,95 @@ and
 .. code-block:: bash
 
    tailf /var/log/httpd/etoxws-v2-ssl.com_error.log
+
+
+.. _deploy-appendix:
+
+Appendix
+--------
+
+Technical information
+~~~~~~~~~~~~~~~~~~~~~
+
+The reference implementation for API version 2 requires several components installed and configured:
+
+* Postgres and a database with r/w access
+* Celery running as background service
+* \RabbitMQ running as background service and a message queue available for celery
+
+Also, the HTTP communication between the eTOXsys components should be encrypted, both for the online version and the in-house versions
+(as requested by industry partners). 
+
+All these components will be installed and configured by the Ansible procedure as described above.
+
+Backup
+~~~~~~
+
+Before you start the deployment process it is recommended to make a backup of your system. For the eTOXlab virtual machine (or any virtual 
+machine based system) just take a snapshot of the current state of the VM (see https://www.virtualbox.org/manual/ch01.html#snapshots).
+
+.. _ssh-setup:
+
+Password-free SSH access to the target machine(s)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: inc_prepare_ssh.rst
+
+Apache setup
+~~~~~~~~~~~~
+
+.. note::
+   Ignore this section if you work with an eTOXlab VM!
+
+Per default the ansible procedure ensure that Apache is installed and a virtual host configuration is created.
+This virtual host will support SSL encryption.
+
+If you deploy to a machine that has already a working virtual host configuration (including SSL support) you can comment out the ``{ role: apache }`` 
+in the ``etoxlabvm.yml`` file. In that case you have to define the two variables
+
+* ``VHOST_CONF_DIR``: location of the virtual host configuration directory.
+* ``APACHE_WEBAPP_DIR``: location where the webapp code will be located (eg.: ``/srv/www/webapps``)
+
+Ansible variables
+~~~~~~~~~~~~~~~~~
+The deployment can be adjusted by several variables as defined in ``deploy/roles/etoxws-server/defaults/main.yml``. Variables are redefined in
+the ``vars`` section of the ``etoxlabvm.yml`` file.
+
+.. note:: The defaults should perfectly work for eTOXlab. No need to change those variables.
+
+The main variables are as follows:
+
+ETOXWS_NAME
+   Name of the instance. Used as default for all kind of configuration, such as DB name, username, password as well
+   as baseurl (i.e., \https://<hostname>/{{ETOXWS_NAME}} and virtual env (i.e., ``/opt/virtualenv/{{ETOXWS_NAME}}``).
+
+   default:
+
+::
+   
+   ETOXWS_NAME: etoxwsapi
+
+
+ETOXWS_IMPL_V2:
+   yaml dict with path, package name and class name of the webservice implementation class (v2)
+
+   default (defined in ``etoxlabvm.yml``):
+   
+::
+
+   ETOXWS_IMPL_V2:
+      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
+      PYPCK: "views2"
+      PYCLASS: "WS2"
+
+ETOXWS_NPROC
+   number of processor cores used simultanously for calculations. Jobs are queued if all nodes are occupied and new jobs are submitted.
+   
+   default:  
+
+::
+
+   ETOXWS_NPROC: 0
+
+which means: detect the number of cores and use this number.
 

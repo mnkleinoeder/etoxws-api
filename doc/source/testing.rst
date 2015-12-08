@@ -17,15 +17,7 @@ For development and testing a local instance of the code and a working configura
 
 Please execute the following steps. 
 
-.. code-block:: bash
-
-   etoxws-v2:~ $> mkdir etoxws
-   etoxws-v2:~ $> cd etoxws
-   etoxws-v2:~/etoxws $> git clone https://github.com/mnkleinoeder/etoxws-api.git
-   etoxws-v2:~/etoxws $> virtualenv venv
-   etoxws-v2:~/etoxws $> . venv/bin/activate
-   (venv)etoxws-v2:~/etoxws $> pip install -U pip
-   (venv)etoxws-v2:~/etoxws $> pip install -r etoxws-api/src/etoxwsapi/req.pip
+.. include:: inc_create_venv.rst
 
 Now, you should have a working copy of the code and a virtual environment with all required packages.
 
@@ -36,16 +28,7 @@ Runtime environment
 
 Next, you need to create a runtime environment (``make_env.sh``):
 
-.. code-block:: bash
-
-   (venv)etoxws-v2:~/etoxws/etoxws-api $> cp make_env.sh.in make_env.sh
-
-The template file ``make_env.sh.in`` contains the local settings that will work with eTOXlab.
-So a copy should just create a suitable ``make_env.sh``. If you work outside of eTOXlab please change
-paths in the copied file as needed.
-
-Please also note that the ``make_env.sh`` file will contain the ``DJANGO_SETTINGS_MODULE`` variable for defining the settings
-to be loaded.
+.. include:: inc_makeenv.rst
 
 Creating the development database and job queue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,19 +36,7 @@ Creating the development database and job queue
 In order not to interfere with the production version (see :doc:`deployment`) a development stack can easily be deployed on the same
 machine.
 
-.. code-block:: bash
-
-   etoxws-v2:~ $> cd etoxws
-   etoxws-v2:~/etoxws $> . venv/bin/activate
-   etoxws-v2:~/etoxws $> cd etoxws-api/deploy
-
-Check for the file ``hosts``. If it does not exist create it by copying from ``hosts.in``. By default localhost is listed which
-is sufficient if you work within eTOXlab.
- 
-.. code-block:: bash
-
-   (venv)etoxws-v2:~/etoxws/etoxws-api/deploy $> cp hosts.in hosts
-   (venv)etoxws-v2:~/etoxws/etoxws-api/deploy $> vi hosts # adapt as needed
+.. include:: inc_prepare_venv.rst
 
 Finally, execute ansible (if you get an authentication error please refer to :ref:`ssh-setup`).
    
@@ -133,43 +104,7 @@ In the second terminal please follow these instructions:
 The test client
 ---------------
 
-The reference implementation provides a client program for testing the webservice, both in development mode and production.
-
-Please start a new terminal window and activate the environment created before.
-
-.. code-block:: bash
-
-   etoxws-v2:~ $> cd etoxws/etoxws-api/
-   etoxws-v2:~/etoxws/etoxws-api $> . make_env.sh
-
-Now, you are ready to run the command line client:
-
-.. code-block:: bash
-
-   (venv)etoxws-v2:~/etoxws/etoxws-api $> python src/client/cli.py --help
-   usage: cli.py [-h] [-b BASEURL] [-l LOGLEV] {test,info,calc,cleanup} ...
-   
-   Command line interface to access the eTOX webservices (based on API v2)
-   
-   positional arguments:
-     {test,info,calc,cleanup}
-                           available subcommands
-       test                test help
-       calc                calculation help
-       info                prints info and dir from webservice implementation
-                           running at base url
-       cleanup             cancels and deletes jobs
-   
-   optional arguments:
-     -h, --help            show this help message and exit
-     -b BASEURL, --base-url BASEURL
-                           base url of webservice to be tested [default:
-                           http://localhost:8000/etoxwsapi/v2]
-     -l LOGLEV, --log-level LOGLEV
-                           set verbosity level [default: WARN] (see python
-                           logging module)
-
-The client program supports subcommands for specific tasks. Please refer to the command line help.
+.. include:: inc_testclient.rst
 
 Please note that the local development environment will be used as webservice endpoints base url by default.
 Please refer to sections :ref:`start-job-queue` and :ref:`start-dev-server`.
