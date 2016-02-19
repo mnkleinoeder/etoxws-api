@@ -1,0 +1,6 @@
+[submodule "deploy/extern/apache-vhost"]
+	path = deploy/extern/apache-vhost
+	url = https://github.com/mnkleinoeder/ansible-role-apache-vhost.git
+[submodule "deploy/extern/apache"]
+	path = deploy/extern/apache
+	url = https://github.com/mnkleinoeder/ansible-role-apache.git
