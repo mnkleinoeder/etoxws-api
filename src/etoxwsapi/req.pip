@@ -4,7 +4,6 @@ Django==1.6.8
 #Django==1.7.1
 Fabric==1.8.0
 flower
-celery[librabbitmq]
 #celery==3.1.10
 # rather old ipython to be compatible w/ python2.6
 ipython==1.2.1
