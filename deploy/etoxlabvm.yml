@@ -9,10 +9,10 @@
   - ETOXWS_PRODUCTION: True
   - etoxws-dev: false
   - APACHE_USE_HTTP: true
-  - ETOXWS_IMPL_V2:
-      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
-      PYPCK: "views2"
-      PYCLASS: "WS2"
+#  - ETOXWS_IMPL_V2:
+#      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
+#      PYPCK: "views2"
+#      PYCLASS: "WS2"
   - RDKIT_DIR: "/opt/RDKIT"
   tasks:
   - name: cleanup old and outdated directories
@@ -23,6 +23,8 @@
     - "/etc/httpd/conf.d/etox.d"
   roles:
   - { role: apache ,
+        tags: apache }
+  - { role: apache-vhost ,
         tags: apache }
   - { role: etoxws-server,
         ETOXWS_CLEAN_DB: True,

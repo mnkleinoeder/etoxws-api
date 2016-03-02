@@ -13,7 +13,7 @@ export PYTHONPATH=${pp:+${pp}:}{{ETOXWS_APPDIR}}/src:/opt/rdkit/lib/python{{pyth
 export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.prod
 {% else %}
 # load settings for etoxlab
-export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.etoxlabdev
+export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.dev
 {% endif %} 
 
 

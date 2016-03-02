@@ -1,5 +1,6 @@
 ansible==1.9.4
 argparse
+celery[librabbitmq]
 Django==1.6.8
 #Django==1.7.1
 Fabric==1.8.0

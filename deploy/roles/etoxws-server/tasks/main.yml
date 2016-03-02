@@ -9,6 +9,8 @@
 - set_fact: etoxws_wsgi={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.wsgi
 - set_fact: etoxws_conf={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.conf
 
+- set_fact:
+    venv_install_celery_man: false
 
 ###############################################################################
 # OS dependent tasks
@@ -85,17 +87,31 @@
 ###############################################################################
 # setting up the virtual env
 ###############################################################################
+
+- debug: var=venv_install_celery_man
+
 - file: path=/opt/virtualenv state=directory mode=755
 
 - shell: virtualenv {{etoxws_virtenv}}
     creates={{etoxws_virtenv}}
 
+- pip: name=pip state=latest
+    executable={{etoxws_pip}}
+
 - pip: requirements={{ETOXWS_APPDIR}}/src/etoxwsapi/req.pip
     executable={{etoxws_pip}}
 
+- pip: name=celery[librabbitmq]
+    executable={{etoxws_pip}}
+#  when: not venv_install_celery_man
+
+#- 
+#https://pypi.python.org/packages/source/l/librabbitmq/librabbitmq-1.6.1.tar.gz#md5=716f05388d4747ea605c1a31f8541e3b
+
+
 - pip: name=argparse
     executable={{etoxws_pip}}
-  when: ansible_distribution == "CentOS"
+  when: python_version == "2.6"
 
 ###############################################################################
 # enable the task management toolchain
@@ -132,11 +148,11 @@
 # configuration of the webapp
 ###############################################################################
 - name: copy helper script for setting the runtime env
-  template: src="make_env.sh" dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
+  template: src=make_env.sh.j2 dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
 
-- name: copy production settings
-  template: src="setting_local.py.j2" dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings/settings_local.py
-  when: ETOXWS_PRODUCTION|bool
+- name: copy local settings
+  template: src=setting_local.py.j2 dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings/settings_local.py
+#  when: ETOXWS_PRODUCTION|bool
 
 #- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
 
@@ -156,12 +172,16 @@
 # and  http://pydev.org/manual_adv_remote_debugger.html
 - set_fact: pydevd=""
   when: ETOXWS_PRODUCTION|bool
-
 - set_fact: pydevd=/opt/pydevd/pysrc
   when: not ETOXWS_PRODUCTION|bool
+  
 - file: path=/opt/pydevd state=directory
-- unarchive: src=pydevd.tgz dest=/opt/pydevd/
   when: not ETOXWS_PRODUCTION|bool
+
+# manually copy pydevd files from your pydev installation
+# eg:
+# $ cd ~/.p2/pool/plugins/org.python.pydev_4.4.0.201510052309
+# $ rsync -rv pysrc root@<IP_TO_SERVER>:/opt/pydevd/
 
 - lineinfile: dest="/home/modeler/soft/eTOXlab/ws/views2.py"
     insertbefore="(\s+)while True:"

@@ -1,9 +1,0 @@
----
-- name: install required packages for eTOXlab
-  yum: name="{{item}}" state=present
-  with_items:
-  - redhat-lsb
-  - 
-
-
-rabbitmq-server

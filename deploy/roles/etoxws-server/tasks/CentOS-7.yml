@@ -1,0 +1,47 @@
+---
+# why the hack they have the version number in the package name? or provide a meta-package ...
+- set_fact:
+    postgres_main_conf: /var/lib/pgsql/data/pg_hba.conf
+    postgres_service_name: postgresql
+    python_version: 2.7
+    supervisord_conf: "/etc/supervisord.conf"
+    supervisord_conf_dir: "/etc/supervisor/conf.d"
+    supervisor_service_name: supervisord
+
+- set_fact:
+    venv_install_celery_man: true
+
+- name: install EPEL repo
+  yum: name=epel-release
+
+- name: install required packages
+  yum: name="{{item}}" state=present
+  with_items:
+  - "@Development Tools"
+  - postgresql-devel
+  - rabbitmq-server
+  - librabbitmq-devel
+  - librabbitmq
+  - libyaml-devel
+  - postgresql-server
+  - python-psycopg2
+  - python-virtualenv
+  - supervisor
+  - git
+  - sudo
+  - byobu
+
+- name: init postgres
+  shell: postgresql-setup initdb
+  args:
+    creates: "{{postgres_main_conf}}"
+
+
+#- name: create link for rabbitmq-plugins in /usr/local/bin
+#  file: src=/usr/lib/rabbitmq/bin/{{item}} dest=/usr/local/bin/{{item}} state=link
+#  with_items:
+#  - rabbitmq-defaults
+#  - rabbitmq-env
+#  - rabbitmq-plugins
+#  when: ansible_distribution_major_version == "6"
+  

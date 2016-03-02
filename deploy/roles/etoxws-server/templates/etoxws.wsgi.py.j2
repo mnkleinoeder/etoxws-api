@@ -21,7 +21,7 @@ sys.path.extend('{{p}}'.split(':'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.prod'
 {% else %}
 # load settings for etoxlab
-os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.etoxlabdev'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.dev'
 {% endif %} 
 
 import django.core.handlers.wsgi
