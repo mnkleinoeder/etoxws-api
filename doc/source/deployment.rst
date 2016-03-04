@@ -33,6 +33,16 @@ Please run the following steps.
 
 .. include:: inc_create_venv.rst
 
+.. important::
+   Please note that the next step is new since 2016-03. Please execute this step otherwise Ansible will give an error!
+
+Please run the script ``update_project.sh`` in the base directory of the etoxws-api project:
+
+.. code-block:: bash
+
+   (venv)etoxws-v2:~/etoxws $> cd ~/etoxws/etoxws-api
+   (venv)etoxws-v2:~/etoxws/etoxws-api $> ./update_project.sh
+
 Now, you should be ready for executing the upgrade process as described in the next section.
 
 Running Ansible
