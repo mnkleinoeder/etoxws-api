@@ -1,17 +1,4 @@
 ---
-- set_fact: postgres_main_conf=/etc/postgresql/9.3/main/pg_hba.conf
-  when: ansible_lsb.release | version_compare('14.04', '==')
-
-- set_fact: postgres_main_conf=/etc/postgresql/9.1/main/pg_hba.conf
-  when: ansible_lsb.release | version_compare('12.04', '==')
-
-- set_fact:
-    postgres_service_name: postgresql
-    python_version: 2.7
-    supervisord_conf: "/etc/supervisor/supervisord.conf"
-    supervisord_conf_dir: "/etc/supervisor/conf.d"
-    supervisor_service_name: supervisor
-
 - name: install required packages
   apt: name="{{item}}" state=present update_cache=yes
   with_items:

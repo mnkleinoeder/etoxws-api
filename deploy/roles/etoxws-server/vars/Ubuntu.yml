@@ -1,0 +1,8 @@
+---
+postgres_service_name: postgresql
+python_version: 2.7
+supervisord_conf: "/etc/supervisor/supervisord.conf"
+supervisord_conf_dir: "/etc/supervisor/conf.d"
+supervisor_service_name: supervisor
+supervisor_conf_ext: conf
+

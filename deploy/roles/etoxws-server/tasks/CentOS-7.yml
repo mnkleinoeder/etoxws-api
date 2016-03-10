@@ -1,16 +1,4 @@
 ---
-# why the hack they have the version number in the package name? or provide a meta-package ...
-- set_fact:
-    postgres_main_conf: /var/lib/pgsql/data/pg_hba.conf
-    postgres_service_name: postgresql
-    python_version: 2.7
-    supervisord_conf: "/etc/supervisord.conf"
-    supervisord_conf_dir: "/etc/supervisor/conf.d"
-    supervisor_service_name: supervisord
-
-- set_fact:
-    venv_install_celery_man: true
-
 - name: install EPEL repo
   yum: name=epel-release
 
@@ -36,6 +24,10 @@
   args:
     creates: "{{postgres_main_conf}}"
 
+- service: name={{ item }} state=started enabled=yes
+  with_items:
+  - supervisord
+  - postgresql
 
 #- name: create link for rabbitmq-plugins in /usr/local/bin
 #  file: src=/usr/lib/rabbitmq/bin/{{item}} dest=/usr/local/bin/{{item}} state=link

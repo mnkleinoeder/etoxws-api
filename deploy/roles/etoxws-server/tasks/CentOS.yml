@@ -1,5 +1,9 @@
 ---
 # why the hack they have the version number in the package name? or provide a meta-package ...
+
+- name: disable selinux
+  selinux: state=disabled
+
 - include: "CentOS-6.yml"
   when: ansible_distribution_major_version == "6"
   

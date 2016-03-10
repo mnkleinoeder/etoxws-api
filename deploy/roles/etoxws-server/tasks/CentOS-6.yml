@@ -1,12 +1,4 @@
 ---
-# why the hack they have the version number in the package name? or provide a meta-package ...
-- set_fact:
-    postgres_main_conf: /opt/PostgreSQL/9.2/data/pg_hba.conf
-    postgres_service_name: postgresql-9.2
-    python_version: 2.6
-    supervisord_conf: "/etc/supervisord.conf"
-    supervisord_conf_dir: "/etc/supervisor/conf.d"
-    supervisor_service_name: supervisord
 
 - name: install required packages
   yum: name="{{item}}" state=present
