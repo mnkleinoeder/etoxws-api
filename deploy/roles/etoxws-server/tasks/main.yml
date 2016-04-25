@@ -192,8 +192,12 @@
   when: ETOXWS_PRODUCTION|bool
   register: cel2
 
-- supervisorctl: name={{ETOXWS_NAME}} state=restarted
+- supervisorctl: name={{ETOXWS_NAME}} state=stopped
   when: cel1|changed or cel2|changed
+
+- shell: sleep 5
+
+- supervisorctl: name={{ETOXWS_NAME}} state=started
 
 ###############################################################################
 # apache setup
