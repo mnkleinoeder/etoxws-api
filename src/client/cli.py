@@ -19,7 +19,7 @@ from etoxwsapi.v2 import schema
 SSL_VERIFY=False
 
 ## defaults
-_INFILE = os.path.join(THIS_DIR, "tiny.sdf")
+_INFILE = os.path.join(THIS_DIR, 'testdata', "tiny.sdf")
 _BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
 _LOG_LEV = "WARN"
 _POLL_INTERVALL = 5
@@ -103,7 +103,8 @@ class WSClientHandler(object):
         with open(self.args.infile) as fp:
             req_obj.sdf_file = fp.read()
 
-        req_ret = requests.post(self.args.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY)
+        req_ret = requests.post(self.args.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY,
+                                headers={'Content-type': 'application/json'})
 
         if req_ret.status_code == 200:
             job_ids = list()
