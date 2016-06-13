@@ -85,13 +85,17 @@ class WSClientHandler(object):
                     print frmt%("cmp_id", "value", "AD", "RI")
                     print '-' * len(frmt%('','','',''))
                     for r in results['results']:
-                        print frmt%(_val(r, 'cmp_id'), _val(r, 'value'), _val(r, 'AD','value'), _val(r, 'RI','value'))
+                        line = frmt%(_val(r, 'cmp_id'), _val(r, 'value'), _val(r, 'AD','value'), _val(r, 'RI','value'))
+                        if r.get('message', None):
+                            print line, r['message']
+                        else:
+                            print line
                 else:
                     print "Job is not (yet) available: %s (%s)"%(results['status'], results['msg'])
             else:
                 print "Could not get job results: %s, %s"%(ret.status_code, ret.text)
 
-    def _submit_jobs(self, models):
+    def _submit_jobs(self, models, infile):
         """
         preparing request for calculation
         """
@@ -100,11 +104,12 @@ class WSClientHandler(object):
 
         req_obj.req_calculations = models
 
-        with open(self.args.infile) as fp:
+        with open(infile) as fp:
             req_obj.sdf_file = fp.read()
 
         req_ret = requests.post(self.args.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY,
-                                headers={'Content-type': 'application/json'})
+                                headers={'Content-type': 'application/json'},
+                                timeout=5)
 
         if req_ret.status_code == 200:
             job_ids = list()
@@ -198,7 +203,7 @@ class WSClientHandler(object):
 
     def calc(self):
         models = self._get_selected_models()
-        jobs   = self._submit_jobs(models)
+        jobs   = self._submit_jobs(models, self.args.infile)
         self._observing_jobs(jobs)
 
         infp = open(self.args.infile, 'rU')
@@ -231,7 +236,7 @@ class WSClientHandler(object):
         #import pydevd; pydevd.settrace()
 
         models = self._get_selected_models()
-        jobs   = self._submit_jobs(models)
+        jobs   = self._submit_jobs(models, self.args.infile)
 
         # test for consistency of job ids
         url = '/'.join((self.args.baseurl, 'jobs/'))
@@ -242,6 +247,19 @@ class WSClientHandler(object):
 
         self._observing_jobs(jobs, interval=self.args.poll, duration=self.args.duration, cancel_after=self.args.delete)
         self._print_result(jobs)
+
+    def test_long(self):
+        from os import listdir
+        from os.path import isfile, join
+        import glob
+        
+        testdir = os.path.join(THIS_DIR, 'testdata')
+        testfiles = glob.glob(join(testdir, '*.sdf'))
+        
+        for testfile in testfiles:
+            print testfile
+#         jobs = self._submit_jobs(self.models, testfile)
+#         self._observing_jobs(jobs)
 
     def dir_info(self):
         delim = 160 * '='
@@ -288,7 +306,8 @@ class CLI(object):
 
         subparsers = parser.add_subparsers(help='available subcommands')
 
-        parser_test = subparsers.add_parser('test', help='test help')
+        parser_test = subparsers.add_parser('test', help="""run models with a tiny dataset of three simple molecules (testdata/tiny.sdf).
+                                                                    This is useful only while developing and debugging.""")
         parser_test.add_argument("-p", "--poll-interval", dest="poll", type=int, help="poll status each N sec [default: %(default)s]", metavar="N", default= _POLL_INTERVALL)
         parser_test.add_argument("-d", "--duration", dest="duration", type=int, help="stop this program after N sec [default: %(default)s]", metavar="N", default= _DURATION)
         parser_test.add_argument("-c", "--delete-after", dest="delete", type=int, help="issue a DELETE request after N polls [default: %(default)s]", metavar="N", default= _DELETE_AFTER)
@@ -297,6 +316,10 @@ class CLI(object):
         parser_test.add_argument("-i", "--ids", dest="ids", help="comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", default=None)
 
         parser_test.set_defaults(func='test')
+
+        parser_test = subparsers.add_parser('test-long', help="""run models with an extensive test-suite file (testdata/test-suite.sdf).
+                                                                 This test must pass before a VM is accepted for deployment.""")
+        parser_test.set_defaults(func='test_long')
 
         parser_calc = subparsers.add_parser('calc', help='calculation help')
         parser_calc.set_defaults(func='calc')

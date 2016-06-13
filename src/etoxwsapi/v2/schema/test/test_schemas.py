@@ -28,10 +28,10 @@ class Test_calculation_info(unittest.TestCase):
 		self.assertRaises(ValueError, self.calculation_info.create_object, id="model_name_must_fail")
 
 	def test_comply_id_contraints(self):
-		self.calculation_info.create_object(id="/cat/name/1", category="ENDPOINT")
+		self.calculation_info.create_object(id="/cat/name/1", category="ENDPOINT", version='1')
 
 	def test_with_value_spec(self):
-		o = self.calculation_info.create_object(id="/cat/name/1", category="ENDPOINT")
+		o = self.calculation_info.create_object(id="/cat/name/1", category="ENDPOINT", version='1')
 
 		res = schema.get("result_endpoint").schema
 		res['properties']['result'] = { "enum": ["positive", "negative", "unknown"]}
