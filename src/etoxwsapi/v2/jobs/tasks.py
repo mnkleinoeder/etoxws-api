@@ -30,26 +30,19 @@ class JobObserver():
         self.msg = ""
         self.completion_time = 0
 
+    def _log(self, func, msg, *args, **kwargs):
+        if not msg:
+            return
+        func(msg, *args, **kwargs)
+        
     def log_error(self, msg, *args, **kwargs):
-        """
-				report error
-        """
-        self.logger.error(msg, *args, **kwargs)
+        self._log(self.logger.error, msg, *args, **kwargs)
     def log_warn(self, msg, *args, **kwargs):
-        """
-				report warning
-        """
-        self.logger.warn(msg, *args, **kwargs)
+        self._log(self.logger.warn, msg, *args, **kwargs)
     def log_info(self, msg, *args, **kwargs):
-        """
-				informational message
-        """
-        self.logger.info(msg, *args, **kwargs)
+        self._log(self.logger.info, msg, *args, **kwargs)
     def log_debug(self, msg, *args, **kwargs):
-        """
-				information just for debugging purpose
-        """
-        self.logger.debug(msg, *args, **kwargs)
+        self._log(self.logger.debug, msg, *args, **kwargs)
 
     def _finalize(self):
         job = Job.objects.get(job_id=self.job_id)
@@ -117,7 +110,7 @@ def calculate(self, calc_info, sdf_file): #, logger, lock):
         v2_impl.calculate_impl(jr, calc_info, sdf_file)
     except Exception, e:
         logger.error("Exception occurred: %s"%(e))
-        for l in traceback.format_exc().splitlines():
-            logger.error(l)
-        jr.report_status(1, str(e))
+        msg = str(e) + '\n' + '\n'.join(traceback.format_exc().splitlines())
+        logger.error(msg)
+        jr.report_status(1, msg)
     jr._finalize()

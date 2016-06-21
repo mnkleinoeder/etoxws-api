@@ -2,26 +2,27 @@ import json
 from uuid import uuid1
 import logging
 import time
-
+import sys
+import traceback
+import os
+import re
+import psutil
+from StringIO import StringIO
+from io import BytesIO
+from celery.result import AsyncResult
+from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-#from django.shortcuts import render_to_response, render
 from django.views.generic.base import View
 
 from etoxwsapi.v2 import schema
 
 from .models import Job, Result
+from utils import SDFFile
 
-from cStringIO import StringIO
 
 #from etoxwsapi.v2.jobs import tasks
 import etoxwsapi.v2.jobs.tasks
-from celery.result import AsyncResult
 from etoxwsapi.djcelery import jobmgr
-import sys
-import traceback
-from django.shortcuts import get_object_or_404
-import os
-import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -73,12 +74,10 @@ def _conv_job(job):
         job_status['results'] = results
     return job_status
 
+_m_end = re.compile('(M\s+END)')
+
 def _nrecord(sdf_file):
-    nrec = 0
-    for line in StringIO(sdf_file):
-        if line[0] == 'M' and line.startswith("M  END"):
-            nrec += 1
-    return nrec
+    return len(_m_end.findall(sdf_file))
 
 def _wrap_method(method, request):
     try:
@@ -104,11 +103,13 @@ class JobsView(View):
         logger.info("Calculation request from %s"%(request.META['REMOTE_ADDR']))
         calc_req_schema = schema.get('calculation_request')
         try:
+            #import pydevd; pydevd.settrace()
             calc_request = calc_req_schema.loads(request.body)
             sdf_file = calc_request['sdf_file']
             nrecord = _nrecord(sdf_file)
         except Exception, e:
             msg = "Invalid input data in request (%s)"%(e)
+            msg += '\n' + '\n'.join(traceback.format_exc().splitlines())
             return HttpResponse(msg, status = 400)
 
         jobs = list()
@@ -164,7 +165,7 @@ class JobHandlerView(View):
         job = get_object_or_404(Job, job_id=job_id)
         try:
             logger.info("Entering DELETE for job: %s"%(job_id))
-            #import pydevd; pydevd.settrace('192.168.0.234')
+            #import pydevd; pydevd.settrace()
             cjob = AsyncResult(job_id)
             if not cjob.ready():
                 if job.pid > 0:
