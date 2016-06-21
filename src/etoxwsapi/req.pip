@@ -1,5 +1,6 @@
 ansible==1.9.4
 argparse
+blessings
 celery[librabbitmq]==3.1.23
 Django==1.6.8
 #Django==1.7.1
