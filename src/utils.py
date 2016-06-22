@@ -8,19 +8,34 @@ import logging
 
 logger = logging.getLogger('SDF utils')
 
+try:
+    from rdkit import Chem
+    def _check_rec(rec):
+        # TODO: implement check for correct ctab using rdkit
+        return True
+except ImportError, e:
+    def _check_rec(rec):
+        return True
+
 class WriteMixin():
     def _write(self, fp, item):
         fp.write("%s%s"%(item, b'%s'%(self.linesep)))
 
 class SDFRec(object, WriteMixin):
     re_prop = re.compile('>.*<(.*)>.*')
+    re_v3000 = re.compile('V3000')
     def __init__(self, rec, linesep):
+        #print '->%s<-'%(rec)
+        self.is_v3000 = False
+        self.is_valid = True
         self.linesep = linesep
         self.rec = rec
         self.ctab = ""
         self.proptab = ""
         self.props = OrderedDict()
+
         self._parse()
+        _check_rec(self.to_string(ctab_only=True))
         #print "'%s'"%(self.rec)
 
     def add_prop(self, propname, propvalue):
@@ -51,8 +66,11 @@ class SDFRec(object, WriteMixin):
         is_ctab = True
         propname = None
         propentry = ""
-        for line in StringIO(self.rec):
+        for lno, line in enumerate(StringIO(self.rec)):
             if is_ctab:
+                if lno == 3:
+                    if self.re_v3000.search(line):
+                        self.is_v3000 = True
                 self.ctab += self._cat_line(line)
             if line[0] == 'M' and line.startswith("M  END"):
                     is_ctab = False
@@ -72,8 +90,11 @@ class SDFRec(object, WriteMixin):
             self.add_prop(propname, propentry.rstrip())
         self.ctab = self.ctab.rstrip()
         self.proptab = self.proptab.rstrip()
+        #print self.is_v3000
 
 class SDFFile(object, WriteMixin):
+    re_rec = re.compile('\$\$\$\$[\n\r]{0,1}') # sometimes the eof is missing
+
     def __init__(self, fname):
         self.sdfrecs = []
         self.linesep = b'\n'
@@ -99,7 +120,7 @@ class SDFFile(object, WriteMixin):
 
             content = fp.read() 
             if '$$$$' in content:
-                recs = content.split('$$$$')[:-1]
+                recs = self.re_rec.split(content)[:-1]
             elif 'M  END' in content:
                 recs = [ content ]
             else:
@@ -108,7 +129,7 @@ class SDFFile(object, WriteMixin):
 
     def to_string(self, ctab_only = False):
         outbuf = StringIO()
-        self._write(outbuf, "".join( [ rec.to_string(ctab_only).rstrip() for rec in self.sdfrecs] ))
+        self._write(outbuf, "".join( [ rec.to_string(ctab_only) for rec in self.sdfrecs] ))
         #outbuf.write("".join( [ rec.to_string().rstrip() for rec in self.sdfrecs] ))
         return outbuf.getvalue()
 
@@ -117,7 +138,8 @@ class SDFFile(object, WriteMixin):
             fp.write( self.to_string() )
 
 if __name__ == '__main__':
-    f = SDFFile('client/testdata/tiny.sdf')
-    f[0].add_prop('M_BLA', "blubsi")
-    sys.stdout.write("'%s'"%(f[0].to_string(True)))
+    f = SDFFile('client/testdata/mol_v3000.sdf')
+    print len(f)
+#     f[0].add_prop('M_BLA', "blubsi")
+#     sys.stdout.write("'%s'"%(f[0].to_string(True)))
     f.write('/home/thomas/w45/git/etoxws-api/src/client/testdata/t.sdf')

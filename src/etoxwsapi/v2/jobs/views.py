@@ -74,7 +74,7 @@ def _conv_job(job):
         job_status['results'] = results
     return job_status
 
-_m_end = re.compile('(M\s+END)')
+_m_end = re.compile('\sM\s+END')
 
 def _nrecord(sdf_file):
     return len(_m_end.findall(sdf_file))

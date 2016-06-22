@@ -30,11 +30,12 @@ SSL_VERIFY=False
 _INFILE = os.path.join(THIS_DIR, 'testdata', "tiny.sdf")
 _BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
 _LOG_LEV = "WARN"
+_TIMEOUT = 60
 
 term = Terminal()
 
 def http_get(url):
-    ret = requests.get(url, verify=SSL_VERIFY)
+    ret = requests.get(url, verify=SSL_VERIFY, timeout=_TIMEOUT)
 
     if ret.status_code == 200:
         return ret
@@ -60,8 +61,8 @@ class Job(object):
         return (self.nmessage(Job.CRIT) == 0)
 
 class TermMixin():
-    delim1 = "="*100 
-    delim2 = "-"*100 
+    delim1 = "="*101
+    delim2 = "-"*100
 
     def _print(self, t, msg = ""):
         prfx = '| '
@@ -115,7 +116,7 @@ class CalculationTask(object, TermMixin):
 
         req_ret = requests.post(self.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY,
                                 headers={'Content-type': 'application/json'},
-                                timeout=5)
+                                timeout=_TIMEOUT)
 
         if req_ret.status_code == 200:
             self.jobs = []
@@ -152,7 +153,7 @@ class CalculationTask(object, TermMixin):
             self._print( term.clear_eos(self.term_pos) )
             if running:
                 for i, (job, stat) in enumerate(running):
-                    self._print( term.move(self.term_pos+i),  term.yellow(term.blink("Running: ")) + job.model_id + " (%s/%s)"%(stat['currecord'], stat['nrecord']) ) 
+                    self._print( term.move(self.term_pos+i)+term.clear_eol(),  term.yellow(term.blink("Running: ")) + job.model_id + " (%s/%s)"%(stat['currecord'], stat['nrecord']) ) 
             elif naccepted:
                 self._print(term.move(self.term_pos), "Waiting for job execution. %s job(s) accepted"%(naccepted))
             else:
@@ -192,7 +193,7 @@ class CalculationTask(object, TermMixin):
             elif nmissing > 10:
                 msg += " Missing for more than %d %%"%( (nmissing/nresults) * 100 )
             else:
-                msg += " Missing for records: %s"%( ','.join(missing) )
+                msg += " Missing for records: %s"%( ','.join([str(tt) for tt in missing]) )
             job.summary.append((lev, msg))
         for i, job in enumerate(self.jobs):
             try:
@@ -212,15 +213,16 @@ class CalculationTask(object, TermMixin):
                         ri_missing = []
                         for r in results:
                             icmp = int(r['cmp_id'])
-                            if not r['success']:
+                            if r['success']:
+                                val = self._val(r, 'value', None,   val_missing, icmp)
+                                ad  = self._val(r, 'AD'   ,'value', ad_missing, icmp)
+                                ri  = self._val(r, 'RI'   ,'value', ri_missing, icmp)
+                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ""),      val)
+                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":ADAN"), ad)
+                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":RI"),   ri)
                                 #pprint.pprint(r)
-                                job.summary.append((Job.CRIT, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
-                            val = self._val(r, 'value', None,   val_missing, icmp)
-                            ad  = self._val(r, 'AD'   ,'value', ad_missing, icmp)
-                            ri  = self._val(r, 'RI'   ,'value', ri_missing, icmp)
-                            self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ""),      val)
-                            self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":ADAN"), ad)
-                            self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":RI"),   ri)
+                            else:
+                                job.summary.append((Job.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
                             
                         _missing(job, "Calculated value", val_missing, nresults, Job.WARN)
                         _missing(job, "AD", ad_missing, nresults, Job.WARN)
@@ -417,8 +419,9 @@ class WSClientHandler(object, TermMixin):
             self._write_results()
         self._print("", "")
         self._print("", self.delim1)
-        self._print("", "Test summary:")
-        self._print("", self.delim1)
+        self._print("", "Test summary per test file:")
+        self._print("", self.delim2)
+        model_summary = {}
         for c in self.calc_tasks:
             frmt = '%-81s: %-19s '
             if c.success():
@@ -426,8 +429,19 @@ class WSClientHandler(object, TermMixin):
             else:
                 status = term.red("Tests failed.")
             self._print("", frmt%(c.fname, status))
-            self._print("", self.delim1)
-            
+            for job in c.jobs:
+                if not job.success():
+                    model_summary.setdefault(job.model_id, []).append(c.fname)
+        self._print("", self.delim1)
+        self._print("", "")
+        self._print("", self.delim1)
+        self._print("", "Prediction failures observed for files:")
+        self._print("", self.delim2)
+        for m, ff in model_summary.iteritems():
+            self._print("", "[%s]"%(m))
+            for f in ff:
+                self._print("", " - %s"%(f))
+        self._print("", self.delim1)
         #print term.move(self.cur_line,0) + "All tests done.                                                              "
 
     def dir_info(self):
