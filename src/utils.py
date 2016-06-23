@@ -5,6 +5,7 @@ from StringIO import StringIO
 import re
 import sys
 import logging
+import types
 
 logger = logging.getLogger('SDF utils')
 
@@ -52,7 +53,10 @@ class SDFRec(object, WriteMixin):
             for k,v in self.props.iteritems():
                 self._write(outbuf, '>  <%s>'%(k))
                 self._write(outbuf, v)
-                if v:
+                if type(v) in types.StringTypes and len(v) == 0:
+                    # if the prop value is an emtpy string we don't need an extra CR
+                    pass
+                else:
                     self._write(outbuf, "")
         self._write(outbuf, '$$$$')
         return outbuf.getvalue()

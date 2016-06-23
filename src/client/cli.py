@@ -437,10 +437,14 @@ class WSClientHandler(object, TermMixin):
         self._print("", self.delim1)
         self._print("", "Prediction failures observed for files:")
         self._print("", self.delim2)
+        no_failures = True
         for m, ff in model_summary.iteritems():
+            no_failures = False
             self._print("", "[%s]"%(m))
             for f in ff:
                 self._print("", " - %s"%(f))
+        if no_failures:
+            self._print("", "No failures!")
         self._print("", self.delim1)
         #print term.move(self.cur_line,0) + "All tests done.                                                              "
 
@@ -466,12 +470,12 @@ class WSClientHandler(object, TermMixin):
             print "Available models:"
 
             header = frmt%("#", "ID", "version", "category", "external_id")
-            print self.delim2
+            print '-'*len(header)
             print header
-            print self.delim2
+            print '-'*len(header)
             for i, model in enumerate(self.models):
                 print frmt%(i, model['id'], model.get('version', '1'), model.get('category', 'N/A'), model.get('external_id', 'N/A'))
-            print self.delim2
+            print '-'*len(header)
 
 class CLI(object):
     def __init__(self):
