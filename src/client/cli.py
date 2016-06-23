@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(THIS_DIR, ".."))
 SSL_VERIFY=False
 
 ## defaults
-_INFILE = os.path.join(THIS_DIR, 'testdata', "tiny.sdf")
+_INFILE = os.path.join(THIS_DIR, "tiny.sdf")
 _BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
 _LOG_LEV = "WARN"
 _TIMEOUT = 60
