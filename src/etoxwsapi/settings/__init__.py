@@ -201,9 +201,6 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'pathinfo'
         },
-        'silent': {
-            'class': 'logging.NullHandler',
-        },
         'stdout': {
             'level': LOG_LEVEL,
             'class': 'logging.StreamHandler',
