@@ -107,24 +107,41 @@
 # enable the task management toolchain
 ###############################################################################
 
-- service: name=rabbitmq-server state=started enabled=yes
-- rabbitmq_vhost: name={{MQ_VHOST}} state=present
+- service: name=rabbitmq-server enabled=yes
+- service: name=rabbitmq-server state=stopped
+
+- file: src=rabbitmq-env.conf dest=/etc/rabbitmq/rabbitmq-env.conf
+
+- service: name=rabbitmq-server state=started
+
+- rabbitmq_vhost:
+    name: "{{MQ_VHOST}}"
+    state: present
+    node: "{{MQ_NODE}}"
+  environment:
+    RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
 #- rabbitmq_user: user={{MQ_USERNAME}}
 #                 state=absent
 
-- rabbitmq_user: user={{MQ_USERNAME}}
-                 password={{ETOXWS_SERVICE_PASSWD}}
-                 vhost={{MQ_VHOST}}
-                 configure_priv=.*
-                 read_priv=.*
-                 write_priv=.*
-                 state=present
-                 #tags=administrator
+- rabbitmq_user:
+    user: "{{MQ_USERNAME}}"
+    password: "{{ETOXWS_SERVICE_PASSWD}}"
+    vhost: "{{MQ_VHOST}}"
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    state: present
+    node: "{{MQ_NODE}}"
+  environment:
+    RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
-- rabbitmq_user: user=guest state=absent
-
-- rabbitmq_plugin: names=rabbitmq_management state=enabled
+- rabbitmq_user:
+    user: guest
+    state: absent
+    node: "{{MQ_NODE}}"
+  environment:
+    RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
 #- group: name={{ETOXWS_NAME}} system=yes state=present
 #- user: name={{ETOXWS_NAME}} group={{ETOXWS_NAME}} system=yes state=present
@@ -151,18 +168,14 @@
   register: r
   changed_when: not "Installed 0 object(s) from 0 fixture(s)" in r.stdout
 
-#- ini_file: dest="{{supervisord_conf}}"
-#            section=include
-#            option=files
-#            value="{{supervisord_conf_dir}}/*.conf"
-#  register: cel1
-
-# PyDev debugger support if not in production mode
+# PyDev debugger support
 # see: http://brianfisher.name/content/remote-debugging-python-eclipse-and-pydev
 # and  http://pydev.org/manual_adv_remote_debugger.html
-- set_fact: pydevd=""
+- set_fact:
+    pydevd: ""
   when: ETOXWS_PRODUCTION|bool
-- set_fact: pydevd=/opt/pydevd/pysrc
+- set_fact:
+    pydevd: "/opt/pydevd/pysrc"
   when: not ETOXWS_PRODUCTION|bool
   
 - file: path=/opt/pydevd state=directory
@@ -187,9 +200,15 @@
 - template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.{{ supervisor_conf_ext }} mode=644
   register: cel1
 
-- set_fact: _cel_variant="-flower"
-- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }} mode=644
-  when: ETOXWS_PRODUCTION|bool
+  # enabling flower
+#- rabbitmq_plugin: names=rabbitmq_management state=enabled
+#- set_fact: _cel_variant="-flower"
+#- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }} mode=644
+#  when: ETOXWS_PRODUCTION|bool
+#  register: cel2
+  # disabling flower
+- rabbitmq_plugin: names=rabbitmq_management state=disabled
+- file: path={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }} state=absent
   register: cel2
 
 - supervisorctl: name={{ETOXWS_NAME}} state=stopped

@@ -21,6 +21,7 @@ ETOXWS_PRODUCTION: true
 # 0: use default by celery which is nr of cores availabe
 ETOXWS_NPROC: 0
 
+MQ_NODE: "rabbit@localhost"
 MQ_VHOST: "{{ETOXWS_NAME}}"
 MQ_USERNAME: "{{ETOXWS_NAME}}"
 
