@@ -1,0 +1,12 @@
+---
+- hosts: etoxlab
+  tasks:
+  - apt: update_cache=yes upgrade=safe
+    when: ansible_distribution == "Ubuntu"
+  - name: cleanup old packages
+    shell: apt-get -y autoremove
+    when: ansible_distribution == "Ubuntu"
+
+  - name: upgrade all packages
+    yum: name=* state=latest
+    when: ansible_distribution == "CentOS"

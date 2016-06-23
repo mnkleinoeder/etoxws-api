@@ -14,13 +14,15 @@
       PYPCK: "views2"
       PYCLASS: "WS2"
   - RDKIT_DIR: "/opt/RDKIT"
-  tasks:
+
+  pre_tasks:
   - name: cleanup old and outdated directories
     file: path="{{ item }}" state=absent
     with_items:
     - "/srv/www/webapps/etoxws"
     - "/srv/www/webapps/etoxws-api"
     - "/etc/httpd/conf.d/etox.d"
+
   roles:
   - { role: apache ,
         tags: apache }
