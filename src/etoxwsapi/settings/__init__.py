@@ -242,7 +242,5 @@ with _conn(BROKER_URL) as conn: #@UndefinedVariable
             print "Server process seems down."
             print "Check with 'service rabbitmq-server status'"
 
-
-
-pprint(LOGGING)
+#pprint(LOGGING)
 

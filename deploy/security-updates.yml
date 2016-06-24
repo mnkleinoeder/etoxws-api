@@ -1,5 +1,5 @@
 ---
-- hosts: etoxlab
+- hosts: managed-upgrades
   tasks:
   - apt: update_cache=yes upgrade=safe
     when: ansible_distribution == "Ubuntu"

@@ -55,6 +55,7 @@ class Job(object):
         self.model_id = calc_info['id']
         self.name = "%s (version %s)"%(calc_info['id'], calc_info.get('version', '1'))
         self.summary = []
+
     def nmessage(self, lev):
         return len([s for s in self.summary if s[0] == lev])
     def success(self):
@@ -121,6 +122,12 @@ class CalculationTask(object, TermMixin):
         if req_ret.status_code == 200:
             self.jobs = []
             for i, stat in enumerate(json.loads(req_ret.text)):
+                schema.validate(stat, schema.get('job_status'))
+#                 self.summary.append((Job.CRIT, "%s; %s"%(e, stat))) 
+#                 logging.critical(str(e))
+#                 logging.critical(calc_info)
+#                 logging.critical(stat)
+
                 self.jobs.append( Job(self.models[i], stat) )
         else:
             raise Exception("Failed to submit jobs (%s): %s"%(req_ret.status_code, req_ret.text))
@@ -272,11 +279,12 @@ class WSClientHandler(object, TermMixin):
 
         url = '/'.join((self.args.baseurl, 'info'))
         ret = http_get(url)
-        self.wsinfo = json.loads(ret.text)
+        self.wsinfo = schema.validate(json.loads(ret.text), schema.get('ws_info'))
 
         url = '/'.join((self.args.baseurl, 'dir'))
         ret = http_get(url)
-        self.models = [ m for m in json.loads(ret.text)]
+        #self.models = [ m for m in json.loads(ret.text)]
+        self.models = [ schema.validate(m, schema.get('calculation_info')) for m in json.loads(ret.text)]
 
         logging.debug(pprint.pformat(self.wsinfo))
         logging.debug(pprint.pformat(self.models))
@@ -285,7 +293,6 @@ class WSClientHandler(object, TermMixin):
         self.cur_line = 0
 
         super(WSClientHandler, self).__init__()
-
 
     def _create_task(self, fname, term_pos):
         c = CalculationTask(self, fname, term_pos)
@@ -477,6 +484,32 @@ class WSClientHandler(object, TermMixin):
                 print frmt%(i, model['id'], model.get('version', '1'), model.get('category', 'N/A'), model.get('external_id', 'N/A'))
             print '-'*len(header)
 
+    def check_etoxvault(self):
+        ret = requests.get('http://phi.imim.es/allmodels/?authkey=%s'%(self.args.authkey))
+        
+        if (ret.status_code != 200):
+            raise Exception("Could not retrieve data from eTOXvault (HTTP: %s)"%(ret.status_code))
+
+        all_recs = []        
+        for rec in ret.json():
+            t = rec.get('modeltag', '')
+            if not t:
+                continue
+            mtag = t.strip()
+            partner = rec['partner'].strip()
+            version = rec['version'].strip()
+            all_recs.append("%s:%s:%s"%(mtag, partner,version))
+        frmt = '%-81s: %-19s '
+        for m in self.models:
+            ident = "%s:%s:%s"%( m['id'].strip(), self.wsinfo['provider'].strip(), m['version'].strip() )
+            if ident in all_recs:
+                status = term.green("Available.")
+            else:
+                status = term.red("Missing!")
+            self._print("", frmt%(ident, status))
+            
+        
+
 class CLI(object):
     def __init__(self):
         pass
@@ -515,6 +548,10 @@ class CLI(object):
         parser_calc.add_argument("-I", "--input-file", dest="infile", help="SDFile to be used as input file for calculations.", required=True )
         parser_calc.add_argument("-O", "--output-file", dest="outfile", help="SDFile to be used as output file.", required=True )
         parser_calc.add_argument(*i_option[0], **i_option[1])
+
+        parser_evault = subparsers.add_parser('etoxvault-check', help='check if a eTOXvault record is available for all models')
+        parser_evault.set_defaults(func='check_etoxvault')
+        parser_evault.add_argument("-k", "--authkey", dest="authkey", help="Access key for eTOXvault REST API.", required=True )
 
         parser_dir = subparsers.add_parser('info', help='prints info and dir from webservice implementation running at base url')
         parser_dir.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="output format", nargs='?', default=None, required=False)
