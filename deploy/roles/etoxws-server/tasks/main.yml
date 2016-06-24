@@ -110,7 +110,7 @@
 - service: name=rabbitmq-server enabled=yes
 - service: name=rabbitmq-server state=stopped
 
-- file: src=rabbitmq-env.conf dest=/etc/rabbitmq/rabbitmq-env.conf
+- template: src=rabbitmq-env.conf.j2 dest=/etc/rabbitmq/rabbitmq-env.conf
 
 - service: name=rabbitmq-server state=started
 
