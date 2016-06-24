@@ -57,7 +57,7 @@ def _map_state(cel_state):
 
 def _conv_job(job):
     job_status_schema = schema.get('job_status')
-    job_status = job_status_schema.create_object()
+    job_status = job_status_schema.create_object(job_id='-1', status='JOB_UNKNOWN')
     for key in job_status_schema.schema['properties'].keys():
         if key in ( "results", "calculation_info" ):
             # results are stored in a separate DB table

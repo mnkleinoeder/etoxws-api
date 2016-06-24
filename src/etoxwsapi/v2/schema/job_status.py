@@ -36,6 +36,7 @@ job_status =	{
 		},
 		"msg" : { "type": "string" },
 	},
+	"required": [ "job_id", "status" ]
 	#"additionalProperties": True,
 }
 

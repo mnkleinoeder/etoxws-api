@@ -135,6 +135,14 @@ def create_result_endpoint(data_type):
     rs['properties']['value']['type'] = data_type
     return SchemaDefinition("result_endpoint"+data_type, rs)
 
+def validate(obj, sm):
+    """
+    helper to validate and return the same object
+    """
+    sm.validate(obj)
+    return obj
+
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     ws_info = get('ws_info')
