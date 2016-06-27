@@ -17,8 +17,6 @@ from django.views.generic.base import View
 from etoxwsapi.v2 import schema
 
 from .models import Job, Result
-from utils import SDFFile
-
 
 #from etoxwsapi.v2.jobs import tasks
 import etoxwsapi.v2.jobs.tasks
