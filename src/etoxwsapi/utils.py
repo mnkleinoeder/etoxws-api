@@ -142,8 +142,8 @@ class SDFFile(object, WriteMixin):
             fp.write( self.to_string() )
 
 if __name__ == '__main__':
-    f = SDFFile('client/testdata/mol_v3000.sdf')
+    f = SDFFile('client/testdata/tine.sdf')
     print len(f)
 #     f[0].add_prop('M_BLA', "blubsi")
 #     sys.stdout.write("'%s'"%(f[0].to_string(True)))
-    f.write('/home/thomas/w45/git/etoxws-api/src/client/testdata/t.sdf')
+    f.write('/tmp/t.sdf')

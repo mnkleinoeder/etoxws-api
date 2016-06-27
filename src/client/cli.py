@@ -17,8 +17,9 @@ import glob
 from blessings import Terminal
 import signal
 
-from utils import SDFFile
+from etoxwsapi.utils import SDFFile
 from etoxwsapi.v2 import schema
+from etoxwsapi.v2 import utils as v2_utils
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(THIS_DIR, ".."))
@@ -492,21 +493,17 @@ class WSClientHandler(object, TermMixin):
 
         all_recs = []        
         for rec in ret.json():
-            t = rec.get('modeltag', '')
-            if not t:
-                continue
-            mtag = t.strip()
-            partner = rec['partner'].strip()
-            version = rec['version'].strip()
-            all_recs.append("%s:%s:%s"%(mtag, partner,version))
+            mtag, _ = v2_utils.modelid_from_calcinfo(rec)
+            all_recs.append(mtag)
         frmt = '%-81s: %-19s '
         for m in self.models:
-            ident = "%s:%s:%s"%( m['id'].strip(), self.wsinfo['provider'].strip(), m['version'].strip() )
-            if ident in all_recs:
+            mtag, _ = v2_utils.modelid( m['id'], self.wsinfo['provider'], m['version'] )
+            #print mtag, _
+            if mtag in all_recs:
                 status = term.green("Available.")
             else:
                 status = term.red("Missing!")
-            self._print("", frmt%(ident, status))
+            self._print("", frmt%(mtag, status))
             
         
 
