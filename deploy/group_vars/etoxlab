@@ -1,0 +1,8 @@
+---
+ETOXWS_PRODUCTION: True
+ETOXWS_IMPL_V2: 
+    PYPATH: "/home/modeler/soft/eTOXlab/ws/"
+    PYPCK: "views2"
+    PYCLASS: "WS2"
+RDKIT_DIR: "/opt/RDKIT"
+

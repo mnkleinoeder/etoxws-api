@@ -5,16 +5,6 @@
 # PYPATH: "/home/modeler/soft/eTOXlab/ws/:MY_PATH1:MY_PATH2"
 ###############################################################################
 - hosts: etoxlab
-  vars:
-  - ETOXWS_PRODUCTION: True
-  - etoxws-dev: false
-  - APACHE_USE_HTTP: true
-  - ETOXWS_IMPL_V2:
-      PYPATH: "/home/modeler/soft/eTOXlab/ws/"
-      PYPCK: "views2"
-      PYCLASS: "WS2"
-  - RDKIT_DIR: "/opt/RDKIT"
-
   pre_tasks:
   - name: cleanup old and outdated directories
     file: path="{{ item }}" state=absent

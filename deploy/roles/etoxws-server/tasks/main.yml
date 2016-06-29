@@ -21,6 +21,10 @@
 - include: CentOS.yml
   when: ansible_distribution == "CentOS"
 
+- debug: var=ETOXWS_IMPL_V2
+#- pause:
+#    prompt: 'Settings okay?. Press return to continue. Press Ctrl+c and then "a" to abort'
+
 ###############################################################################
 # setting up postgres
 # we suppose that postgres has been installed already
