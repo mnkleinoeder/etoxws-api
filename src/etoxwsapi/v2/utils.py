@@ -24,8 +24,14 @@ def modelid(mtaxonomy, mprovider, mversion):
 	mtag = None
 	try:
 		if mtaxonomy and mprovider and mversion:
-			_v = int(float(mversion)) # making the clunky version info in etoxvault more tolerant
-			mtag = ':'.join([str(val).strip() for val in (mtaxonomy, mprovider, _v)])
+			# very ugly hack to rectify wrong provider string
+			_p = mprovider
+			if mprovider == "Inte:Ligand GmbH":
+				_p = 'IL'
+			# making the clunky version info in etoxvault more tolerant
+			_v = int(float(mversion))
+
+			mtag = ':'.join([str(val).strip() for val in (mtaxonomy, _p, _v)])
 	except Exception, e:
 		logging.debug("Could not generate modelid %s"%(e))
 	mid = hashlib.md5(str(mtag)).hexdigest()

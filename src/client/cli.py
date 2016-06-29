@@ -267,6 +267,7 @@ class CalculationTask(object, TermMixin):
                 print >>outstr, '-' * len(frmt%('','','',''))
             else:
                 print >>outstr, "No results available"
+                print '\n'.join([m for lev, m in job.summary if lev == Job.CRIT])
 
 class WSClientHandler(object, TermMixin):
     def __init__(self, prog, args):
@@ -348,6 +349,15 @@ class WSClientHandler(object, TermMixin):
             print url+job_id
             requests.delete(url+job_id, verify=SSL_VERIFY)
 
+    def inspect_jobs(self):
+        ret = http_get('/'.join((self.args.baseurl, 'jobs/')))
+        for job_id in json.loads(ret.text):
+            print job_id
+            url = '/'.join((self.baseurl, "jobs", job_id))
+            ret = http_get(url)
+            stat = ret.json()
+            print stat
+
     def kill_running_jobs(self):
         for task in self.calc_tasks:
             task.kill()
@@ -404,8 +414,10 @@ class WSClientHandler(object, TermMixin):
         
     def test(self):
         self._print( term.clear() )
-        self._run_test(self.args.infile, 0)
+        self._print( term.move(0), "==> Running tests for %s <=="%(self.args.baseurl) )
+        self._run_test(self.args.infile, 1)
         self._write_results()
+        self._print( "", "==> Done for %s <=="%(self.args.baseurl) )
         
     def test_long(self):
         
@@ -418,10 +430,13 @@ class WSClientHandler(object, TermMixin):
 
         #testfiles = [ os.path.join(THIS_DIR, 'testdata', 'utf-8.sdf') ]
 
+        self.cur_line = 0
         self._print( term.clear() )
+        self._print( term.move(self.cur_line, 0), "==> Running tests for %s <=="%(self.args.baseurl) )
         for i, testfile in enumerate(testfiles):
-            self._run_test(testfile, i)
-        self.cur_line = i+1
+            self.cur_line = i+1
+            self._run_test(testfile, self.cur_line)
+        #self.cur_line = i+1
         self._write_summary()
         if self.args.print_results:
             self._write_results()
@@ -466,7 +481,8 @@ class WSClientHandler(object, TermMixin):
             print self.delim2
 
             for k in ('provider', 'homepage', 'admin', 'admin_email'):
-                print "%-12s: %s"%(k, self.wsinfo[k])
+                print "%-20s: %s"%(k, self.wsinfo[k])
+            print "%-20s: %s"%("Number of models", len(self.models) )
 
         if self.args.print_summary == 'trac':
             frmt = '|| {{{%-100s}}} ||'
@@ -545,6 +561,9 @@ class CLI(object):
         parser_calc.add_argument("-I", "--input-file", dest="infile", help="SDFile to be used as input file for calculations.", required=True )
         parser_calc.add_argument("-O", "--output-file", dest="outfile", help="SDFile to be used as output file.", required=True )
         parser_calc.add_argument(*i_option[0], **i_option[1])
+
+        parser_jobs = subparsers.add_parser('inspect-jobs', help='inspect jobs')
+        parser_jobs.set_defaults(func='inspect_jobs')
 
         parser_evault = subparsers.add_parser('etoxvault-check', help='check if a eTOXvault record is available for all models')
         parser_evault.set_defaults(func='check_etoxvault')
