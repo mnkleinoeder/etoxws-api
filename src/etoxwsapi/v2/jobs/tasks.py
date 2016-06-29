@@ -8,6 +8,8 @@ from django.conf import settings
 from etoxwsapi.v2.jobs.models import Job
 import time
 import traceback
+from etoxwsapi.utils import SDFFile
+from StringIO import StringIO
 v2_impl = settings.ETOXWS_IMPL_V2()
 
 from celery.utils.log import get_task_logger
@@ -26,9 +28,10 @@ class JobObserver():
         self.logger = logger
         self.results = dict()
         
-        self.retcode = None
+        self.retcode = -1
         self.msg = ""
         self.completion_time = 0
+        self.offset = 0
 
     def _log(self, func, msg, *args, **kwargs):
         if not msg:
@@ -46,9 +49,7 @@ class JobObserver():
 
     def _finalize(self):
         job = Job.objects.get(job_id=self.job_id)
-        if self.retcode is None:
-            stat = "JOB_UNKNOWN"
-        elif self.retcode == 0:
+        if self.retcode == 0:
             stat = "JOB_COMPLETED"
         else:
             stat = "JOB_FAILED"
@@ -57,13 +58,18 @@ class JobObserver():
         job.completion_time = self.completion_time
         job.save()
 
+    def is_valid(self):
+        job = Job.objects.get(job_id=self.job_id)
+        self.log_info(job.status)
+        return self.retcode == 0 and ("JOB_CANCELLED" != job.status)
+        
     def report_progress(self, cur):
         """
         report progress: number of current record related to input sdfile
         """
         assert(type(cur) == types.IntType)
         job = Job.objects.get(job_id=self.job_id)
-        job.currecord = cur
+        job.currecord = cur + self.offset
         job.status = "JOB_RUNNING"
         job.save()
 
@@ -93,10 +99,11 @@ class JobObserver():
         """
         give result for compound with cmp_id. result data must be given as JSON object with schema result_endpoint
         """
-        self.results[cmp_id] = result_json
+        i =  cmp_id + self.offset
+        self.results[i] = result_json
         from etoxwsapi.v2.jobs.models import Result
         job = Job.objects.get(job_id=self.job_id)
-        result = Result(job=job, cmp_id=cmp_id, result_json=result_json)
+        result = Result(job=job, cmp_id=i, result_json=result_json)
         result.save()
 
 @jobmgr.task(bind=True, ignore_result=True, name='etoxwsapi.v2.jobs.tasks.calculate')
@@ -107,7 +114,15 @@ def calculate(self, calc_info, sdf_file): #, logger, lock):
     logger.info("Starting calculation for %s"%(calc_info['id']))
     jr = JobObserver(jobid=jobid, logger=logger)
     try:
-        v2_impl.calculate_impl(jr, calc_info, sdf_file)
+        chunk_size = 100
+        sdf = SDFFile(StringIO(sdf_file))
+        chunks = sdf.split(chunk_size)
+        for i, chunk in enumerate(chunks):
+            logger.info("Processing chunk %s/%s (chunksize is %s)"%(i+1, len(chunks), chunk_size))
+            jr.offset = chunk_size*i
+            v2_impl.calculate_impl(jr, calc_info, chunk.to_string())
+            if not jr.is_valid():
+                break
     except Exception, e:
         logger.error("Exception occurred: %s"%(e))
         msg = str(e) + '\n' + '\n'.join(traceback.format_exc().splitlines())
