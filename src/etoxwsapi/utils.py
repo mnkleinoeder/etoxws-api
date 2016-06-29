@@ -99,10 +99,11 @@ class SDFRec(object, WriteMixin):
 class SDFFile(object, WriteMixin):
     re_rec = re.compile('\$\$\$\$[\n\r]{0,1}') # sometimes the eof is missing
 
-    def __init__(self, fname):
+    def __init__(self, fname = None):
         self.sdfrecs = []
         self.linesep = b'\n'
-        self.parse(fname)
+        if fname:
+            self.parse(fname)
 
     def __len__(self):
         return len(self.sdfrecs)
@@ -113,23 +114,53 @@ class SDFFile(object, WriteMixin):
     def __iter__(self):
         return iter(self.sdfrecs)
 
-    def parse(self, fname):
-        with open(fname, 'rb') as fp:
-            chunk = fp.read(1024)
-            # handling mixed line feeds
-            if chunk.count('\r\n') >= chunk.count('\n'):
-                #print "is windows"
-                self.linesep = b'\r\n'
-            fp.seek(0)
+    def split(self, size):
+        i = 0
+        parts = []
 
-            content = fp.read() 
-            if '$$$$' in content:
-                recs = self.re_rec.split(content)[:-1]
-            elif 'M  END' in content:
-                recs = [ content ]
-            else:
-                raise Exception("File is not a MOL/SDF file: '%s'"%(fname))
-            self.sdfrecs.extend([ SDFRec(rec, self.linesep) for rec in recs])
+        run = True
+        while( run ):
+            (m,n) = (size*i, size *(i+1))
+            if n >= self.__len__():
+                n = self.__len__()
+                run = False
+            #print m, n
+            part = SDFFile()
+            part.linesep = self.linesep
+            part.sdfrecs = self.sdfrecs[ m:n ]
+            parts.append(part)
+            i += 1
+        return parts
+
+    def _parse(self, fp):
+        ret = True
+        chunk = fp.read(1024)
+        # handling mixed line feeds
+        if chunk.count('\r\n') >= chunk.count('\n'):
+            #print "is windows"
+            self.linesep = b'\r\n'
+        fp.seek(0)
+
+        content = fp.read() 
+        if '$$$$' in content:
+            recs = self.re_rec.split(content)[:-1]
+        elif 'M  END' in content:
+            recs = [ content ]
+        else:
+            ret = False
+        self.sdfrecs.extend([ SDFRec(rec, self.linesep) for rec in recs])
+        return ret
+
+    def parse(self, fobj):
+        if type(fobj) in types.StringTypes:
+            with open(fobj, 'rb') as fp:
+                if not self._parse(fp):
+                    raise Exception("File is not a MOL/SDF file: '%s'"%(fobj))
+        elif hasattr(fobj, 'seek'):
+            if not self._parse(fobj):
+                raise Exception("File object does not contain MOL/SDF data")
+        else:
+            raise Exception("arg cannot be parsed.")
 
     def to_string(self, ctab_only = False):
         outbuf = StringIO()
@@ -142,8 +173,17 @@ class SDFFile(object, WriteMixin):
             fp.write( self.to_string() )
 
 if __name__ == '__main__':
-    f = SDFFile('client/testdata/tine.sdf')
-    print len(f)
-#     f[0].add_prop('M_BLA', "blubsi")
-#     sys.stdout.write("'%s'"%(f[0].to_string(True)))
-    f.write('/tmp/t.sdf')
+    f = SDFFile('/home/thomas/w45/git/etoxws-api/src/client/testdata/nci2000.sdf')
+    assert(len(f) == 2000)
+    parts = f.split(666)
+    assert(len(parts) == 4)
+    assert(len(parts[3]) == 2)
+    print len(f), len(parts)
+    with open('/home/thomas/w45/git/etoxws-api/src/client/testdata/nci2000.sdf', 'rb') as fp:
+        sio = StringIO(fp.read())
+        f = SDFFile()
+        f.parse(sio)
+        print len(f)
+    #f[0].add_prop('M_BLA', "blubsi")
+    #sys.stdout.write("'%s'"%(parts[3].to_string(True)))
+    #parts[3].write('/tmp/t.sdf')
