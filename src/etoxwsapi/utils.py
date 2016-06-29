@@ -71,8 +71,10 @@ class SDFRec(object, WriteMixin):
         propname = None
         propentry = ""
         for lno, line in enumerate(StringIO(self.rec)):
+            if lno == 0:
+                continue
             if is_ctab:
-                if lno == 3:
+                if lno < 5:
                     if self.re_v3000.search(line):
                         self.is_v3000 = True
                 self.ctab += self._cat_line(line)
@@ -97,7 +99,7 @@ class SDFRec(object, WriteMixin):
         #print self.is_v3000
 
 class SDFFile(object, WriteMixin):
-    re_rec = re.compile('\$\$\$\$[\n\r]{0,1}') # sometimes the eof is missing
+    re_rec = re.compile('\$\$\$\$')
 
     def __init__(self, fname = None):
         self.sdfrecs = []
@@ -141,7 +143,7 @@ class SDFFile(object, WriteMixin):
             self.linesep = b'\r\n'
         fp.seek(0)
 
-        content = fp.read() 
+        content = self.linesep + fp.read().rstrip()
         if '$$$$' in content:
             recs = self.re_rec.split(content)[:-1]
         elif 'M  END' in content:
@@ -173,17 +175,29 @@ class SDFFile(object, WriteMixin):
             fp.write( self.to_string() )
 
 if __name__ == '__main__':
-    f = SDFFile('/home/thomas/w45/git/etoxws-api/src/client/testdata/nci2000.sdf')
-    assert(len(f) == 2000)
-    parts = f.split(666)
-    assert(len(parts) == 4)
-    assert(len(parts[3]) == 2)
-    print len(f), len(parts)
-    with open('/home/thomas/w45/git/etoxws-api/src/client/testdata/nci2000.sdf', 'rb') as fp:
-        sio = StringIO(fp.read())
-        f = SDFFile()
-        f.parse(sio)
-        print len(f)
+    fname = '/home/thomas/w45/git/etoxws-api/src/client/testdata/win-lf.sdf'
+    f = SDFFile(fname)
+    
+#    print "'%s'"%(f[1].to_string())
+    print len(f)
+#     for ff in f:
+#         print ff.is_v3000
+    
+    f.write('/tmp/t.sdf')
+
+#     fname = '/home/thomas/w45/git/etoxws-api/src/client/testdata/nci2000.sdf'
+#     f = SDFFile(fname)
+#     assert(len(f) == 2000)
+#     parts = f.split(666)
+#     assert(len(parts) == 4)
+#     assert(len(parts[3]) == 2)
+#     print len(f), len(parts)
+#     with open(fname, 'rb') as fp:
+#         sio = StringIO(fp.read())
+#         f = SDFFile()
+#         f.parse(sio)
+#         print len(f)
+
     #f[0].add_prop('M_BLA', "blubsi")
     #sys.stdout.write("'%s'"%(parts[3].to_string(True)))
     #parts[3].write('/tmp/t.sdf')

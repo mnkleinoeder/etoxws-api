@@ -115,6 +115,9 @@ class CalculationTask(object, TermMixin):
         req_obj.req_calculations = self.models
 
         req_obj.sdf_file = self.sdf_file.to_string(ctab_only=True)
+#         self._print(term.move(5), "Submitting sdfile as is")
+#         with open(self.fname, 'rb') as fp:
+#             req_obj.sdf_file = fp.read() 
 
         req_ret = requests.post(self.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY,
                                 headers={'Content-type': 'application/json'},
@@ -191,18 +194,24 @@ class CalculationTask(object, TermMixin):
         return val
 
     def _analyze_results(self):
-        def _missing(job, what, missing, nresults, lev):
+        def _missing(job, what, missing, nresults, thres = None):
             if len(missing) == 0:
                 return
+            lev = Job.WARN
             nmissing = len(missing) 
+            fail_ratio = (float(nmissing)/nresults)
             msg = "Prediction did not provide a %s for all compounds."%(what)
             if nmissing == nresults:
                 msg += " Missing for all compounds!"
             elif nmissing > 10:
-                msg += " Missing for more than %d %%"%( (nmissing/nresults) * 100 )
+                msg += " Missing for more than %.2f %%"%( fail_ratio * 100 )
             else:
                 msg += " Missing for records: %s"%( ','.join([str(tt) for tt in missing]) )
+            if thres is not None:
+                if fail_ratio > thres:
+                    lev = Job.CRIT
             job.summary.append((lev, msg))
+
         for i, job in enumerate(self.jobs):
             try:
                 ret = http_get('/'.join((self.baseurl, 'jobs', job.job_id)))
@@ -231,10 +240,10 @@ class CalculationTask(object, TermMixin):
                                 #pprint.pprint(r)
                             else:
                                 job.summary.append((Job.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
-                            
-                        _missing(job, "Calculated value", val_missing, nresults, Job.WARN)
-                        _missing(job, "AD", ad_missing, nresults, Job.WARN)
-                        _missing(job, "RI", ri_missing, nresults, Job.WARN)
+                        
+                        _missing(job, "Calculated value", val_missing, nresults, thres=0.5)
+                        _missing(job, "AD", ad_missing, nresults)
+                        _missing(job, "RI", ri_missing, nresults)
                         #ad_missing, ri_missing
                     else:
                         #job.summary.append((Job.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], results.get('msg', "No error message given") )))

@@ -148,8 +148,9 @@ LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
 LOG_LEVEL  = "WARN"
 LOG_TO_STDOUT = False
 
+CELERY_RESULT_BACKEND = 'rpc://'
 # CELERY SETTINGS
-CELERY_RESULT_BACKEND = 'amqp'
+#CELERY_RESULT_BACKEND = 'amqp'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
