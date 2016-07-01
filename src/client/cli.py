@@ -20,47 +20,17 @@ import signal
 from etoxwsapi.utils import SDFFile
 from etoxwsapi.v2 import schema
 from etoxwsapi.v2 import utils as v2_utils
+from etoxwsapi.v2.utils import SSL_VERIFY, JobStat, http_get, extract_val
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(THIS_DIR, ".."))
-
-
-SSL_VERIFY=False
 
 ## defaults
 _INFILE = os.path.join(THIS_DIR, "tiny.sdf")
 _BASE_URL = 'http://localhost:8000/etoxwsapi/v2'
 _LOG_LEV = "WARN"
-_TIMEOUT = 60
 
 term = Terminal()
-
-def http_get(url):
-    ret = requests.get(url, verify=SSL_VERIFY, timeout=_TIMEOUT)
-
-    if ret.status_code == 200:
-        return ret
-    else:
-        logging.critical("Body of response:")
-        logging.critical(ret.content)
-        raise Exception("GET from '%s' failed with %s"%(url, ret.status_code))
-
-class Job(object):
-    NONE = 0
-    CRIT = 1
-    WARN = 2
-    INFO = 3
-    def __init__(self, calc_info, stat):
-        self.stat = stat
-        self.job_id = stat['job_id']
-        self.model_id = calc_info['id']
-        self.name = "%s (version %s)"%(calc_info['id'], calc_info.get('version', '1'))
-        self.summary = []
-
-    def nmessage(self, lev):
-        return len([s for s in self.summary if s[0] == lev])
-    def success(self):
-        return (self.nmessage(Job.CRIT) == 0)
 
 class TermMixin():
     delim1 = "="*101
@@ -109,32 +79,7 @@ class CalculationTask(object, TermMixin):
         return ( len([j for j in self.jobs if j.success()]) == len(self.jobs) )
 
     def _submit(self):
-        calculation_request = schema.get('calculation_request')
-        req_obj = calculation_request.create_object()
-
-        req_obj.req_calculations = self.models
-
-        req_obj.sdf_file = self.sdf_file.to_string(ctab_only=True)
-#         self._print(term.move(5), "Submitting sdfile as is")
-#         with open(self.fname, 'rb') as fp:
-#             req_obj.sdf_file = fp.read() 
-
-        req_ret = requests.post(self.baseurl+"/jobs/", data = req_obj.to_json(), verify=SSL_VERIFY,
-                                headers={'Content-type': 'application/json'},
-                                timeout=_TIMEOUT)
-
-        if req_ret.status_code == 200:
-            self.jobs = []
-            for i, stat in enumerate(json.loads(req_ret.text)):
-                schema.validate(stat, schema.get('job_status'))
-#                 self.summary.append((Job.CRIT, "%s; %s"%(e, stat))) 
-#                 logging.critical(str(e))
-#                 logging.critical(calc_info)
-#                 logging.critical(stat)
-
-                self.jobs.append( Job(self.models[i], stat) )
-        else:
-            raise Exception("Failed to submit jobs (%s): %s"%(req_ret.status_code, req_ret.text))
+        self.jobs = v2_utils.submit_jobs(self.wsinfo['provider'], self.baseurl, self.models, self.sdf_file.to_string(ctab_only=True))
 
     def _poll(self):
         interval = 1
@@ -142,18 +87,18 @@ class CalculationTask(object, TermMixin):
             do_poll = False
             running = []
             naccepted = 0
+
+            v2_utils.update_jobs(self.jobs)
+
             for job in self.jobs:
-                url = '/'.join((self.baseurl, "jobs", job.job_id))
-                ret = http_get(url)
-                stat = ret.json()
-                logging.debug(stat)
+                logging.debug(job.stat)
                 #print "status for '%s': %s (%s), %s/%s"%(job_id, stat['status'], model_id, stat['currecord'], stat['nrecord'])
-                if stat['status'] == "JOB_RUNNING":
-                    running.append((job, stat))
-                elif stat['status'] == "JOB_ACCEPTED":
+                if job.stat['status'] == "JOB_RUNNING":
+                    running.append(job)
+                elif job.stat['status'] == "JOB_ACCEPTED":
                     naccepted += 1
 
-                if stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
+                if job.stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
                     do_poll = True
 
                 time.sleep(interval)
@@ -163,99 +108,17 @@ class CalculationTask(object, TermMixin):
 
             self._print( term.clear_eos(self.term_pos) )
             if running:
-                for i, (job, stat) in enumerate(running):
-                    self._print( term.move(self.term_pos+i)+term.clear_eol(),  term.yellow(term.blink("Running: ")) + job.model_id + " (%s/%s)"%(stat['currecord'], stat['nrecord']) ) 
+                for i, job in enumerate(running):
+                    self._print( term.move(self.term_pos+i)+term.clear_eol(),
+                                 term.yellow(term.blink("Running: "))
+                                 + job.model_id + " (%s/%s)"%(job.stat['currecord'], job.stat['nrecord']) ) 
             elif naccepted:
                 self._print(term.move(self.term_pos), "Waiting for job execution. %s job(s) accepted"%(naccepted))
             else:
                 self._print(term.move(self.term_pos), "No job accecpted yet. Is the job queue (celery) running? Please check.")
 
-    def _make_prop_name(self, model, meta):
-        mid = model['id']
-        label, n = mid.split('/')[-2:]
-        return "%s #%s (%s, version %s)%s"%(label, n, self.wsinfo['provider'], model.get('version', '1'), meta)
-
-    def _val(self, r, k1, k2, missing = None, icmp = None):
-        val = 'n/a'
-        avail = False
-        try:
-            if k2:
-                val = r[k1][k2]
-            else:
-                val = r[k1]
-            avail = True
-        except KeyError:
-            pass
-        except Exception, e:
-            print type(e)
-            raise e
-        if not avail and missing is not None:
-            missing.append(icmp)
-        return val
-
     def _analyze_results(self):
-        def _missing(job, what, missing, nresults, thres = None):
-            if len(missing) == 0:
-                return
-            lev = Job.WARN
-            nmissing = len(missing) 
-            fail_ratio = (float(nmissing)/nresults)
-            msg = "Prediction did not provide a %s for all compounds."%(what)
-            if nmissing == nresults:
-                msg += " Missing for all compounds!"
-            elif nmissing > 10:
-                msg += " Missing for more than %.2f %%"%( fail_ratio * 100 )
-            else:
-                msg += " Missing for records: %s"%( ','.join([str(tt) for tt in missing]) )
-            if thres is not None:
-                if fail_ratio > thres:
-                    lev = Job.CRIT
-            job.summary.append((lev, msg))
-
-        for i, job in enumerate(self.jobs):
-            try:
-                ret = http_get('/'.join((self.baseurl, 'jobs', job.job_id)))
-                if ret.status_code == 200:
-                    stat = json.loads(ret.text)
-                    job.stat = stat
-                    if stat['status'] == "JOB_COMPLETED":
-                        results = stat['results']
-                        if len(results) != len(self.sdf_file):
-                            job.summary.append((Job.CRIT, "Number of results (%s) does not match number of input compounds (%s)"%(len(results), len(self.sdf_file))))
-                            continue
-
-                        nresults = len(results)
-                        val_missing = []
-                        ad_missing = []
-                        ri_missing = []
-                        for r in results:
-                            icmp = int(r['cmp_id'])
-                            if r['success']:
-                                val = self._val(r, 'value', None,   val_missing, icmp)
-                                ad  = self._val(r, 'AD'   ,'value', ad_missing, icmp)
-                                ri  = self._val(r, 'RI'   ,'value', ri_missing, icmp)
-                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ""),      val)
-                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":ADAN"), ad)
-                                self.sdf_file[icmp].add_prop( self._make_prop_name(self.models[i], ":RI"),   ri)
-                                #pprint.pprint(r)
-                            else:
-                                job.summary.append((Job.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
-                        
-                        _missing(job, "Calculated value", val_missing, nresults, thres=0.5)
-                        _missing(job, "AD", ad_missing, nresults)
-                        _missing(job, "RI", ri_missing, nresults)
-                        #ad_missing, ri_missing
-                    else:
-                        #job.summary.append((Job.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], results.get('msg', "No error message given") )))
-                        job.summary.append((Job.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], stat.get('msg', "No error message given") )))
-                else:
-                    job.summary.append((Job.CRIT, "Failed to retrieve job status. HTTP status-code was '%s', returned data were: %s"%(ret.status_code, ret.text) ))
-                
-            except Exception, e:
-                msg = "Failed to retrieve job status: %s\n"%(e)
-                msg += "\n".join(traceback.format_exc().splitlines())
-
-                job.summary.append((Job.CRIT, msg))
+        v2_utils.analyze_job_results(self.jobs, self.sdf_file)
 
     def print_results(self, outstr = sys.stdout):
         frmt = '| %-7s | %-20s | %-20s | %-20s |'
@@ -268,7 +131,7 @@ class CalculationTask(object, TermMixin):
                 print >>outstr, frmt%("cmp_id", "value", "AD", "RI")
                 print >>outstr, '-' * len(frmt%('','','',''))
                 for r in results:
-                    line = frmt%( r['cmp_id'], self._val(r, 'value', None), self._val(r, 'AD','value'), self._val(r, 'RI','value') )
+                    line = frmt%( r['cmp_id'], extract_val(r, 'value', None), extract_val(r, 'AD','value'), extract_val(r, 'RI','value') )
                     if r.get('message', None):
                         print >>outstr, line, r['message']
                     else:
@@ -276,7 +139,7 @@ class CalculationTask(object, TermMixin):
                 print >>outstr, '-' * len(frmt%('','','',''))
             else:
                 print >>outstr, "No results available"
-                print '\n'.join([m for lev, m in job.summary if lev == Job.CRIT])
+                print '\n'.join([m for lev, m in job.summary if lev == JobStat.CRIT])
 
 class WSClientHandler(object, TermMixin):
     def __init__(self, prog, args):
@@ -295,7 +158,8 @@ class WSClientHandler(object, TermMixin):
         url = '/'.join((self.args.baseurl, 'dir'))
         ret = http_get(url)
         #self.models = [ m for m in json.loads(ret.text)]
-        self.models = [ schema.validate(m, schema.get('calculation_info')) for m in json.loads(ret.text)]
+        self.models = [ schema.validate(m, schema.get('calculation_info')) for m in json.loads(ret.text)
+                                if m['id'] != "/Toxicity/Target Safety Pharmacology/Hyperbilirubinemia/1"]
 
         logging.debug(pprint.pformat(self.wsinfo))
         logging.debug(pprint.pformat(self.models))
@@ -401,7 +265,7 @@ class WSClientHandler(object, TermMixin):
                     stat = term.red("FAILED")
                 self._print("", "[Model %s]: %s"%(job.model_id, stat))
                 #self._print("", "-"*80)
-                for s1, t, m in ((Job.CRIT, term.red, "|- Critical errors:"), (Job.WARN, term.yellow, "|- Warnings"), (Job.INFO, term.normal, "|- Information messages")):
+                for s1, t, m in ((JobStat.CRIT, term.red, "|- Critical errors:"), (JobStat.WARN, term.yellow, "|- Warnings"), (JobStat.INFO, term.normal, "|- Information messages")):
                     if job.nmessage(s1):
                         self._print("", m)
                         for s2, m in job.summary:
@@ -443,6 +307,8 @@ class WSClientHandler(object, TermMixin):
         self._print( term.clear() )
         self._print( term.move(self.cur_line, 0), "==> Running tests for %s <=="%(self.args.baseurl) )
         for i, testfile in enumerate(testfiles):
+            #if 'huge' in testfile:
+            #    continue
             self.cur_line = i+1
             self._run_test(testfile, self.cur_line)
         #self.cur_line = i+1
@@ -518,13 +384,14 @@ class WSClientHandler(object, TermMixin):
 
         all_recs = []        
         for rec in ret.json():
-            mtag, _ = v2_utils.modelid_from_calcinfo(rec)
-            all_recs.append(mtag)
+            mtag, mid = v2_utils.modelid(rec['modeltag'], rec['partner'], rec['version'])
+            print mtag
+            all_recs.append(mid)
         frmt = '%-81s: %-19s '
-        for m in self.models:
-            mtag, _ = v2_utils.modelid( m['id'], self.wsinfo['provider'], m['version'] )
-            #print mtag, _
-            if mtag in all_recs:
+        for m in self.get_selected_models():
+            #pprint.pprint(m)
+            mtag, mid = v2_utils.modelid_from_calcinfo(self.wsinfo['provider'], m)
+            if mid in all_recs:
                 status = term.green("Available.")
             else:
                 status = term.red("Missing!")
@@ -577,6 +444,7 @@ class CLI(object):
         parser_evault = subparsers.add_parser('etoxvault-check', help='check if a eTOXvault record is available for all models')
         parser_evault.set_defaults(func='check_etoxvault')
         parser_evault.add_argument("-k", "--authkey", dest="authkey", help="Access key for eTOXvault REST API.", required=True )
+        parser_evault.add_argument(*i_option[0], **i_option[1])
 
         parser_dir = subparsers.add_parser('info', help='prints info and dir from webservice implementation running at base url')
         parser_dir.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="output format", nargs='?', default=None, required=False)
