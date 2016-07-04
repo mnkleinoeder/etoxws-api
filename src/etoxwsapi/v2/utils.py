@@ -45,7 +45,7 @@ def modelid(mtaxonomy, mprovider, mversion):
     ret = (mtag, mid)
     return ret
 
-def http_get(url):
+def http_get(url, timeout=TIMEOUT):
     ret = requests.get(url, verify=SSL_VERIFY, timeout=TIMEOUT)
 
     if ret.status_code == 200:
@@ -124,13 +124,16 @@ def submit_jobs(provider, baseurl, models, sdf_file, timeout = 60):
     return jobs
 
 #def update_jobs(baseurl, jobs, timeout):
-def update_jobs(jobs):
+def update_jobs(jobs, timeout=TIMEOUT):
     for job in jobs:
         if job.is_done():
             continue
         url = '/'.join((job.baseurl, "jobs", job.job_id))
-        ret = http_get(url)
-        job.stat = ret.json()
+        try:
+            ret = http_get(url, timeout=timeout)
+            job.stat = ret.json()
+        except Exception, e:
+            logging.warn("Failed to update job status: %s (%s"%(url, e))
 
 def make_prop_name(provider, calc_info, meta = ""):
     mid = calc_info['id']
