@@ -385,7 +385,7 @@ class WSClientHandler(object, TermMixin):
         all_recs = []        
         for rec in ret.json():
             mtag, mid = v2_utils.modelid(rec['modeltag'], rec['partner'], rec['version'])
-            print mtag
+            logging.info("Hash for %s: %s"%(mtag, mid))
             all_recs.append(mid)
         frmt = '%-81s: %-19s '
         for m in self.get_selected_models():
