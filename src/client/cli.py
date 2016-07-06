@@ -109,7 +109,9 @@ class CalculationTask(object, TermMixin):
             self._print( term.clear_eos(self.term_pos) )
             if running:
                 for i, job in enumerate(running):
-                    self._print( term.move(self.term_pos+i)+term.clear_eol(),
+                    t_pos = term.move(self.term_pos+i)
+
+                    self._print(  t_pos +term.clear_eol(),
                                  term.yellow(term.blink("Running: "))
                                  + job.model_id + " (%s/%s)"%(job.stat['currecord'], job.stat['nrecord']) ) 
             elif naccepted:

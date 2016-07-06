@@ -1,11 +1,10 @@
-#from cStringIO import StringIO
-from collections import OrderedDict
-
-from StringIO import StringIO
 import re
 import sys
 import logging
 import types
+
+from collections import OrderedDict
+from StringIO import StringIO
 
 logger = logging.getLogger('SDF utils')
 
@@ -170,9 +169,12 @@ class SDFFile(object, WriteMixin):
         #outbuf.write("".join( [ rec.to_string().rstrip() for rec in self.sdfrecs] ))
         return outbuf.getvalue()
 
-    def write(self, fname):
-        with open(fname, 'w') as fp:
-            fp.write( self.to_string() )
+    def write(self, fobj):
+        if hasattr(fobj, 'write'):
+            fobj.write( self.to_string() )
+        else:
+            with open(fobj, 'w') as fp:
+                fp.write( self.to_string() )
 
 if __name__ == '__main__':
     fname = '/home/thomas/w45/git/etoxws-api/src/client/testdata/win-lf.sdf'
