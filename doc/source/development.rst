@@ -52,8 +52,8 @@ Running the web application in development mode
 The webservice implementation consists of two main components, the job queue and the http server. In production the two components are
 executed as daemons (supervisor and apache/httpd). The deployment in production mode is described here: :doc:`deployment`.
 
-During development of the adapter code between the webservice and the model execution it is recommended to run the web application in development
-mode.
+During development of the adapter code between the webservice and the model execution it is recommended to run the web application
+in development mode.
 
 Please open two different terminal windows and follow the next steps. 
 
@@ -118,10 +118,16 @@ such as ``python src/client/cli.py test`` you will see corresponding log output 
 Using a debugger
 ~~~~~~~~~~~~~~~~
 
-If ``ETOXWS_PRODUCTION`` is ``false`` (ie. the application runs in debug mode) a remote debugging tool is delivered and
-ready to use: the PyDev remote debugger (http://pydev.org/manual_adv_remote_debugger.html).
+If ``ETOXWS_PRODUCTION`` is ``false`` (ie. the application runs in debug mode) a remote debugging tool can be used:
+the PyDev remote debugger (http://pydev.org/manual_adv_remote_debugger.html).
 
-Just set a breakpoint at an arbitrary location in your code by adding the following line of code:
+To enable the pydevd debugger the pydevd source has to be added to the PYTHONPATH. Please refer to the PyDev documentation
+(http://www.pydev.org/).
+
+In case you have a local copy of Eclipse/PyDev the path to the pydevd debugger is
+``path_to_eclipse/plugins/org.python.pydev_4.4.0.201510052309/pysrc``.
+
+For debugging, just set a breakpoint at an arbitrary location in your code by adding the following line of code:
 
 Debugging on ``localhost``:
 

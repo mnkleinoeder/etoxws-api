@@ -217,7 +217,7 @@ class WSClientHandler(object, TermMixin):
             return 1
         return 0
 
-    def cleanup(self):
+    def kill(self):
         url = '/'.join((self.args.baseurl, 'jobs/'))
         ret = http_get(url)
         for job_id in json.loads(ret.text):
@@ -414,19 +414,20 @@ class CLI(object):
         )
 
         i_option = (("-i", "--ids"), {'dest': "ids", 'help': "comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", 'default':None})
+
         parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=_BASE_URL)
         parser.add_argument("-l", "--log-level", dest="loglev", help="set verbosity level [default: %(default)s] (see python logging module)", default=_LOG_LEV)
         parser.add_argument("-v", "--verbose", dest="verbose", help="write output sequentially to the terminal", default=False, action='store_true')
 
-        subparsers = parser.add_subparsers(help='available subcommands')
+        subparsers = parser.add_subparsers(help='Available subcommands:')
 
-        parser_test = subparsers.add_parser('test', help="""run models with a tiny dataset of three simple molecules (testdata/tiny.sdf).
+        parser_test = subparsers.add_parser('test', help="""Run models with a tiny dataset of three simple molecules (./tiny.sdf).
                                                                    This is useful only while developing and debugging.""")
         parser_test.add_argument("-t", "--test-file", dest="infile", help="SDFile to be used for the test run. [default: %(default)s]", default=_INFILE )
         parser_test.add_argument(*i_option[0], **i_option[1])
         parser_test.set_defaults(func='test')
 
-        parser_test2 = subparsers.add_parser('test-long', help="""run models with an extensive test-suite (i.e., all sdf-files in testdata/ subdir).
+        parser_test2 = subparsers.add_parser('test-long', help="""Run models with an extensive test-suite (i.e., all sdf-files in testdata/ subdir).
                                                                  This test must pass before a VM is accepted for deployment.""")
         parser_test2.add_argument(*i_option[0], **i_option[1])
         parser_test2.add_argument("-P", "--print-results", dest="print_results", help="print results to terminal", default=False, action='store_true')
@@ -434,26 +435,26 @@ class CLI(object):
                                     If not specified all files found in the testdata/ subdir will be used""")
         parser_test2.set_defaults(func='test_long')
 
-        parser_calc = subparsers.add_parser('calc', help='calculation help')
+        parser_calc = subparsers.add_parser('calc', help='Run calculations of a given webservice in order to obtain an SDFile with results.')
         parser_calc.set_defaults(func='calc')
         parser_calc.add_argument("-I", "--input-file", dest="infile", help="SDFile to be used as input file for calculations.", required=True )
         parser_calc.add_argument("-O", "--output-file", dest="outfile", help="SDFile to be used as output file.", required=True )
         parser_calc.add_argument(*i_option[0], **i_option[1])
 
-        parser_jobs = subparsers.add_parser('inspect-jobs', help='inspect jobs')
+        parser_jobs = subparsers.add_parser('inspect-jobs', help='Inspect all jobs of a given webservice.')
         parser_jobs.set_defaults(func='inspect_jobs')
 
-        parser_evault = subparsers.add_parser('etoxvault-check', help='check if a eTOXvault record is available for all models')
+        parser_evault = subparsers.add_parser('etoxvault-check', help='Check if a eTOXvault record is available for all models.')
         parser_evault.set_defaults(func='check_etoxvault')
         parser_evault.add_argument("-k", "--authkey", dest="authkey", help="Access key for eTOXvault REST API.", required=True )
         parser_evault.add_argument(*i_option[0], **i_option[1])
 
-        parser_dir = subparsers.add_parser('info', help='prints info and dir from webservice implementation running at base url')
+        parser_dir = subparsers.add_parser('info', help='Prints info and dir from webservice implementation running at base url.')
         parser_dir.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="output format", nargs='?', default=None, required=False)
         parser_dir.set_defaults(func='dir_info')
 
-        parser_dir = subparsers.add_parser('cleanup', help='cancels and deletes jobs')
-        parser_dir.set_defaults(func='cleanup')
+        parser_dir = subparsers.add_parser('kill', help='Cancels and deletes all running jobs. Jobs will not be erased from the webservice.')
+        parser_dir.set_defaults(func='kill')
 
         args = parser.parse_args()
         #print args

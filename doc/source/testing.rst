@@ -10,17 +10,16 @@ Testing
 Preparation
 -----------
 
-Source code and virtualenv
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+Virtualenv
+~~~~~~~~~~
 
-For development and testing a local instance of the code and a working configuration must be created first.
+For executing the testing client a working configuration must be created first.
 
 Please execute the following steps. 
 
 .. include:: inc_create_venv.rst
 
 Now, you should have a working copy of the code and a virtual environment with all required packages.
-
 
 .. _testing-client:
 

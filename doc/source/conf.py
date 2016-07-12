@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# eTOX webservice API v2 documentation build configuration file, created by
+# eTOX webservice API v3 documentation build configuration file, created by
 # sphinx-quickstart on Tue Apr 29 15:39:23 2014.
 #
 # This file is execfile()d with the current directory set to its
@@ -22,7 +22,7 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC_DIR = os.path.join(THIS_DIR, '..', '..', 'src')
 
 sys.path.insert(0, SRC_DIR)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings.dev'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'etoxwsapi.settings'
 
 # -- General configuration ------------------------------------------------
 
@@ -54,8 +54,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'eTOX webservice API v2'
-copyright = u'2014-2015, Molecular Networks'
+project = u'eTOX webservice API v3'
+copyright = u'2014-2016, Molecular Networks'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -188,7 +188,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'eTOXwebserviceAPIv2doc'
+htmlhelp_basename = 'eTOXwebserviceAPIv3doc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -208,7 +208,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'eTOXwebserviceAPIv2.tex', u'eTOX webservice API v2 Documentation',
+  ('index', 'eTOXwebserviceAPIv3.tex', u'eTOX webservice API v3 Documentation',
    u'Molecular Networks', 'manual'),
 ]
 
@@ -238,7 +238,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'etoxwebserviceapiv2', u'eTOX webservice API v2 Documentation',
+    ('index', 'etoxwebserviceapiv3', u'eTOX webservice API v3 Documentation',
      [u'Molecular Networks'], 1)
 ]
 
@@ -252,8 +252,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'eTOXwebserviceAPIv2', u'eTOX webservice API v2 Documentation',
-   u'Molecular Networks', 'eTOXwebserviceAPIv2', 'One line description of project.',
+  ('index', 'eTOXwebserviceAPIv3', u'eTOX webservice API v3 Documentation',
+   u'Molecular Networks', 'eTOXwebserviceAPIv3', 'One line description of project.',
    'Miscellaneous'),
 ]
 

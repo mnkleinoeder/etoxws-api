@@ -8,6 +8,6 @@ ETOXWSAPI_IMPL=/home/modeler/soft/eTOXlab/ws
 RDKIT_DIR=/opt/rdkit
 export LD_LIBRARY_PATH=$RDKIT_DIR/lib
 export PYTHONPATH=$ETOXWSAPI_IMPL:$ETOXWSAPI_DIR/src:$RDKIT_DIR/lib/python2.7/site-packages:$PYTHONPATH
-export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.etoxlabdev
+export DJANGO_SETTINGS_MODULE=etoxwsapi.settings
 
 #echo 'cd to "src/etoxwsapi" and run django with "python manage.py <action>"'

@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This is the online documentation for the reference implementation of the eTOX prediction webservice API v2.
+This is the online documentation for the reference implementation of the eTOX prediction webservice API v3.
 
 More information about the eTOX project can be found here: http://www.etoxproject.eu/
 
