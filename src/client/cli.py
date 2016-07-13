@@ -18,9 +18,9 @@ from blessings import Terminal
 import signal
 
 from etoxwsapi.utils import SDFFile
-from etoxwsapi.v2 import schema
-from etoxwsapi.v2 import utils as v2_utils
-from etoxwsapi.v2.utils import SSL_VERIFY, JobStat, http_get, extract_val
+from etoxwsapi.v3 import schema
+from etoxwsapi.v3 import utils as v2_utils
+from etoxwsapi.v3.utils import SSL_VERIFY, JobStat, http_get, extract_val
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(THIS_DIR, ".."))
@@ -93,12 +93,12 @@ class CalculationTask(object, TermMixin):
             for job in self.jobs:
                 logging.debug(job.stat)
                 #print "status for '%s': %s (%s), %s/%s"%(job_id, stat['status'], model_id, stat['currecord'], stat['nrecord'])
-                if job.stat['status'] == "JOB_RUNNING":
+                if job.is_running():
                     running.append(job)
-                elif job.stat['status'] == "JOB_ACCEPTED":
+                elif job.is_accepted():
                     naccepted += 1
 
-                if job.stat['status'] not in ( "JOB_COMPLETED", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"):
+                if job.is_open():
                     do_poll = True
 
                 time.sleep(interval)
