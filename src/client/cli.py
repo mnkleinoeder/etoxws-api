@@ -19,7 +19,7 @@ import signal
 
 from etoxwsapi.utils import SDFFile
 from etoxwsapi.v3 import schema
-from etoxwsapi.v3 import utils as v2_utils
+from etoxwsapi.v3 import utils as v3_utils
 from etoxwsapi.v3.utils import SSL_VERIFY, JobStat, http_get, extract_val
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -79,7 +79,7 @@ class CalculationTask(object, TermMixin):
         return ( len([j for j in self.jobs if j.success()]) == len(self.jobs) )
 
     def _submit(self):
-        self.jobs = v2_utils.submit_jobs(self.wsinfo['provider'], self.baseurl, self.models, self.sdf_file.to_string(ctab_only=True))
+        self.jobs = v3_utils.submit_jobs(self.wsinfo['provider'], self.baseurl, self.models, self.sdf_file.to_string(ctab_only=True))
 
     def _poll(self):
         interval = 1
@@ -88,7 +88,7 @@ class CalculationTask(object, TermMixin):
             running = []
             naccepted = 0
 
-            v2_utils.update_jobs(self.jobs)
+            v3_utils.update_jobs(self.jobs)
 
             for job in self.jobs:
                 logging.debug(job.stat)
@@ -120,7 +120,7 @@ class CalculationTask(object, TermMixin):
                 self._print(term.move(self.term_pos), "No job accecpted yet. Is the job queue (celery) running? Please check.")
 
     def _analyze_results(self):
-        v2_utils.analyze_job_results(self.jobs, self.sdf_file)
+        v3_utils.analyze_job_results(self.jobs, self.sdf_file)
 
     def print_results(self, outstr = sys.stdout):
         frmt = '| %-7s | %-20s | %-20s | %-20s |'
@@ -386,13 +386,13 @@ class WSClientHandler(object, TermMixin):
 
         all_recs = []        
         for rec in ret.json():
-            mtag, mid = v2_utils.modelid(rec['modeltag'], rec['partner'], rec['version'])
+            mtag, mid = v3_utils.modelid(rec['modeltag'], rec['partner'], rec['version'])
             logging.info("Hash for %s: %s"%(mtag, mid))
             all_recs.append(mid)
         frmt = '%-81s: %-19s '
         for m in self.get_selected_models():
             #pprint.pprint(m)
-            mtag, mid = v2_utils.modelid_from_calcinfo(self.wsinfo['provider'], m)
+            mtag, mid = v3_utils.modelid_from_calcinfo(self.wsinfo['provider'], m)
             if mid in all_recs:
                 status = term.green("Available.")
             else:
@@ -409,7 +409,7 @@ class CLI(object):
         parser = ArgumentParser(
             formatter_class=RawDescriptionHelpFormatter,
             description="""
-            Command line interface to access the eTOX webservices (based on API v2.1)
+            Command line interface to access the eTOX webservices (v2 and v3 are supported)
             running calculation can be stopped anytime by Ctrl-C.""",
         )
 

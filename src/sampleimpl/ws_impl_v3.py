@@ -8,6 +8,7 @@ import re
 import tempfile
 
 from etoxwsapi.v3 import schema
+from etoxwsapi.v3 import wsbase
 from .ws_impl_v2 import WS2
 import time
 
@@ -42,7 +43,7 @@ class WS3(WS2):
         """
         self.m2_id = '/Sample Path/Other Sample Model/1'
         self.m2_1 = calculation_info.create_object(id=self.m2_id, category="ENDPOINT", version="1")
-        self.m2_1['license_end'] = time.mktime(time.strptime("2016 09 30 0 0 0", "%Y %m %d %H %M %S"))
+        self.m2_1['license_end'] = -1 #time.mktime(time.strptime("2016 06 30 0 0 0", "%Y %m %d %H %M %S"))
         self.m2_1['license_info'] = "License for software XYZ from company ABC required. Please contact model admin"
         r_type = schema.get("result_endpoint").schema
         r_type['properties']['value'] = { "enum": ["positive", "negative", "unknown"]}
@@ -50,3 +51,15 @@ class WS3(WS2):
 
         self.my_models.append(self.m2_1)
 
+    def calculate_impl(self, jobobserver, calc_info, sdf_file):
+        def check_lic(ci):
+            lic_end = ci.get('license_end', 0)
+            if -1 == lic_end:
+                raise wsbase.NoValidLicense()
+            elif 0 < lic_end:
+                if time.time() > lic_end:
+                    raise wsbase.LicenseExpired(lic_end)
+        for m in self.my_models:
+            if m['id'] == calc_info['id']:
+                check_lic(m)
+        super(WS2, self).calculate_impl(self, jobobserver, calc_info, sdf_file)

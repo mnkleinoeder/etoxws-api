@@ -2,6 +2,18 @@ import types
 import json
 from cStringIO import StringIO
 import logging
+from datetime import datetime
+
+class LicenseError(Exception):
+    pass
+
+class NoValidLicense(LicenseError):
+    def __init__(self):
+        super(NoValidLicense, self).__init__("No valid license found.")
+
+class LicenseExpired(LicenseError):
+    def __init__(self, lic_end):
+        super(LicenseExpired, self).__init__("License expired: %s"%(datetime.fromtimestamp(lic_end)))
 
 # TODO: make this an interface
 class WebserviceImplementationBase(object):
