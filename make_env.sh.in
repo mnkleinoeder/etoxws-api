@@ -1,5 +1,5 @@
 # sample file for setting up the environment for running the webapp
-# copy to a "make_env.sh" and adapt paths below. Don't checkin the copied file.
+# copy to a "make_env.sh" and adapt paths below. Don't commit or check-in the copied file.
 
 . /home/modeler/etoxws/venv/bin/activate
 ETOXWSAPI_DIR=/home/modeler/etoxws/etoxws-api

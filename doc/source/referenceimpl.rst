@@ -40,15 +40,14 @@ the  webservice. These methods have to be implemented by the adapter (i.e., a su
 ``etoxwsapi.v3.wsbase.WebserviceImplementationBase``).
 
 The connection between the django app and the calculation adapter is made via the Django settings mechanism
-``etoxwsapi/settings/*.py``.
+``etoxwsapi/settings/``.
 
-* the default development setting ``etoxwsapi/settings/dev.py`` loads the sample implementation.
-* there is a etoxlab specific dev settings file ``etoxwsapi/settings/etoxlabdev.py`` which connects the etoxlab implementation class.
-* in production the prod settings are loaded and the actual settings injected via a settings_local.py file.
+Local settings are defined in a file ``etoxwsapi/settings/settings_local.py``. A template file is provided
+``etoxwsapi/settings/settings_local.py.in`` which contains usable settings for eTOXlab in development mode.
+This file needs only to be copied in order to obtain a working development environment.
 
-The settings to be used are defined by an environment variable ``DJANGO_SETTINGS_MODULE``,
-e.g., ``export DJANGO_SETTINGS_MODULE=etoxwsapi.settings.etoxlabdev`` for loading the etoxlab specific settings. See also :ref:`runtime-env`.
- 
+The production settings for the WSGI/Apache settings are automatically deployed during the deployment (:doc:`deployment`).
+
 The package contains a sample implementation of the webservice adapter in the ``sampleimpl`` directory.
 This example should demonstrate how to implement the calculation adapter.
 
@@ -61,7 +60,7 @@ Implementation
 Please refer to :ref:`prepare-env` in order to have a working environment.
 
 #. create a new python module
-#. set the PYTHONPATH to ``/path/to/etoxwsapi/src``
+#. set the PYTHONPATH to ``/path/to/etoxws-api/src``
 #. import required classes and packages from etoxwsapi::
 
       from etoxwsapi.v3 import schema

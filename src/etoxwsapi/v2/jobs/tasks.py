@@ -91,6 +91,7 @@ class JobObserver():
         0 - success
         1 - failure
         """
+        self.log_info("%s; %s"%(retcode, errmsg))
         self.retcode = retcode
         self.msg = errmsg
         self.completion_time = time.time()

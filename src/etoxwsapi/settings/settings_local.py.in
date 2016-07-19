@@ -17,7 +17,10 @@ from sampleimpl.ws_impl_v1 import WS1
 ETOXWS_IMPL_V1 = WS1
 
 from sampleimpl.ws_impl_v2 import WS2
-ETOXWS_IMPL_V2 = WS2
+ETOXWS_IMPL = WS2
+
+from sampleimpl.ws_impl_v3 import WS3
+ETOXWS_IMPL = WS2
 
 DEBUG = True
 TEMPLATE_DEBUG = True

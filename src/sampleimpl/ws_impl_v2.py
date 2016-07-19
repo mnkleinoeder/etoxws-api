@@ -50,9 +50,9 @@ class WS2(WebserviceImplementationBase):
     def info_impl(self):
         ws_info = schema.get('ws_info')
         data = { "provider": "Molecular Networks GmbH",
-                            "homepage": "http://www.molecular-networks.com",
+                            "homepage": "http://www.mn-am.com",
                             "admin": "Thomas Kleinoeder",
-                            "admin_email": "kleinoeder@molecular-networks.com",
+                            "admin_email": "thomas.kleinoeder@mn-am.com",
         }
         ws = ws_info.create_object(**data)
         return ws.to_json()

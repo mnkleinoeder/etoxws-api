@@ -46,7 +46,7 @@ calculation_info =  {
 			},
 			"license_end": {
 				"type": "number",
-				"description": "license end in seconds since EPOCH (see python time.time()), 0 means no license end",
+				"description":  "license end in seconds since EPOCH (see python time.time()), 0 means no license required, -1 means no valid license available",
 				"default": 0
 			},
 			"license_info": {

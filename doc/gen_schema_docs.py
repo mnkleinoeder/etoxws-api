@@ -2,7 +2,7 @@
 
 import os
 
-from etoxwsapi.v2.schema import get_registry, get_doc
+from etoxwsapi.v3.schema import get_registry, get_doc
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 

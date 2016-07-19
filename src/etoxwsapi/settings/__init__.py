@@ -159,7 +159,7 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERYD_POOL_RESTARTS = True
 CELERY_IGNORE_RESULT = True
 
-ETOXWS_IMPL_V2_ASYNC = True
+ETOXWS_IMPL_ASYNC = True
 
 dflt_datefmt = '%d/%b/%Y %H:%M:%S'
 dflt_log_prfx = '[%(asctime)s][%(levelname)s]'
@@ -171,7 +171,7 @@ except Exception, e:
     sys.stderr.write( "Ignoring missing settings_local.py: %s"%(e) )
 
 # see http://celery.readthedocs.org/en/latest/configuration.html#celery-always-eager
-CELERY_ALWAYS_EAGER = (not ETOXWS_IMPL_V2_ASYNC)
+CELERY_ALWAYS_EAGER = (not ETOXWS_IMPL_ASYNC)
 
 dflt_logger = {
     'handlers': dflt_handlers,

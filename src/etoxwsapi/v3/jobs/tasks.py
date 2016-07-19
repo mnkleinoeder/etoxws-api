@@ -10,7 +10,8 @@ import time
 import traceback
 from etoxwsapi.utils import SDFFile
 from StringIO import StringIO
-v3_impl = settings.ETOXWS_IMPL_V3()
+
+v3_impl_cls = settings.ETOXWS_IMPL_V3
 
 from celery.utils.log import get_task_logger
 
@@ -63,13 +64,13 @@ class JobObserver():
         self.log_info(job.status)
         return self.retcode == 0 and ("JOB_CANCELLED" != job.status)
         
-    def report_progress(self, cur):
+    def report_progress(self, current_record):
         """
         report progress: number of current record related to input sdfile
         """
-        assert(type(cur) == types.IntType)
+        assert(type(current_record) == types.IntType)
         job = Job.objects.get(job_id=self.job_id)
-        job.currecord = cur + self.offset
+        job.currecord = current_record + self.offset
         job.status = "JOB_RUNNING"
         job.save()
 
@@ -114,6 +115,7 @@ def calculate(self, calc_info, sdf_file): #, logger, lock):
     logger.info("Starting calculation for %s"%(calc_info['id']))
     jr = JobObserver(jobid=jobid, logger=logger)
     try:
+        v3_impl = v3_impl_cls()
         chunk_size = 100
         sdf = SDFFile(StringIO(sdf_file))
         chunks = sdf.split(chunk_size)

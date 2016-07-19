@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-eTOX webservice API v2's documentation
-======================================
+Documentation for the eTOX webservice API v3
+============================================
 
 Contents:
 
