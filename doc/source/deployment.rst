@@ -33,16 +33,6 @@ Please run the following steps.
 
 .. include:: inc_create_venv.rst
 
-.. important::
-   Please note that the next step is new since 2016-03. Please execute this step otherwise Ansible will give an error!
-
-Please run the script ``update_project.sh`` in the base directory of the etoxws-api project:
-
-.. code-block:: bash
-
-   (venv)etoxws-v2:~/etoxws $> cd ~/etoxws/etoxws-api
-   (venv)etoxws-v2:~/etoxws/etoxws-api $> ./update_project.sh
-
 Now, you should be ready for executing the upgrade process as described in the next section.
 
 Running Ansible
@@ -61,10 +51,10 @@ Finally, execute ansible (if you get an authentication error please refer to :re
 Ansible should now download all required packages and bits-and-pieces and configure the task management tool-chain
 as well as integration with the apache webserver.
 
-Start a web-browser and enter \https://<ip_or_hostname>/etoxwsapi/v2/info. You should see a JSON string corresponding to
+Start a web-browser and enter \https://<ip_or_hostname>/etoxwsapi/v3/info. You should see a JSON string corresponding to
 the information given in the webservice implementation class.
 
-.. note:: The SSL certificate for the virtual host is self-signed. Therefore, all browser will issue a certificate error
+.. note:: The SSL certificate for the virtual host is self-signed. Therefore, all browsers will issue a certificate error
    when the webservice is accessed by a browser. This is not a problem for the webservice infrastructure as
    eTOXsys is aware of those self-signed certificate and can ignore the warnings when accessing.
 
@@ -199,7 +189,8 @@ and
 
 .. code-block:: bash
 
-   tailf /var/log/httpd/etoxws-v2-ssl.com_error.log
+   tailf /var/log/httpd/etoxws-{{HOSTNAME}}-ssl_error.log # if access via https
+   tailf /var/log/httpd/etoxws-{{HOSTNAME}}_error.log # if access via http
 
 
 .. _deploy-appendix:
@@ -210,7 +201,7 @@ Appendix
 Technical information
 ~~~~~~~~~~~~~~~~~~~~~
 
-The reference implementation for API version 2 requires several components installed and configured:
+The reference implementation for API version 2/3 requires several components installed and configured:
 
 * Postgres and a database with r/w access
 * Celery running as background service
@@ -240,7 +231,7 @@ Apache setup
 .. note::
    Ignore this section if you work with an eTOXlab VM!
 
-Per default the ansible procedure ensure that Apache is installed and a virtual host configuration is created.
+Per default the ansible procedure ensures that Apache is installed and a virtual host configuration is created.
 This virtual host will support SSL encryption.
 
 If you deploy to a machine that has already a working virtual host configuration (including SSL support) you can comment out the ``{ role: apache }`` 
@@ -280,6 +271,9 @@ ETOXWS_IMPL_V2:
       PYPATH: "/home/modeler/soft/eTOXlab/ws/"
       PYPCK: "views2"
       PYCLASS: "WS2"
+
+ETOXWS_IMPL_V3:
+   see ETOXWS_IMPL_V2, adapt to match for V3 implementation
 
 ETOXWS_NPROC
    number of processor cores used simultanously for calculations. Jobs are queued if all nodes are occupied and new jobs are submitted.

@@ -5,7 +5,7 @@ Make sure that you have a SSH authentication key pair in $HOME/.ssh:
    ~$ ls .ssh/id_*
    .ssh/id_rsa  .ssh/id_rsa.pub
 
-If not create authentication keys with ``ssh-keygen``. Just press enter when the program asks for setting a passphrase.
+If not create certificates with ``ssh-keygen``. Just press enter when the program asks for setting a passphrase.
 
 .. code-block:: bash
 

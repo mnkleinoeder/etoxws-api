@@ -156,7 +156,7 @@ Class documentation
 .. automodule:: etoxwsapi.v3.wsbase
    :members:
 
-.. autoclass:: etoxwsapi.v3.jobs.tasks.JobObserver
+.. autoclass:: etoxwsapi.v3.jobs_v3.tasks.JobObserver
    :members:
 
 ..   :undoc-members: etoxwsapi.v3.jobs.views.DummyLock

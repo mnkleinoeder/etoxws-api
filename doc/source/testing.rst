@@ -5,7 +5,7 @@ Testing
    :language: py
    :class: highlight
 
-.. _prepare-env:
+.. _prepare-env_test:
 
 Preparation
 -----------
@@ -21,7 +21,7 @@ Please execute the following steps.
 
 Now, you should have a working copy of the code and a virtual environment with all required packages.
 
-.. _testing-client:
+.. _testing-client_test:
 
 The test client
 ---------------

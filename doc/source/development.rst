@@ -5,7 +5,7 @@ Development
    :language: py
    :class: highlight
 
-.. _prepare-env:
+.. _prepare-env_dev:
 
 Preparation
 -----------
@@ -99,7 +99,7 @@ In the second terminal please follow these instructions:
    Quit the server with CONTROL-C.
 
 
-.. _testing-client:
+.. _testing-client_dev:
 
 The test client
 ---------------
