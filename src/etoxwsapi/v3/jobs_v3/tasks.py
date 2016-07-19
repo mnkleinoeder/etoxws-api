@@ -1,15 +1,15 @@
 #import pydevd; pydevd.settrace()
 
 import types
-
-from etoxwsapi.djcelery import jobmgr
-
-from django.conf import settings
-from etoxwsapi.v3.jobs.models import Job
 import time
 import traceback
-from etoxwsapi.utils import SDFFile
 from StringIO import StringIO
+from django.conf import settings
+
+from etoxwsapi.djcelery import jobmgr
+from etoxwsapi.utils import SDFFile
+
+from etoxwsapi.v3.jobs_v3.models import Job
 
 v3_impl_cls = settings.ETOXWS_IMPL_V3
 
@@ -102,12 +102,12 @@ class JobObserver():
         """
         i =  cmp_id + self.offset
         self.results[i] = result_json
-        from etoxwsapi.v3.jobs.models import Result
+        from etoxwsapi.v3.jobs_v3.models import Result
         job = Job.objects.get(job_id=self.job_id)
         result = Result(job=job, cmp_id=i, result_json=result_json)
         result.save()
 
-@jobmgr.task(bind=True, ignore_result=True, name='etoxwsapi.v3.jobs.tasks.calculate')
+@jobmgr.task(bind=True, ignore_result=True, name='etoxwsapi.v3.jobs_v3.tasks.calculate')
 def calculate(self, calc_info, sdf_file): #, logger, lock):
     #import pydevd; pydevd.settrace()
     jobid = self.request.id

@@ -2,24 +2,19 @@ import json
 from uuid import uuid1
 import logging
 import time
-import sys
 import traceback
-import os
 import re
 import psutil
-from StringIO import StringIO
-from io import BytesIO
+
 from celery.result import AsyncResult
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.views.generic.base import View
 
 from etoxwsapi.v3 import schema
+from etoxwsapi.v3.jobs_v3.models import Job, Result
+import etoxwsapi.v3.jobs_v3.tasks
 
-from .models import Job, Result
-
-#from etoxwsapi.v2.jobs import tasks
-import etoxwsapi.v3.jobs.tasks
 from etoxwsapi.djcelery import jobmgr
 
 logger = logging.getLogger(__name__)
@@ -123,7 +118,7 @@ class JobsView(View):
                     calc_info['version'] = '1'
                 calc_info_schema.validate(calc_info)
 
-                cjob = etoxwsapi.v3.jobs.tasks.calculate.apply_async((calc_info, sdf_file), task_id=job_id, retry=False)  #@UndefinedVariable
+                cjob = etoxwsapi.v3.jobs_v3.tasks.calculate.apply_async((calc_info, sdf_file), task_id=job_id, retry=False)  #@UndefinedVariable
 
                 job.status = _map_state(cjob.state)
             except Exception, e:

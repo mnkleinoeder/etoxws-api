@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from etoxwsapi.v3.jobs import views
+from etoxwsapi.v3.jobs_v3 import views
 from django.views.decorators.csrf import csrf_exempt
 
 

@@ -1,15 +1,12 @@
 ---
 
-- name: install required packages
-  yum: name="{{item}}" state=present
-  with_items:
-  - rabbitmq-server
-  - librabbitmq
-  - libyaml-devel
-  - postgresql92
-  - python-psycopg2
-  - sudo
-  - byobu
+#- name: install required packages
+#  yum: name="{{item}}" state=present
+#  with_items:
+##  - postgresql92
+##  - python-psycopg2
+#  - sudo
+#  - byobu
   
 - name: create link for rabbitmq-plugins in /usr/local/bin
   file: src=/usr/lib/rabbitmq/bin/{{item}} dest=/usr/local/bin/{{item}} state=link
@@ -17,7 +14,5 @@
   - rabbitmq-defaults
   - rabbitmq-env
   - rabbitmq-plugins
-  when: ansible_distribution_major_version == "6"
 
 - include: install_pip_supervisord.yml
-  when: ansible_distribution_major_version == "6"

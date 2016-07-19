@@ -5,19 +5,9 @@
 - name: install required packages
   yum: name="{{item}}" state=present
   with_items:
-  - "@Development Tools"
   - postgresql-devel
-  - rabbitmq-server
-  - librabbitmq-devel
-  - librabbitmq
-  - libyaml-devel
   - postgresql-server
-  - python-psycopg2
-  - python-virtualenv
   - supervisor
-  - git
-  - sudo
-  - byobu
 
 - name: init postgres
   shell: postgresql-setup initdb

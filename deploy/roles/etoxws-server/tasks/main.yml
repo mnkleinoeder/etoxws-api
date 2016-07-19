@@ -81,11 +81,11 @@
 #    repo="https://github.com/mnkleinoeder/etoxws-api.git"
 #    version=monitoring
 - name: fetch code from github
-  git: >
-    repo="https://github.com/mnkleinoeder/etoxws-api.git"
-    dest="{{ETOXWS_APPDIR}}"
-    force=yes
-    version=master
+  git:
+    repo: "https://github.com/mnkleinoeder/etoxws-api.git"
+    dest: "{{ETOXWS_APPDIR}}"
+    force: yes
+    version: "{{ ETOXWS_GIT_TAG }}"
   notify: reload apache
 
 ###############################################################################
@@ -97,10 +97,12 @@
 - shell: virtualenv {{etoxws_virtenv}}
     creates={{etoxws_virtenv}}
 
-- pip: name=pip state=latest
+- pip: name=pip state=present version=7.1.2
     executable={{etoxws_pip}}
+  register: r
+  ignore_errors: true
 
-- pip: requirements={{ETOXWS_APPDIR}}/src/etoxwsapi/req.pip state=latest
+- pip: requirements={{ETOXWS_APPDIR}}/pip_requirements.txt
     executable={{etoxws_pip}}
 
 - pip: name=argparse

@@ -121,9 +121,9 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'etoxwsapi.v2',
-    'etoxwsapi.v2.jobs.JobsV2',
+    'etoxwsapi.v2.jobs',
     'etoxwsapi.v3',
-    'etoxwsapi.v3.jobs.JobsV3',
+    'etoxwsapi.v3.jobs_v3',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

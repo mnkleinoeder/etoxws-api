@@ -1,7 +1,8 @@
 import os
 from django.core.urlresolvers import reverse
 from django.test import TestCase
-from etoxwsapi.v3 import schema, jobs
+from etoxwsapi.v3 import schema
+from etoxwsapi.v3 import jobs_v3
 import types
 import logging
 import unittest
@@ -40,31 +41,31 @@ class JobsTest(TestCase):
         with open(fname) as fp:
             req_obj.sdf_file = fp.read()
 
-        url = reverse("jobs")
+        url = reverse("jobs_v3")
         response = self.client.post(url, content_type = 'application/json', data=req_obj.to_json())
         return response
 
     def test_submit_job(self):
         job_status_schema = schema.get('job_status')
         response = self._submit_job()
-        logging.info("new jobs submitted.")
+        logging.info("new jobs_v3 submitted.")
         
-        jobs = json.loads(response.content)
+        jobs_v3 = json.loads(response.content)
 
         logging.info("Submitted job ids:")
-        for job in jobs:
+        for job in jobs_v3:
             job_status_schema.validate(job)
             logging.info(job['job_id'])
 
-        url = reverse("jobs")
+        url = reverse("jobs_v3")
 
         poll = True
         while(poll):
             time.sleep(1)
             poll = False
-            for job in jobs:
+            for job in jobs_v3:
                 jobid = job['job_id']
-                u = url+"/jobs/%s"%(jobid)
+                u = url+"/jobs_v3/%s"%(jobid)
                 response = self.client.get(u)
                 self.assertEqual(200, response.status_code)
                 if response.status_code == 200:

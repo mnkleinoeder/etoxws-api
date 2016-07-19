@@ -4,6 +4,20 @@
 - name: disable selinux
   selinux: state=disabled
 
+- name: install required packages
+  yum: name="{{item}}" state=present
+  with_items:
+  - "@Development Tools"
+  - rabbitmq-server
+  - librabbitmq-devel
+  - librabbitmq
+  - libyaml-devel
+  - libffi-devel
+  - python-virtualenv
+  - git
+  - sudo
+  - byobu
+
 - include: "CentOS-6.yml"
   when: ansible_distribution_major_version == "6"
   

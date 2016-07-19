@@ -29,3 +29,4 @@ MQ_USERNAME: "{{ETOXWS_NAME}}"
 # via internet. For in-house installation in host-only network defaults are okay
 ETOXWS_SERVICE_PASSWD: "{{ETOXWS_NAME}}"
 
+ETOXWS_GIT_TAG: master

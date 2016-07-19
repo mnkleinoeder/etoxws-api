@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
 
-from etoxwsapi.v3.jobs import urls as jobs_urls
+from etoxwsapi.v3.jobs_v3 import urls as jobs_urls
 from etoxwsapi.v3.meta import urls as meta_urls
 from etoxwsapi.v3.schema import _urls as schema_urls
 import django
