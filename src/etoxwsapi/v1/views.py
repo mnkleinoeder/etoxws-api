@@ -16,14 +16,14 @@ except ImportError, e:
 def info(request):
 	try:
 		jsondata = v1_impl.info()
-		return HttpResponse(jsondata, mimetype='application/json')
+		return HttpResponse(jsondata, content_type='application/json')
 	except Exception, e:
 		raise 
 
 @csrf_exempt
 def available_services(request):
 	jsondata = v1_impl.dir()
-	return HttpResponse(jsondata, mimetype='application/json')
+	return HttpResponse(jsondata, content_type='application/json')
 
 @csrf_exempt
 def calculate(request):
@@ -49,5 +49,5 @@ def calculate(request):
 	except Exception, e:
 		jsondata = json.dumps({"property" : property, "results": "", "msg":  str(e) })
 		status_code = 500
-	return HttpResponse(jsondata, mimetype='application/json', status=status_code)
+	return HttpResponse(jsondata, content_type='application/json', status=status_code)
 

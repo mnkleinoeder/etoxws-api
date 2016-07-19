@@ -118,7 +118,7 @@ def urlconf():
                 self.schema = schema
             def __call__(self, request):
                 jsondata = self.schema.to_json(indent=2)
-                return HttpResponse(jsondata, mimetype='application/json')
+                return HttpResponse(jsondata, content_type='application/json')
         urls.append(url(r'%s$'%(name),  _View(schema), name='schema_%s'%(name)))
 
     return urls
