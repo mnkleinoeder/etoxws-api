@@ -1,6 +1,3 @@
-import socket
-from pprint import pprint
-
 
 BROKER_URL = 'amqp://etoxwsapi_dev:etoxwsapi_dev@localhost:5672/etoxwsapi_dev'
 
@@ -16,31 +13,16 @@ DATABASES = {
 from sampleimpl.ws_impl_v1 import WS1
 ETOXWS_IMPL_V1 = WS1
 
-from sampleimpl.ws_impl_v2 import WS2
-ETOXWS_IMPL = WS2
+from view2 import WS2
+ETOXWS_IMPL_V2 = WS2
 
+#from view3 import WS3 
 from sampleimpl.ws_impl_v3 import WS3
-ETOXWS_IMPL = WS2
+ETOXWS_IMPL_V3 = WS3
 
 DEBUG = True
 TEMPLATE_DEBUG = True
 
 dflt_handlers = ['stdout']
 LOG_LEVEL = "INFO"
-
-from kombu import Connection as _conn
-
-with _conn(BROKER_URL) as conn: #@UndefinedVariable
-    try:
-        simple_queue = conn.SimpleQueue('simple_queue')
-    except socket.error, e:
-        print "rabbitmq url: ", BROKER_URL #@UndefinedVariable
-        print "Warning: could not establish connection to rabbitmq: ",
-        if e.errno == 104:
-            print "Access problems."
-            print "Check that username, password and vhost are correct."
-        elif e.errno == 111:
-            print "Server process seems down."
-            print "Check with 'service rabbitmq-server status'"
-
 
