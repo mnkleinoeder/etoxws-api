@@ -2,7 +2,7 @@
 
 export LD_LIBRARY_PATH={{RDKIT_DIR}}/lib
 pp=""
-{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH) %}
+{% for p in (ETOXWS_IMPL_V1.PYPATH, ETOXWS_IMPL_V2.PYPATH, ETOXWS_IMPL_V3.PYPATH) %}
 {% if p|length > 0 %}
 pp={{p}}${pp:+:${pp}}
 {% endif %} 

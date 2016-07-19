@@ -12,6 +12,11 @@ ETOXWS_IMPL_V2:
   PYPCK: "sampleimpl.ws_impl_v2"
   PYCLASS: "WS2"
 
+ETOXWS_IMPL_V3:
+  PYPATH: ""
+  PYPCK: "sampleimpl.ws_impl_v3"
+  PYCLASS: "WS3"
+
 RDKIT_DIR: "/opt/rdkit"
 
 # if true the database is deleted and re-created

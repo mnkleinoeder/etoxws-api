@@ -4,5 +4,9 @@ ETOXWS_IMPL_V2:
     PYPATH: "/home/modeler/soft/eTOXlab/ws/"
     PYPCK: "views2"
     PYCLASS: "WS2"
+ETOXWS_IMPL_V3: 
+    PYPATH: "/home/modeler/soft/eTOXlab/ws/"
+    PYPCK: "views3"
+    PYCLASS: "WS3"
 RDKIT_DIR: "/opt/RDKIT"
 
