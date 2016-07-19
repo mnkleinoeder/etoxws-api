@@ -17,7 +17,7 @@ def _cleanup_url(url):
 _base_url = _cleanup_url(settings.BASE_URL)
 
 urlpatterns = patterns('',
-	url(r'^%sv1'%(_base_url), include('etoxwsapi.v1.urls')),
-	url(r'^%sv2'%(_base_url), include('etoxwsapi.v2.urls')),
-	url(r'^%sv3'%(_base_url), include('etoxwsapi.v3.urls')),
+	url(r'^%sv1/'%(_base_url), include('etoxwsapi.v1.urls')),
+	url(r'^%sv2/'%(_base_url), include('etoxwsapi.v2.urls')),
+	url(r'^%sv3/'%(_base_url), include('etoxwsapi.v3.urls')),
 )

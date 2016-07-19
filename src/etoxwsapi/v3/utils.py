@@ -79,7 +79,7 @@ class JobStat(object):
         return not (self.is_done() or self.stat['status'] == "JOB_UNKNOWN")
 
     def is_done(self):
-        return (self.stat['status'] in ( "JOB_SUCCESS", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"))
+        return (self.stat['status'] in ( "JOB_COMPLETED", "JOB_SUCCESS", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"))
 
     def to_string(self, lev, linesep = '\n'):
         return linesep.join([m for l,m in self.summary if l == lev])
