@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.join(THIS_DIR, ".."))
 
 ## defaults
 _INFILE = os.path.join(THIS_DIR, "tiny.sdf")
-_BASE_URL = 'http://localhost:9000/etoxwsapi/v3'
+_BASE_URL = 'http://localhost:8100/etoxwsapi/v3'
 _LOG_LEV = "WARN"
 
 term = Terminal()

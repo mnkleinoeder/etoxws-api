@@ -2,7 +2,6 @@ import json
 
 from django.core.context_processors import csrf
 from django.views.decorators.csrf import csrf_exempt
-
 from django.http import HttpResponse
 
 try:
@@ -36,10 +35,10 @@ def calculate(request):
 			raise Exception, "One input file required in uploaded data"
 
 		property = indata['property']
-		if not property in _AVAILABLE_PREDICTIONS:
+		if not property in v1_impl._AVAILABLE_PREDICTIONS:
 			raise Exception, "Unknown property: '%s'"%(property)
 		format = indata['format']
-		if not format in _SUPPORTED_FILE_FORMATS:	
+		if not format in ('sdf', 'mol'):	
 			raise Exception, "Unknown file format: '%s'"%(format)
 
 		file = request.FILES['uploadfile']

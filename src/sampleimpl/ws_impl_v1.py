@@ -8,9 +8,8 @@ import json
 
 from etoxwsapi.v1.wsbase import WebserviceImplementationBase
 
-_AVAILABLE_PREDICTIONS = [ "/endpoint/definition/model/1" ]
-
 class WS1(WebserviceImplementationBase):
+	_AVAILABLE_PREDICTIONS = [ "/endpoint/definition/model/1" ]
 	def info(self):
 		data = { "provider": "Sample Organization",
 							"homepage": "http://www.example.com",
@@ -20,7 +19,7 @@ class WS1(WebserviceImplementationBase):
 		return json.dumps(data)
 
 	def available_services(self):
-		data = { "predictions": _AVAILABLE_PREDICTIONS}
+		data = { "predictions": self._AVAILABLE_PREDICTIONS}
 		return json.dumps(data)
 	
 

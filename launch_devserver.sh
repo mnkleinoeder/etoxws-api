@@ -6,5 +6,5 @@ DIR=$(dirname $(readlink -f $0))
 
 cd src/etoxwsapi/
 
-python manage.py runserver 0.0.0.0:9000
+python manage.py runserver 0.0.0.0:8100
 
