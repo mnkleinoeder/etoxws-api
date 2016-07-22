@@ -159,9 +159,17 @@ class WSClientHandler(object, TermMixin):
 
         url = '/'.join((self.args.baseurl, 'dir'))
         ret = http_get(url)
-        #self.models = [ m for m in json.loads(ret.text)]
-        self.models = [ schema.validate(m, schema.get('calculation_info')) for m in json.loads(ret.text)
-                                if m['id'] != "/Toxicity/Target Safety Pharmacology/Hyperbilirubinemia/1"]
+
+        self.models = []
+        self.models_no_lic = []
+
+        for m in json.loads(ret.text):
+            m = schema.validate(m, schema.get('calculation_info'))
+            is_valid, _ = v3_utils.license_check(m)
+            if is_valid:
+                self.models.append(m)
+            else:
+                self.models_no_lic.append(m)
 
         logging.debug(pprint.pformat(self.wsinfo))
         logging.debug(pprint.pformat(self.models))
@@ -359,7 +367,7 @@ class WSClientHandler(object, TermMixin):
 
             for k in ('provider', 'homepage', 'admin', 'admin_email'):
                 print "%-20s: %s"%(k, self.wsinfo[k])
-            print "%-20s: %s"%("Number of models", len(self.models) )
+            print "%-20s: %s (%s available/%s not executable)"%("Number of models", len(self.models)+len(self.models_no_lic), len(self.models), len(self.models_no_lic) )
 
         if self.args.print_summary == 'trac':
             frmt = '|| {{{%-100s}}} ||'
@@ -368,15 +376,37 @@ class WSClientHandler(object, TermMixin):
         else:
             print self.delim1
             frmt = '| %-3s | %-100s | %-9s | %-15s | %-100s |'
-            print "Available models:"
 
-            header = frmt%("#", "ID", "version", "category", "external_id")
-            print '-'*len(header)
-            print header
-            print '-'*len(header)
-            for i, model in enumerate(self.models):
-                print frmt%(i, model['id'], model.get('version', '1'), model.get('category', 'N/A'), model.get('external_id', 'N/A'))
-            print '-'*len(header)
+            if len(self.models):
+                print "Available models:"
+    
+                header = frmt%("ID", "Model tag", "version", "category", "license information")
+                print '-'*len(header)
+                print header
+                print '-'*len(header)
+                for i, model in enumerate(self.models):
+                    lic_valid, lic_info = v3_utils.license_check(model)
+                    assert(lic_valid) # should be checked during initial parsing
+                    print frmt%(i, model['id'], model.get('version', '1'), model.get('category', 'N/A'), lic_info)
+                print '-'*len(header)
+            if len(self.models_no_lic):
+                print "Models without valid license:"
+    
+                header = frmt%("ID", "Model tag", "version", "category", "license information")
+                print '-'*len(header)
+                print header
+                print '-'*len(header)
+                for model in self.models_no_lic:
+                    lic_valid, lic_info = v3_utils.license_check(model)
+                    assert(not lic_valid) # should be checked during initial parsing
+                    print frmt%("-", model['id'], model.get('version', '1'), model.get('category', 'N/A'), lic_info)
+                print '-'*len(header)
+
+            if len(self.models) == 0:
+                print term.red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print term.red("!! Warning: no executable models found !!")
+                print term.red("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
 
     def check_etoxvault(self):
         ret = requests.get('http://phi.imim.es/allmodels/?authkey=%s'%(self.args.authkey))

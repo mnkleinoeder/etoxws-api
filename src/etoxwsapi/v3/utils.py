@@ -1,9 +1,12 @@
 import hashlib
 import logging
-from etoxwsapi.v3 import schema
 import requests
 import json
 import traceback
+import time
+from datetime import datetime
+
+from etoxwsapi.v3 import schema
 
 TIMEOUT = 120
 SSL_VERIFY=False
@@ -17,6 +20,32 @@ def create_value_type_spec(spec):
         },
         "additionalProperties": False,
     }
+
+def license_check(calc_info):
+    is_valid = True
+    info = None
+    lic_end = calc_info.get('license_end', 0)
+    if -1 == lic_end:
+        is_valid = False
+        info = "License missing"
+    elif 0 < lic_end:
+        lic_end_str = datetime.fromtimestamp(lic_end)
+        if time.time() > lic_end:
+            info = "License expired (%s)"%(lic_end_str)
+            is_valid = False
+        else:
+            info = "Valid license. Expiration: %s"%(lic_end_str)
+
+    _i = calc_info.get('license_info', None)
+    if info:
+        if _i:
+            info += ". " + _i
+    else:
+        if _i:
+            info = _i
+        else:
+            info = 'n/a' 
+    return is_valid, info
 
 def modelid_from_calcinfo(provider, calc_info):
     return modelid(*(calc_info.get('id', None), provider, calc_info.get('version', None)))
