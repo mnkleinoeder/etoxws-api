@@ -85,7 +85,7 @@
     repo="https://github.com/mnkleinoeder/etoxws-api.git"
     dest="{{ETOXWS_APPDIR}}"
     force=yes
-    version=master
+    version=v2x
   notify: reload apache
 
 ###############################################################################
