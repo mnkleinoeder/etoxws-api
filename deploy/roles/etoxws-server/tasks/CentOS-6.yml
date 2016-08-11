@@ -16,3 +16,6 @@
   - rabbitmq-plugins
 
 - include: install_pip_supervisord.yml
+
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# need to remove the first lines in /etc/httpd/conf/http.conf from eTOXlab which have been added by Manuel
