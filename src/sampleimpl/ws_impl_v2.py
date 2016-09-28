@@ -6,6 +6,8 @@ import subprocess
 import os
 import re
 import tempfile
+import traceback
+import shutil
 
 from etoxwsapi.v2 import schema
 from etoxwsapi.v2.wsbase import WebserviceImplementationBase
@@ -61,48 +63,58 @@ class WS2(WebserviceImplementationBase):
         return json.dumps(self.my_models)
 
     def calculate_impl(self, jobobserver, calc_info, sdf_file):
-        result_endpoint_schema = schema.get("result_endpoint")
-        calculation_program = os.path.join(THIS_DIR, 'sample_calculation_program.py')
+        tmp_dir = None
+        try:
+            result_endpoint_schema = schema.get("result_endpoint")
+            calculation_program = os.path.join(THIS_DIR, 'sample_calculation_program.py')
+    
+            infile = tempfile.mktemp(suffix=".sdf")
+            with open(infile, "wb") as fp:
+                fp.write(sdf_file)
+    
+            outfile = tempfile.mktemp(suffix=".sdf")
+    
+            jobobserver.log_info("calculation for %s (version %s)"%(calc_info['id'], calc_info['version']))
+    
+            regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
+    
+            #
+            # check the version
+            #
+    
+            p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], calc_info['version'], infile, outfile]
+                                                    ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+            jobobserver.report_started(p.pid)
+            while True:
+                retcode = p.poll() #returns None while subprocess is running
+                line = p.stdout.readline()
+                if (retcode is not None):
+                    break
+                else:
+                    m = regex.search(line)
+                    if m:
+                        jobobserver.report_progress(int(m.group(1)))
+    
+            jobobserver.report_status(retcode, p.stderr.read())
+            if retcode == 0:
+                with open(outfile) as fp:
+                    for i, line in enumerate(fp):
+                        r = line.strip().split('\t')
+                        result = result_endpoint_schema.create_object()
+                        result['cmp_id'] = str(i)
+                        result['value'] = float(r[0])
+                        result['success'] = True
+                        result['AD'] = { "value": float(r[1]), "success": True, "message": "" }
+                        result['RI'] = { "value": float(r[2]), "success": True, "message": "" }
+                        jobobserver.report_result(i, json.dumps(result))
 
-        infile = tempfile.mktemp(suffix=".sdf")
-        with open(infile, "wb") as fp:
-            fp.write(sdf_file)
-
-        outfile = tempfile.mktemp(suffix=".sdf")
-
-        jobobserver.log_info("calculation for %s (version %s)"%(calc_info['id'], calc_info['version']))
-
-        regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
-
-        #
-        # check the version
-        #
-
-        p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], calc_info['version'], infile, outfile]
-                                                ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-        jobobserver.report_started(p.pid)
-        while True:
-            retcode = p.poll() #returns None while subprocess is running
-            line = p.stdout.readline()
-            if (retcode is not None):
-                break
-            else:
-                m = regex.search(line)
-                if m:
-                    jobobserver.report_progress(int(m.group(1)))
-
-        jobobserver.report_status(retcode, p.stderr.read())
-        if retcode == 0:
-            with open(outfile) as fp:
-                for i, line in enumerate(fp):
-                    r = line.strip().split('\t')
-                    result = result_endpoint_schema.create_object()
-                    result['cmp_id'] = str(i)
-                    result['value'] = float(r[0])
-                    result['success'] = True
-                    result['AD'] = { "value": float(r[1]), "success": True, "message": "" }
-                    result['RI'] = { "value": float(r[2]), "success": True, "message": "" }
-                    jobobserver.report_result(i, json.dumps(result))
-
-
+        except Exception, e:
+            jobobserver.report_status(1, str(e))
+            jobobserver.log_error(traceback.format_exc().splitlines())
+        finally:
+            try:
+                shutil.rmtree(tmp_dir)
+            except Exception, te:
+                jobobserver.log_warn("Could not delete tmpdir %s (%s)"%(tmp_dir, te))
+      
