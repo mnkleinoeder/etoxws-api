@@ -43,12 +43,17 @@ class WS3(WS2):
         """
         self.m2_id = '/Sample Path/Other Sample Model/1'
         self.m2_1 = calculation_info.create_object(id=self.m2_id, category="ENDPOINT", version="1")
-        self.m2_1['license_end'] = time.mktime(time.strptime("2016 06 30 0 0 0", "%Y %m %d %H %M %S"))
-        #self.m2_1['license_end'] = time.mktime(time.strptime("2016 06 30 0 0 0", "%Y %m %d %H %M %S"))
-        #self.m2_1['license_end'] = -1
-        self.m2_1['license_info'] = "License for software XYZ from company ABC required."
+
+        ac_lic_info = {
+            'license_end': time.mktime(time.strptime("2016 06 30 0 0 0", "%Y %m %d %H %M %S")),
+            'license_info': 'AdrianaCode 2.6 community edition'
+        }
+ 
+        self.m2_1['license_infos'] = [ ac_lic_info, ]
+
         r_type = schema.get("result_endpoint").schema
         r_type['properties']['value'] = { "enum": ["positive", "negative", "unknown"]}
+
         self.m2_1['return_type_spec'] = r_type
 
         self.my_models.append(self.m2_1)

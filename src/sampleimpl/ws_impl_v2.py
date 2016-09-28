@@ -66,37 +66,51 @@ class WS2(WebserviceImplementationBase):
         tmp_dir = None
         try:
             result_endpoint_schema = schema.get("result_endpoint")
+
             calculation_program = os.path.join(THIS_DIR, 'sample_calculation_program.py')
     
-            infile = tempfile.mktemp(suffix=".sdf")
-            with open(infile, "wb") as fp:
+            tmp_dir = tempfile.mkdtemp()
+    
+            infile = os.path.join(tmp_dir, 'input.sdf')
+    
+            with open(infile, 'wb') as fp:
                 fp.write(sdf_file)
     
-            outfile = tempfile.mktemp(suffix=".sdf")
+            outfile = os.path.join(tmp_dir, "output.tsv")
     
             jobobserver.log_info("calculation for %s (version %s)"%(calc_info['id'], calc_info['version']))
     
             regex = re.compile("\*\*\* RECORD no\.:\s+(\d+)\s+read \*")
     
-            #
-            # check the version
-            #
+            cerr_cache_fname = os.path.join(tmp_dir, "cerr_cache")
+            cerr_cache = open(cerr_cache_fname, 'w+b')
     
             p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], calc_info['version'], infile, outfile]
-                                                    ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                                    ,stdout=subprocess.PIPE, stderr=cerr_cache)
     
             jobobserver.report_started(p.pid)
+
+            jobobserver.report_progress(0)
             while True:
                 retcode = p.poll() #returns None while subprocess is running
                 line = p.stdout.readline()
+                #jobobserver.log_info(line)
                 if (retcode is not None):
                     break
                 else:
-                    m = regex.search(line)
-                    if m:
-                        jobobserver.report_progress(int(m.group(1)))
+                    try:
+                        jobobserver.log_debug(line)
+                        m = regex.search(line)
+                        if m:
+                            jobobserver.report_progress(int(m.group(1)))
+                    except Exception, e:
+                        jobobserver.log_warn("Could not process output from command: %s (%s)"%(line, e))
     
-            jobobserver.report_status(retcode, p.stderr.read())
+            cerr_cache.seek(0)
+            #jobobserver.report_status(retcode, p.stderr.read())
+            jobobserver.report_status(retcode, cerr_cache.read())
+            cerr_cache.close()
+    
             if retcode == 0:
                 with open(outfile) as fp:
                     for i, line in enumerate(fp):

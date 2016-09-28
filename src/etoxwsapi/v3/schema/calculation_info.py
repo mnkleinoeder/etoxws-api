@@ -44,15 +44,25 @@ calculation_info =  {
 				"type": "string",
 				"pattern": "^\d+$",
 			},
-			"license_end": {
-				"type": "number",
-				"description":  "license end in seconds since EPOCH (see python time.time()), 0 means no license required, -1 means no valid license available",
-				"default": 0
-			},
-			"license_info": {
-				"type": "string",
-				"description": "Any license information that might be important to the user",
-				"default": "n/a"
+			"license_infos": {
+				"type" : "array",
+				"items": {
+					"type": "object",
+					"description": "instance of a result type matching the return_type_spec in the calculation_info",
+					"properties": {
+						"license_end": {
+							"type": "number",
+							"description":  "license end in seconds since EPOCH (see python time.time()), 0 means no license required, -1 means no valid license available",
+						},
+						"license_info": {
+							"type": "string",
+							"description": "Any license information that might be important to the user",
+							"default": "n/a"
+						},
+					},
+					"additionalProperties": False,
+				},
+				'default': []
 			},
 			"return_type_spec": {
 				"type": "object",
@@ -62,4 +72,3 @@ calculation_info =  {
 		"required": [ "id", "category", "version" ] ,
 		"additionalProperties": False,
 	}
-

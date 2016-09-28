@@ -24,27 +24,32 @@ def create_value_type_spec(spec):
 def license_check(calc_info):
     is_valid = True
     info = None
-    lic_end = calc_info.get('license_end', 0)
-    if -1 == lic_end:
-        is_valid = False
-        info = "License missing"
-    elif 0 < lic_end:
-        lic_end_str = datetime.fromtimestamp(lic_end)
-        if time.time() > lic_end:
-            info = "License expired (%s)"%(lic_end_str)
+    license_infos = calc_info.get('license_infos', [])
+    for li in license_infos:
+        lic_end = li.get('license_end', 0)
+        if -1 == lic_end:
             is_valid = False
-        else:
-            info = "Valid license. Expiration: %s"%(lic_end_str)
+            info = "License missing"
+        elif 0 < lic_end:
+            lic_end_str = datetime.fromtimestamp(lic_end)
+            if time.time() > lic_end:
+                info = "License expired (%s)"%(lic_end_str)
+                is_valid = False
+            else:
+                info = "Valid license. Expiration: %s"%(lic_end_str)
 
-    _i = calc_info.get('license_info', None)
-    if info:
-        if _i:
-            info += ". " + _i
-    else:
-        if _i:
-            info = _i
+        _i = calc_info.get('license_info', None)
+        if info:
+            if _i:
+                info += ". " + _i
         else:
-            info = 'n/a' 
+            if _i:
+                info = _i
+            else:
+                info = 'n/a'
+    if not license_infos:
+        info = "No license restrictions"
+         
     return is_valid, info
 
 def modelid_from_calcinfo(provider, calc_info):

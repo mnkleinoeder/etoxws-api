@@ -43,6 +43,10 @@ class Test_calculation_info(unittest.TestCase):
         t.cmp_id = ""
         t.result = "positive"
 
+    def test_with_license_info(self):
+        o = self.calculation_info.create_object(id="/cat/name/1", category="ENDPOINT", version='2')
+        o['license_infos'] = [{'license_end': 1475073608, 'license_info': 'AdrianaCode 2.6 community edition'}, {'license_end': 1475073608, 'license_info': 'Moka'}]
+
 ##################################################################################################
 ##################################################################################################
 class Test_job_status(unittest.TestCase):
