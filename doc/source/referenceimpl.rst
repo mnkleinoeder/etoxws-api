@@ -83,54 +83,14 @@ calculate_impl(self, jobobserver, calc_info, sdf_file)
 
 .. _`calc_info schema`: apispec.html#calculation-info
 
-If you use subprocess to execute an external program the process id (pid) of the created subprocess must be
-communicated to the jobobserver:::
+Please refer to the file ``sampleimpl/ws_impl_v2.py``. This file provides a ``calculation_impl`` sample implementation.
 
-        p = subprocess.Popen([sys.executable, calculation_program, calc_info['id'], calc_info['version'], infile, outfile]
-                                                ,stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+Please note the error management: the entire prediction execution part is wrapped in a try/except block. Furthermore, the
+cleanup of temporary files is done in a ``finally`` block - so it will always be executed.
 
-        jobobserver.report_started(p.pid)
-
-This allows the correct cleanup of resources in case the job is killed by the ``[DELETE] /jobs/<job_id>`` method.
-
-During execution of the calculation the progress should be reported by calling
-``jobobserver.report_progress(current_record)``. This progress indication will help to present the progress
-to the user in eTOXsys while a calculation is running. ``current_record`` is a integer number and refers to
-the current record from the SDFile processed:::
-
-        while True:
-            retcode = p.poll() #returns None while subprocess is running
-            line = p.stdout.readline()
-            if (retcode is not None):
-                break
-            else:
-                m = regex.search(line)
-                if m:
-                    jobobserver.report_progress(int(m.group(1)))
-
-As soon as the calculation is completed this must be reported by ``jobobserver.report_status(retcode, errmsg)``.
-The ``retcode`` is obtained from the system call if an external program is executed. Otherwise it should be ``0``
-on success and ``1`` on failure, such as:::
-
-        jobobserver.report_status(retcode, p.stderr.read())
-
-Finally, the calculation results must be reported by using ``jobobserver.report_result(cur_rec, result)``.
-This method can be called during job execution in case of processing in python or after an external program has
-completed and during parsing the result file. ``cur_rec`` is the number of the current record referencing to the
-``sdf_file``:::
-
-        if retcode == 0:
-            with open(outfile) as fp:
-                for i, line in enumerate(fp):
-                    r = line.strip().split('\t')
-                    result = result_endpoint_schema.create_object()
-                    result['cmp_id'] = str(i)
-                    result['value'] = float(r[0])
-                    result['success'] = True
-                    result['AD'] = { "value": float(r[1]), "success": True, "message": "" }
-                    result['RI'] = { "value": float(r[2]), "success": True, "message": "" }
-                    jobobserver.report_result(i, json.dumps(result))
-
+Finally, please note the execution of ``subprocess.Popen``. The ``stderr`` argument is set to a file object. It turned out that a pipe
+caused serious problems when to much error output was generated. It is highly recommended to follow the pattern as shown in the sample
+implementation.
 
 Schema management
 ~~~~~~~~~~~~~~~~~
