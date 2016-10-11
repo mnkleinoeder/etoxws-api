@@ -5,6 +5,8 @@ Testing
    :language: py
    :class: highlight
 
+.. include:: inc_general_notes.rst
+
 .. _prepare-env_test:
 
 Preparation

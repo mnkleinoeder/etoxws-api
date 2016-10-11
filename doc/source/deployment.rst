@@ -5,8 +5,7 @@ Deployment of the reference implementation with Ansible
    :language: py
    :class: highlight
 
-.. important::
-   If you have performed the procedure in December 2014, please first delete the old code: `rm -rf ~/upgrade`.
+.. include:: inc_general_notes.rst
 
 Introduction
 ------------

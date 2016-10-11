@@ -1,6 +1,8 @@
 The reference implementation
 ============================
 
+.. include:: inc_general_notes.rst
+
 Introduction
 ------------
 
