@@ -13,6 +13,7 @@ from celery.result import AsyncResult
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.views.generic.base import View
+from django.conf import settings
 
 from etoxwsapi.v2 import schema
 
@@ -166,6 +167,7 @@ class JobHandlerView(View):
             #import pydevd; pydevd.settrace()
             cjob = AsyncResult(job_id)
             if not cjob.ready():
+                settings.ETOXWS_IMPL_V2().cleanup_hook(job_id)
                 if job.pid > 0:
                     logger.info("Trying to kill job subprocess and all children: %s"%(job_id))
                     try:

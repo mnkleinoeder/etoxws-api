@@ -53,6 +53,13 @@ class WebserviceImplementationBase(object):
                 nrec += 1
         return nrec
 
+    def cleanup_hook(self, jobid):
+        """
+        method is called in the delete handler.
+        redefine if anything local resources must be freed or cleaned-up
+        """
+        pass
+
     def calculate_impl(self, jobobserver, calc_info, sdf_file):
         """
         Implements the calculation. Use the jobobserver to report calculation progress,

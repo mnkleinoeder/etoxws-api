@@ -16,6 +16,7 @@ from etoxwsapi.v3.jobs_v3.models import Job, Result
 import etoxwsapi.v3.jobs_v3.tasks
 
 from etoxwsapi.djcelery import jobmgr
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +162,7 @@ class JobHandlerView(View):
             #import pydevd; pydevd.settrace()
             cjob = AsyncResult(job_id)
             if not cjob.ready():
+                settings.ETOXWS_IMPL_V3().cleanup_hook(job_id)
                 if job.pid > 0:
                     logger.info("Trying to kill job subprocess and all children: %s"%(job_id))
                     try:
