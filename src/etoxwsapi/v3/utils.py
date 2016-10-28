@@ -22,35 +22,32 @@ def create_value_type_spec(spec):
     }
 
 def license_check(calc_info):
+    #import pydevd; pydevd.settrace()
     is_valid = True
-    info = None
+    infos = []
     license_infos = calc_info.get('license_infos', [])
     for li in license_infos:
         lic_end = li.get('license_end', 0)
-        if -1 == lic_end:
+        if 0 > lic_end:
             is_valid = False
-            info = "License missing"
-        elif 0 < lic_end:
+            lic_stat = "License missing"
+        elif 0 == lic_end:
+            lic_stat = "Unrestricted license"
+        else:
             lic_end_str = datetime.fromtimestamp(lic_end)
             if time.time() > lic_end:
-                info = "License expired (%s)"%(lic_end_str)
+                lic_stat = "Expired: %s"%(lic_end_str)
                 is_valid = False
             else:
-                info = "Valid license. Expiration: %s"%(lic_end_str)
+                lic_stat = "Valid until: %s"%(lic_end_str)
 
-        _i = calc_info.get('license_info', None)
-        if info:
-            if _i:
-                info += ". " + _i
-        else:
-            if _i:
-                info = _i
-            else:
-                info = 'n/a'
+        _i = li.get('license_info', 'Required software')
+        infos.append( _i + ' (' + lic_stat + ')' )
+        
     if not license_infos:
-        info = "No license restrictions"
+        infos.append("No license restrictions")
          
-    return is_valid, info
+    return is_valid, '|'.join(infos)
 
 def modelid_from_calcinfo(provider, calc_info):
     return modelid(*(calc_info.get('id', None), provider, calc_info.get('version', None)))

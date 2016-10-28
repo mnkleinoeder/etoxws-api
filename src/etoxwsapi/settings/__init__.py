@@ -145,7 +145,7 @@ log_dir = "/var/tmp/%s-%s"%(_log_ident, os.getuid())
 
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
-LOG_FILE = os.path.join(log_dir, "etoxwsapi-v2.log")
+LOG_FILE = os.path.join(log_dir, "etoxwsapi-v3.log")
 
 LOG_LEVEL  = "WARN"
 LOG_TO_STDOUT = False
