@@ -16,7 +16,7 @@ DATABASES = {
 from sampleimpl.ws_impl_v1 import WS1
 ETOXWS_IMPL_V1 = WS1
 
-from wsimpl_v2.broker import WS2
+from sampleimpl.ws_impl_v2 import WS2
 ETOXWS_IMPL_V2 = WS2
 ETOXWS_IMPL_V2_ASYNC = True
 
