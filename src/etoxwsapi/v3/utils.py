@@ -252,7 +252,8 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
                             val_missing.append(icmp)
                             job.summary.append((JobStat.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
                     
-                    _missing(job, "calculated value", val_missing, nresults, thres=0.5)
+                    #_missing(job, "calculated value", val_missing, nresults, thres=0.5)
+                    _missing(job, "calculated value", val_missing, nresults, thres=1.0)
                     _missing(job, "AD", ad_missing, nresults)
                     _missing(job, "RI", ri_missing, nresults)
                     #ad_missing, ri_missing
