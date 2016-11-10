@@ -9,7 +9,7 @@ from StringIO import StringIO
 logger = logging.getLogger('SDF utils')
 
 try:
-    from rdkit import Chem
+    #from rdkit import Chem
     def _check_rec(rec):
         # TODO: implement check for correct ctab using rdkit
         return True
