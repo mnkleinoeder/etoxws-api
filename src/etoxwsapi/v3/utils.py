@@ -86,20 +86,14 @@ def http_get(url, timeout=TIMEOUT):
         logging.critical(ret.content)
         raise Exception("GET from '%s' failed with %s"%(url, ret.status_code))
 
-class JobStat(object):
+class JobStatus(object):
     NONE = 0
     CRIT = 1
     WARN = 2
     INFO = 3
-    def __init__(self, provider, baseurl, calc_info, stat):
-        self.provider = provider
-        self.baseurl = baseurl
-        self.calc_info = calc_info
+    def __init__(self, stat):
         self.stat = stat
         self.job_id = stat['job_id']
-        self.model_id = calc_info['id']
-        self.name = "%s (version %s)"%(calc_info['id'], calc_info.get('version', '1'))
-        self.summary = []
 
     def is_accepted(self):
         return (self.stat['status'] == "JOB_ACCEPTED")
@@ -112,13 +106,23 @@ class JobStat(object):
     def is_done(self):
         return (self.stat['status'] in ( "JOB_COMPLETED", "JOB_SUCCESS", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"))
 
+class JobSummary(JobStatus):
+    def __init__(self, provider, baseurl, calc_info, stat):
+        super(self.__class__, self).__init__(stat)
+        self.provider = provider
+        self.baseurl = baseurl
+        self.calc_info = calc_info
+        self.model_id = calc_info['id']
+        self.name = "%s (version %s)"%(calc_info['id'], calc_info.get('version', '1'))
+        self.summary = []
+
     def to_string(self, lev, linesep = '\n'):
         return linesep.join([m for l,m in self.summary if l == lev])
 
     def nmessage(self, lev):
         return len([s for s in self.summary if s[0] == lev])
     def success(self):
-        return (self.nmessage(JobStat.CRIT) == 0)
+        return (self.nmessage(JobSummary.CRIT) == 0)
 
 
 def submit_jobs(provider, baseurl, models, sdf_file, timeout = 60):
@@ -150,7 +154,7 @@ def submit_jobs(provider, baseurl, models, sdf_file, timeout = 60):
 #				 logging.critical(calc_info)
 #				 logging.critical(stat)
 
-            jobs.append( JobStat(provider, baseurl, models[i], stat) )
+            jobs.append( JobSummary(provider, baseurl, models[i], stat) )
     else:
         raise Exception("Failed to submit jobs (%s): %s"%(req_ret.status_code, req_ret.text))
     return jobs
@@ -195,7 +199,7 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
     def _missing(job, what, missing, nresults, thres = None):
         if len(missing) == 0:
             return
-        lev = JobStat.WARN
+        lev = JobSummary.WARN
         nmissing = len(missing) 
         fail_ratio = (float(nmissing)/nresults)
         msg = "Prediction did not provide a %s for all compounds."%(what)
@@ -207,7 +211,7 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
             msg += " Missing for records: %s"%( ','.join([str(tt) for tt in missing]) )
         if thres is not None:
             if fail_ratio > thres:
-                lev = JobStat.CRIT
+                lev = JobSummary.CRIT
         job.summary.append((lev, msg))
 
     for job in jobs:
@@ -225,12 +229,12 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
                         msg = r.get('message', None)
                         if msg and 'license' in msg.lower():
                             license_error = True
-                            job.summary.append((JobStat.CRIT, "No valid license."))
+                            job.summary.append((JobSummary.CRIT, "No valid license."))
                     if license_error:
                         continue
 
                     if len(results) != len(sdfFile):
-                        job.summary.append((JobStat.CRIT, "Number of results (%s) does not match number of input compounds (%s)"%(len(results), len(sdfFile))))
+                        job.summary.append((JobSummary.CRIT, "Number of results (%s) does not match number of input compounds (%s)"%(len(results), len(sdfFile))))
                         continue
 
                     nresults = len(results)
@@ -250,7 +254,7 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
                             #pprint.pprint(r)
                         else:
                             val_missing.append(icmp)
-                            job.summary.append((JobStat.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
+                            job.summary.append((JobSummary.WARN, "Prediction failed for cpd #%s: %s"%(icmp, r.get('message', "Error message missing!"))))
                     
                     #_missing(job, "calculated value", val_missing, nresults, thres=0.5)
                     _missing(job, "calculated value", val_missing, nresults, thres=1.0)
@@ -258,13 +262,13 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
                     _missing(job, "RI", ri_missing, nresults)
                     #ad_missing, ri_missing
                 else:
-                    #job.summary.append((JobStat.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], results.get('msg', "No error message given") )))
-                    job.summary.append((JobStat.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], stat.get('msg', "No error message given") )))
+                    #job.summary.append((JobSummary.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], results.get('msg', "No error message given") )))
+                    job.summary.append((JobSummary.CRIT, "Job did not succeed successfully.\n%s:\n%s"%(stat['status'], stat.get('msg', "No error message given") )))
             else:
-                job.summary.append((JobStat.CRIT, "Failed to retrieve job status. HTTP status-code was '%s', returned data were: %s"%(ret.status_code, ret.text) ))
+                job.summary.append((JobSummary.CRIT, "Failed to retrieve job status. HTTP status-code was '%s', returned data were: %s"%(ret.status_code, ret.text) ))
             
         except Exception, e:
             msg = "Failed to retrieve job status: %s\n"%(e)
             msg += "\n".join(traceback.format_exc().splitlines())
 
-            job.summary.append((JobStat.CRIT, msg))
+            job.summary.append((JobSummary.CRIT, msg))

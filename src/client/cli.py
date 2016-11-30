@@ -20,7 +20,7 @@ import signal
 from etoxwsapi.utils import SDFFile
 from etoxwsapi.v3 import schema
 from etoxwsapi.v3 import utils as v3_utils
-from etoxwsapi.v3.utils import SSL_VERIFY, JobStat, http_get, extract_val
+from etoxwsapi.v3.utils import SSL_VERIFY, JobSummary, http_get, extract_val
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(THIS_DIR, ".."))
@@ -141,7 +141,7 @@ class CalculationTask(object, TermMixin):
                 print >>outstr, '-' * len(frmt%('','','',''))
             else:
                 print >>outstr, "No results available"
-                print '\n'.join([m for lev, m in job.summary if lev == JobStat.CRIT])
+                print '\n'.join([m for lev, m in job.summary if lev == JobSummary.CRIT])
 
 class WSClientHandler(object, TermMixin):
     def __init__(self, prog, args):
@@ -275,7 +275,7 @@ class WSClientHandler(object, TermMixin):
                     stat = term.red("FAILED")
                 self._print("", "[Model %s]: %s"%(job.model_id, stat))
                 #self._print("", "-"*80)
-                for s1, t, m in ((JobStat.CRIT, term.red, "|- Critical errors:"), (JobStat.WARN, term.yellow, "|- Warnings"), (JobStat.INFO, term.normal, "|- Information messages")):
+                for s1, t, m in ((JobSummary.CRIT, term.red, "|- Critical errors:"), (JobSummary.WARN, term.yellow, "|- Warnings"), (JobSummary.INFO, term.normal, "|- Information messages")):
                     if job.nmessage(s1):
                         self._print("", m)
                         for s2, m in job.summary:
