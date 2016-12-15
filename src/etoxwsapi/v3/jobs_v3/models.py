@@ -1,6 +1,5 @@
 from django.db import models
-
-# Create your models here.
+from django.db.models.deletion import CASCADE
 
 class Job(models.Model):
     job_id          = models.CharField(max_length=36)
@@ -14,7 +13,7 @@ class Job(models.Model):
     pid             = models.IntegerField(default=-1)
 
 class Result(models.Model):
-    job = models.ForeignKey(Job)
+    job = models.ForeignKey(Job, on_delete=CASCADE)
     cmp_id = models.IntegerField()
     result_json = models.TextField()
 

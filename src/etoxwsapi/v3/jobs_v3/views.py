@@ -80,11 +80,53 @@ def _wrap_method(method, request):
         msg = json.dumps(traceback.format_exc().splitlines())
         return HttpResponse(msg, status = 500, content_type='application/json')
 
+def _cancel_job(job):
+    job_id = job.job_id
+    logger.info("Entering DELETE for job: %s"%(job_id))
+    #import pydevd; pydevd.settrace()
+    cjob = AsyncResult(job_id)
+    if not cjob.ready():
+        settings.ETOXWS_IMPL_V3().cleanup_hook(job_id)
+        if job.pid > 0:
+            logger.info("Trying to kill job subprocess and all children: %s"%(job_id))
+            try:
+                parent = psutil.Process(job.pid)
+                logger.info("Command line was: %s (%s)"%(parent.cmdline(), parent.pid))
+                for child in parent.children(recursive=True):
+                    try:
+                        logger.info("Found child process: %s (%s)"%(child.cmdline(), child.pid))
+                        child.kill()
+                    except Exception, e:
+                        logger.warn("%s"%(e))
+                parent.kill()
+            except Exception, e:
+                logger.warn("%s"%(e))
+        jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
+        job.status = "JOB_CANCELLED"
+        job.completion_time = time.time()
+        job.save()
+
 class JobsView(View):
     def post(self, request):
         return _wrap_method(self._post, request)
     def get(self, request):
         return _wrap_method(self._get, request)
+
+    def delete(self, request):
+        return _wrap_method(self._delete, request)
+    def _delete(self, request):
+        failed_jobs = []
+        for job in Job.objects.all():
+            try:
+                _cancel_job(job)
+            except Exception, e:
+                failed_jobs.append(job.job_id)
+            finally:
+                job.delete()
+        msg = ""
+        if failed_jobs:
+            msg = "Failed to cancel %s"%(','.join(failed_jobs))
+        return HttpResponse(json.dumps({'msg': msg}), content_type='application/json')
 
     def _get(self, request):
         q = Job.objects.all()
@@ -158,31 +200,9 @@ class JobHandlerView(View):
     def delete(self, request, job_id):
         job = get_object_or_404(Job, job_id=job_id)
         try:
-            logger.info("Entering DELETE for job: %s"%(job_id))
-            #import pydevd; pydevd.settrace()
-            cjob = AsyncResult(job_id)
-            if not cjob.ready():
-                settings.ETOXWS_IMPL_V3().cleanup_hook(job_id)
-                if job.pid > 0:
-                    logger.info("Trying to kill job subprocess and all children: %s"%(job_id))
-                    try:
-                        parent = psutil.Process(job.pid)
-                        logger.info("Command line was: %s (%s)"%(parent.cmdline(), parent.pid))
-                        for child in parent.children(recursive=True):
-                            try:
-                                logger.info("Found child process: %s (%s)"%(child.cmdline(), child.pid))
-                                child.kill()
-                            except Exception, e:
-                                logger.warn("%s"%(e))
-                        parent.kill()
-                    except Exception, e:
-                        logger.warn("%s"%(e))
-                jobmgr.control.revoke(job_id, terminate=True) #@UndefinedVariable
-                job.status = "JOB_CANCELLED"
-                job.completion_time = time.time()
-                job.save()
+            _cancel_job(job)
             return HttpResponse("", status = 200)
         except Exception, e:
             msg = "Failed to delete job (%s)"%(e)
             return HttpResponse(msg, status = 500)
-
+    
