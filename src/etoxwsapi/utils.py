@@ -141,7 +141,8 @@ class SDFFile(object, WriteMixin):
             #print "is windows"
             self.linesep = b'\r\n'
         fp.seek(0)
-
+        
+        recs = []
         content = self.linesep + fp.read().rstrip()
         if '$$$$' in content:
             recs = self.re_rec.split(content)[:-1]
@@ -149,7 +150,8 @@ class SDFFile(object, WriteMixin):
             recs = [ content ]
         else:
             ret = False
-        self.sdfrecs.extend([ SDFRec(rec, self.linesep) for rec in recs])
+        if recs != []:
+            self.sdfrecs.extend([ SDFRec(rec, self.linesep) for rec in recs])
         return ret
 
     def parse(self, fobj):
