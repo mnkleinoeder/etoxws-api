@@ -116,6 +116,7 @@ class JobsView(View):
         return _wrap_method(self._delete, request)
     def _delete(self, request):
         failed_jobs = []
+        ndel = 0
         for job in Job.objects.all():
             try:
                 _cancel_job(job)
@@ -123,9 +124,10 @@ class JobsView(View):
                 failed_jobs.append(job.job_id)
             finally:
                 job.delete()
-        msg = ""
+                ndel += 1
+        msg = "%s jobs deleted."%(ndel)
         if failed_jobs:
-            msg = "Failed to cancel %s"%(','.join(failed_jobs))
+            msg += " %s failed to delete"%(','.join(failed_jobs))
         return HttpResponse(json.dumps({'msg': msg}), content_type='application/json')
 
     def _get(self, request):

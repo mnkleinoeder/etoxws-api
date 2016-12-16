@@ -12,7 +12,11 @@
     - "/srv/www/webapps/etoxws"
     - "/srv/www/webapps/etoxws-api"
     - "/etc/httpd/conf.d/etox.d"
-
+  - name: set a reasonable prompt
+    lineinfile:
+      dest: "/home/modeler/.bashrc"
+      line: 'export PS1=''\u@\h: \w \$ '''
+      regexp: "export PS1="
   roles:
   - { role: apache ,
         tags: apache }

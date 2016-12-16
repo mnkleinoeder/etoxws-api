@@ -11,6 +11,7 @@
 - set_fact: etoxws_celery={{etoxws_virtenv}}/bin/celery
 - set_fact: etoxws_wsgi={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.wsgi
 - set_fact: etoxws_conf={{VHOST_CONF_DIR}}/{{ETOXWS_NAME}}.conf
+- set_fact: etoxws_db_token={{ETOXWS_NAME|replace('.','_')}}
 
 ###############################################################################
 # OS dependent tasks
@@ -21,7 +22,7 @@
 - include: CentOS.yml
   when: ansible_distribution == "CentOS"
 
-- debug: var=ETOXWS_IMPL_V2
+- debug: var=ETOXWS_IMPL_V3
 #- pause:
 #    prompt: 'Settings okay?. Press return to continue. Press Ctrl+c and then "a" to abort'
 
@@ -30,47 +31,42 @@
 # we suppose that postgres has been installed already
 # we just check that we have superuser access via sudo -u postgres
 ###############################################################################
-#- lineinfile: dest={{postgres_main_conf}}
-#    state=absent
-#    regexp="^local.*md5$"
-#  register: pg1
-- lineinfile: dest={{postgres_main_conf}}
-    line="local   all         all                                         md5"
-    regexp="^local.*md5$"
+- lineinfile:
+    dest:   "{{postgres_main_conf}}"
+    line:   "local   all         all                                         md5"
+    regexp: "^local.*md5$"
   register: pg1
   
-# order is important: next line must come before the md5 line
-# otherwise 'sudo - postgres psql' fails
-- name: remove peer line in order to trigger correct order
-  lineinfile: dest={{postgres_main_conf}}
-    regexp="^local.*peer$"
-    state=absent
-- lineinfile: dest={{postgres_main_conf}}
-    line="local   all             postgres                                peer"
-    regexp="^local.*peer$"
-    insertbefore='^local.*md5$'
+- lineinfile:
+    dest:   "{{postgres_main_conf}}"
+    line:   "local   all             postgres                                peer"
+    regexp: "^local.*peer$"
+    insertbefore: '^local.*md5$'
   register: pg2
 
 - service: name={{postgres_service_name}} state=restarted
   when: pg1|changed or pg2|changed
 
-- set_fact:
-    etoxws_db_token: "{{ETOXWS_NAME|replace('.','_')}}"
-
-- postgresql_db: name='{{etoxws_db_token}}' state=absent
+- postgresql_db:
+    name: '{{etoxws_db_token}}'
+    state: absent
   sudo: yes
   sudo_user: postgres
   when: ETOXWS_CLEAN_DB | bool
 
-- postgresql_db: name={{etoxws_db_token}}
-                 encoding='UTF-8'
-                 lc_collate='en_US.UTF-8'
-                 lc_ctype='en_US.UTF-8'
-                 template='template0'
+- postgresql_db:
+    name:       "{{etoxws_db_token}}"
+    encoding:   'UTF-8'
+    lc_collate: 'en_US.UTF-8'
+    lc_ctype:   'en_US.UTF-8'
+    template:   'template0'
   sudo: yes
   sudo_user: postgres
 
-- postgresql_user: db={{etoxws_db_token}} name={{etoxws_db_token}} password={{ETOXWS_SERVICE_PASSWD}}
+- postgresql_user:
+    db:       "{{etoxws_db_token}}"
+    name:     "{{etoxws_db_token}}"
+    password: "{{ETOXWS_SERVICE_PASSWD}}"
   sudo: yes
   sudo_user: postgres
 
@@ -97,16 +93,21 @@
 - shell: virtualenv {{etoxws_virtenv}}
     creates={{etoxws_virtenv}}
 
-- pip: name=pip state=present version=7.1.2
-    executable={{etoxws_pip}}
+- pip:
+    name: pip
+    state: present
+    version: 7.1.2
+    executable: "{{etoxws_pip}}"
   register: r
   ignore_errors: true
 
-- pip: requirements={{ETOXWS_APPDIR}}/pip_requirements.txt
-    executable={{etoxws_pip}}
+- pip:
+    requirements: "{{ETOXWS_APPDIR}}/pip_requirements.txt"
+    executable: "{{etoxws_pip}}"
 
-- pip: name=argparse
-    executable={{etoxws_pip}}
+- pip:
+    name: argparse
+    executable: "{{etoxws_pip}}"
   when: python_version == "2.6"
 
 ###############################################################################
@@ -114,31 +115,33 @@
 ###############################################################################
 
 - service: name=rabbitmq-server enabled=yes
-- service: name=rabbitmq-server state=stopped
 
-- template: src=rabbitmq-env.conf.j2 dest=/etc/rabbitmq/rabbitmq-env.conf
+- template:
+    src:  "rabbitmq-env.conf.j2"
+    dest: "/etc/rabbitmq/rabbitmq-env.conf"
+  register: r
 
-- service: name=rabbitmq-server state=started
+- service:
+    name:  rabbitmq-server
+    state: restarted
+  when: r.changed
 
 - rabbitmq_vhost:
     name: "{{MQ_VHOST}}"
-    state: present
     node: "{{MQ_NODE}}"
+    state: present
   environment:
     RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
-#- rabbitmq_user: user={{MQ_USERNAME}}
-#                 state=absent
-
 - rabbitmq_user:
+    vhost: "{{MQ_VHOST}}"
     user: "{{MQ_USERNAME}}"
     password: "{{ETOXWS_SERVICE_PASSWD}}"
-    vhost: "{{MQ_VHOST}}"
     configure_priv: .*
     read_priv: .*
     write_priv: .*
-    state: present
     node: "{{MQ_NODE}}"
+    state: present
   environment:
     RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
@@ -149,9 +152,6 @@
   environment:
     RABBITMQ_NODENAME: "{{MQ_NODE}}"
 
-#- group: name={{ETOXWS_NAME}} system=yes state=present
-#- user: name={{ETOXWS_NAME}} group={{ETOXWS_NAME}} system=yes state=present
-
 - file: path={{item}} state=directory
   with_items:
   - "{{supervisord_conf_dir}}"
@@ -161,13 +161,13 @@
 # configuration of the webapp
 ###############################################################################
 - name: copy helper script for setting the runtime env
-  template: src=make_env.sh.j2 dest={{ETOXWS_APPDIR}}/make_env.sh mode=644
-
-- name: copy local settings
-  template: src=setting_local.py.j2 dest={{ETOXWS_APPDIR}}/src/etoxwsapi/settings/settings_local.py
-#  when: ETOXWS_PRODUCTION|bool
-
-#- template: src="launch_celery.sh" dest={{ETOXWS_APPDIR}}/launch_celery.sh mode=755
+  template:
+    src:  "{{ item.src }}"
+    dest: "{{ ETOXWS_APPDIR }}/{{ item.dest }}"
+    mode: 644
+  with_items:
+  - { src: make_env.sh.j2, dest: make_env.sh }
+  - { src: setting_local.py.j2, dest: settings_local.py }
 
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
     chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
@@ -192,35 +192,60 @@
 # $ cd ~/.p2/pool/plugins/org.python.pydev_4.4.0.201510052309
 # $ rsync -rv pysrc root@<IP_TO_SERVER>:/opt/pydevd/
 
-- lineinfile: dest="/home/modeler/soft/eTOXlab/ws/views2.py"
-    insertbefore="(\s+)while True:"
-    line="        jobobserver.report_started(p.pid)"
-  ignore_errors: true
+###############################################################################
+# creating a fall-back WS3 compliant views file which is actually
+# only a copy of WS2 with minor adaptions.
+# actually, all VMs should already contain a WS3 implementation
+# with license informations.
+###############################################################################
+- set_fact:
+    views_path: "/home/modeler/soft/eTOXlab/ws"
 
-- lineinfile: "dest=/home/modeler/soft/eTOXlab/ws/views2.py
-    state=absent
-    line='        jobobserver.report_progress(0) # indicate that calculation has been started'"
-  ignore_errors: true
+- stat:
+    path: "{{ views_path }}/views3.py"
+  register: p
+
+- shell: cp {{ views_path }}/views2.py {{ views_path }}/views3.py
+  notify: reload apache
+  when: not p.stat.exists
+
+- lineinfile:
+    dest:   "{{ views_path }}/views3.py"
+    regexp: "{{ item.r }}"
+    line:   "{{ item.l }}"
+  with_items:
+  - { r: 'from etoxwsapi.v\d import schema', l: "from etoxwsapi.v3 import schema" }
+  - { r: 'from etoxwsapi.v\d.wsbase import WebserviceImplementationBase', l: "from etoxwsapi.v3.wsbase import WebserviceImplementationBase" }
+  - { r: 'class WS.*', l: "class WS3(WebserviceImplementationBase):" }
+  notify: reload apache
+
+- lineinfile: 
+    dest:   "{{ ETOXWS_APPDIR }}/src/etoxwsapi/urls.py"
+    regexp: include\(\'etoxwsapi\.v2\.urls\'\)\)
+    state: absent
+  notify: reload apache
+
 
 - set_fact: _cel_variant=""
-- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.{{ supervisor_conf_ext }} mode=644
+- template: 
+    src:  "etoxws.celeryd.conf.j2"
+    dest: "{{supervisord_conf_dir}}/{{ETOXWS_NAME}}.celeryd.{{ supervisor_conf_ext }}"
+    mode: 644
   register: cel1
 
-  # enabling flower
-#- rabbitmq_plugin: names=rabbitmq_management state=enabled
-#- set_fact: _cel_variant="-flower"
-#- template: src="etoxws.celeryd.conf.j2" dest={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }} mode=644
-#  when: ETOXWS_PRODUCTION|bool
-#  register: cel2
-  # disabling flower
-- rabbitmq_plugin: names=rabbitmq_management state=disabled
-- file: path={{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }} state=absent
+- name: no flower support anymore
+  rabbitmq_plugin:
+    names: rabbitmq_management
+    state: disabled
+- file:
+    path:  "{{supervisord_conf_dir}}/{{ETOXWS_NAME}}.flower.{{ supervisor_conf_ext }}"
+    state: absent
   register: cel2
 
-- supervisorctl: name={{ETOXWS_NAME}} state=stopped
+- supervisorctl:
+    name:  "{{ETOXWS_NAME}}"
+    state: stopped
   when: cel1|changed or cel2|changed
-
-- shell: sleep 5
 
 - supervisorctl: name={{ETOXWS_NAME}} state=started
 
@@ -229,14 +254,14 @@
 ###############################################################################
 
 - template: src="etoxws.wsgi.py.j2" dest={{etoxws_wsgi}}
-  notify: restart apache
+  notify: reload apache
 
 - set_fact: _ssl=""
 - template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}-nossl
-  notify: restart apache
+  notify: reload apache
 
 - set_fact: _ssl="-ssl"
 - template: src="etoxws.apache.conf.j2" dest={{etoxws_conf}}-ssl
-  notify: restart apache
+  notify: reload apache
 
 

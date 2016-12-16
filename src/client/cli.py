@@ -185,6 +185,9 @@ class WSClientHandler(object, TermMixin):
         return c
 
     def get_selected_models(self):
+        """
+        parses the ids command line option and tries to identify the corresponding models
+        """
         models = list()
 
         req_ids = list()
@@ -209,6 +212,19 @@ class WSClientHandler(object, TermMixin):
             models.append(model)
         return models
 
+    def get_selected_jobs(self):
+        """
+        parses the jobs command line option and tries to identify the corresponding models.
+        if not given returns all jobs from a webservice 
+        """
+        jobs = []
+        if self.args.jobs:
+            jobs = list(set(self.args.jobs.split(',')))
+        if not jobs:
+            ret = http_get('/'.join((self.args.baseurl, 'jobs/')))
+            jobs = [ j for j in json.loads(ret.text) ]
+        return jobs
+
     def dispatch(self, func_name):
         try:
             f = getattr(self, func_name)
@@ -225,16 +241,26 @@ class WSClientHandler(object, TermMixin):
             return 1
         return 0
 
-    def kill(self):
-        url = '/'.join((self.args.baseurl, 'jobs/'))
-        ret = http_get(url)
-        for job_id in json.loads(ret.text):
-            print url+job_id
-            requests.delete(url+job_id, verify=SSL_VERIFY)
+    def _delete_url(self, url):
+        print "[DELETE] %s"%(url)
+        return requests.delete(url, verify=SSL_VERIFY)
 
+    def cancel(self):
+        baseurl = '/'.join((self.args.baseurl, 'jobs/'))
+
+        jobs = self.get_selected_jobs()
+        for job_id in jobs:
+            self._delete_url(baseurl+job_id)
+
+    def delete(self):
+        url = '/'.join((self.args.baseurl, 'jobs/'))
+        ret = self._delete_url(url)
+        print ret.text
+        
     def inspect_jobs(self):
-        ret = http_get('/'.join((self.args.baseurl, 'jobs/')))
-        for job_id in json.loads(ret.text):
+        jobs = self.get_selected_jobs()
+        print jobs
+        for job_id in jobs:
             print job_id
             url = '/'.join((self.baseurl, "jobs", job_id))
             ret = http_get(url)
@@ -444,6 +470,7 @@ class CLI(object):
         )
 
         i_option = (("-i", "--ids"), {'dest': "ids", 'help': "comma-separated list with IDs to be calculated [default: all, as obtained by /dir]", 'default':None})
+        j_option = (("-j", "--jobs"), {'dest': "jobs", 'help': "comma-separated list with job ids", 'default':None})
 
         parser.add_argument("-b", "--base-url", dest="baseurl", help="base url of webservice to be tested [default: %(default)s]", default=_BASE_URL)
         parser.add_argument("-l", "--log-level", dest="loglev", help="set verbosity level [default: %(default)s] (see python logging module)", default=_LOG_LEV)
@@ -471,8 +498,9 @@ class CLI(object):
         parser_calc.add_argument("-O", "--output-file", dest="outfile", help="SDFile to be used as output file.", required=True )
         parser_calc.add_argument(*i_option[0], **i_option[1])
 
-        parser_jobs = subparsers.add_parser('inspect-jobs', help='Inspect all jobs of a given webservice.')
+        parser_jobs = subparsers.add_parser('inspect-jobs', help='Inspect jobs of a given webservice.')
         parser_jobs.set_defaults(func='inspect_jobs')
+        parser_jobs.add_argument(*j_option[0], **j_option[1])
 
         parser_evault = subparsers.add_parser('etoxvault-check', help='Check if a eTOXvault record is available for all models.')
         parser_evault.set_defaults(func='check_etoxvault')
@@ -483,8 +511,12 @@ class CLI(object):
         parser_dir.add_argument("-P", "--print-summary", dest="print_summary", const='stdout', help="output format", nargs='?', default=None, required=False)
         parser_dir.set_defaults(func='dir_info')
 
-        parser_dir = subparsers.add_parser('kill', help='Cancels and deletes all running jobs. Jobs will not be erased from the webservice.')
-        parser_dir.set_defaults(func='kill')
+        parser_cancel = subparsers.add_parser('cancel', help='Cancels (kills) all running jobs. Jobs will not be deleted from the webservice.')
+        parser_cancel.set_defaults(func='cancel')
+        parser_cancel.add_argument(*j_option[0], **j_option[1])
+
+        parser_delete = subparsers.add_parser('delete', help='Deletes jobs from the webservice. Running jobs are killed and then deleted.')
+        parser_delete.set_defaults(func='delete')
 
         args = parser.parse_args()
         #print args

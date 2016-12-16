@@ -1,6 +1,12 @@
 ---
-- name: restart apache
+- name: restart postgres
   service: name={{postgres_service_name}} state=restarted
+
+- name: restart apache
+  service: name={{SYS_APACHE_SERVICE}} state=restarted
+
+- name: reload apache
+  service: name={{SYS_APACHE_SERVICE}} state=reloaded
 
 - name: restart supervisor
   service: name={{supervisor_service_name}} state=restarted
