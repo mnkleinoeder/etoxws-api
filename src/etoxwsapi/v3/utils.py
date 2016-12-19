@@ -106,6 +106,9 @@ class JobStatus(object):
     def is_done(self):
         return (self.stat['status'] in ( "JOB_COMPLETED", "JOB_SUCCESS", "JOB_FAILED", "JOB_REJECTED", "JOB_CANCELLED"))
 
+    def is_success(self):
+        return (self.stat['status'] in ( "JOB_COMPLETED", "JOB_SUCCESS"))
+
 class JobSummary(JobStatus):
     def __init__(self, provider, baseurl, calc_info, stat):
         super(self.__class__, self).__init__(stat)
@@ -216,12 +219,13 @@ def analyze_job_results(jobs, sdfFile, update_sdf = True):
 
     for job in jobs:
         try:
+            #import pydevd; pydevd.settrace()
             license_error = False
             ret = http_get('/'.join((job.baseurl, 'jobs', job.job_id)))
             if ret.status_code == 200:
                 stat = json.loads(ret.text)
                 job.stat = stat
-                if stat['status'] == "JOB_SUCCESS":
+                if job.is_success():
                     results = stat['results']
 
                     # clunky check for missing licenses. Message should be in the job status not in results

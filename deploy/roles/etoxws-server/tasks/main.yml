@@ -167,7 +167,7 @@
     mode: 644
   with_items:
   - { src: make_env.sh.j2, dest: make_env.sh }
-  - { src: setting_local.py.j2, dest: settings_local.py }
+  - { src: setting_local.py.j2, dest: src/etoxwsapi/settings/settings_local.py }
 
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
     chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
