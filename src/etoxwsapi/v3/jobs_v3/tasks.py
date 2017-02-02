@@ -126,7 +126,6 @@ def calculate(self, calc_info, sdf_file): #, logger, lock):
             if not jr.is_valid():
                 break
     except Exception, e:
-        logger.error("Exception occurred: %s"%(e))
         msg = str(e) + '\n' + '\n'.join(traceback.format_exc().splitlines())
         logger.error(msg)
         jr.report_status(1, msg)

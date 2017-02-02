@@ -35,3 +35,6 @@ MQ_USERNAME: "{{ETOXWS_NAME}}"
 ETOXWS_SERVICE_PASSWD: "{{ETOXWS_NAME}}"
 
 ETOXWS_GIT_TAG: master
+
+# list of key, value pairs to be added to the settings_local
+ETOXWS_EXTRA_SETTINGS: []

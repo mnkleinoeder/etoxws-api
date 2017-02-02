@@ -43,9 +43,9 @@ def license_check(calc_info):
 
         _i = li.get('license_info', 'Required software')
         infos.append( _i + ' (' + lic_stat + ')' )
-        
+
     if not license_infos:
-        infos.append("No license restrictions")
+        infos.append("No license information available")
          
     return is_valid, '|'.join(infos)
 

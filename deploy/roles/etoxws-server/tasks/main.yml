@@ -169,6 +169,13 @@
   - { src: make_env.sh.j2, dest: make_env.sh }
   - { src: setting_local.py.j2, dest: src/etoxwsapi/settings/settings_local.py }
 
+- name: add custom extra settings
+  lineinfile:
+    dest:   "{{ ETOXWS_APPDIR }}/src/etoxwsapi/settings/settings_local.py"
+    line:   "{{ item.key }} = {{ item.value }}"
+    insertafter: EOF
+  with_items: ETOXWS_EXTRA_SETTINGS
+
 - shell: . {{ETOXWS_APPDIR}}/make_env.sh && python manage.py syncdb --noinput
     chdir="{{ETOXWS_APPDIR}}/src/etoxwsapi"
   register: r
@@ -198,33 +205,34 @@
 # actually, all VMs should already contain a WS3 implementation
 # with license informations.
 ###############################################################################
-- set_fact:
-    views_path: "/home/modeler/soft/eTOXlab/ws"
 
-- stat:
-    path: "{{ views_path }}/views3.py"
-  register: p
-
-- shell: cp {{ views_path }}/views2.py {{ views_path }}/views3.py
-  notify: reload apache
-  when: not p.stat.exists
-
-- lineinfile:
-    dest:   "{{ views_path }}/views3.py"
-    regexp: "{{ item.r }}"
-    line:   "{{ item.l }}"
-  with_items:
-  - { r: 'from etoxwsapi.v\d import schema', l: "from etoxwsapi.v3 import schema" }
-  - { r: 'from etoxwsapi.v\d.wsbase import WebserviceImplementationBase', l: "from etoxwsapi.v3.wsbase import WebserviceImplementationBase" }
-  - { r: 'class WS.*', l: "class WS3(WebserviceImplementationBase):" }
-  notify: reload apache
-
-- lineinfile: 
-    dest:   "{{ ETOXWS_APPDIR }}/src/etoxwsapi/urls.py"
-    regexp: include\(\'etoxwsapi\.v2\.urls\'\)\)
-    state: absent
-  notify: reload apache
-
+#- set_fact:
+#    views_path: "/home/modeler/soft/eTOXlab/ws"
+#
+#- stat:
+#    path: "{{ views_path }}/views3.py"
+#  register: p
+#
+#- shell: cp {{ views_path }}/views2.py {{ views_path }}/views3.py
+#  notify: reload apache
+#  when: not p.stat.exists
+#
+#- lineinfile:
+#    dest:   "{{ views_path }}/views3.py"
+#    regexp: "{{ item.r }}"
+#    line:   "{{ item.l }}"
+#  with_items:
+#  - { r: 'from etoxwsapi.v\d import schema', l: "from etoxwsapi.v3 import schema" }
+#  - { r: 'from etoxwsapi.v\d.wsbase import WebserviceImplementationBase', l: "from etoxwsapi.v3.wsbase import WebserviceImplementationBase" }
+#  - { r: 'class WS.*', l: "class WS3(WebserviceImplementationBase):" }
+#  notify: reload apache
+#
+#- lineinfile: 
+#    dest:   "{{ ETOXWS_APPDIR }}/src/etoxwsapi/urls.py"
+#    regexp: include\(\'etoxwsapi\.v2\.urls\'\)\)
+#    state: absent
+#  notify: reload apache
+#
 
 - set_fact: _cel_variant=""
 - template: 

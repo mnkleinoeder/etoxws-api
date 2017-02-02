@@ -397,8 +397,8 @@ class WSClientHandler(object, TermMixin):
 
         if self.args.print_summary == 'trac':
             frmt = '|| {{{%-100s}}} ||'
-            for model in sorted([ m['id'] for m in self.models]):
-                print frmt%(model)
+            for model in sorted([ "|| {{{%-100s}}} || {{{version %s}}} ||"%(m['id'],m['version']) for m in self.models]):
+                print model
         else:
             print self.delim1
             frmt = '| %-3s | %-100s | %-9s | %-15s | %-100s |'
